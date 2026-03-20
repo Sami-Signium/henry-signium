@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HENRY – Signium Austria</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0D2240;
+  --navy-light: #1a3a6b;
+  --gold: #C9A84C;
+  --gold-light: #e8c97a;
+  --white: #ffffff;
+  --off-white: #F7F6F2;
+  --gray-100: #F1EFE8;
+  --gray-200: #D3D1C7;
+  --gray-400: #888780;
+  --gray-600: #5F5E5A;
+  --text: #1a1a18;
+  --text-muted: #5F5E5A;
+  --success: #2d7a4f;
+  --success-bg: #e8f5ee;
+  --warning: #9a6a00;
+  --warning-bg: #fef3d0;
+  --danger: #a32d2d;
+  --danger-bg: #fceaea;
+  --info: #185FA5;
+  --info-bg: #e6f1fb;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  background: var(--off-white);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 13px;
+}
+
+/* SIDEBAR */
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: 220px;
+  background: var(--navy);
+  display: flex; flex-direction: column;
+  z-index: 100;
+}
+
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.logo-mark {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 4px;
+}
+
+.logo-h {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px; color: var(--gold);
+  line-height: 1;
+}
+
+.logo-text { color: var(--white); }
+.logo-text .l1 { font-size: 14px; font-weight: 600; letter-spacing: .08em; }
+.logo-text .l2 { font-size: 10px; font-weight: 300; color: var(--gray-200); letter-spacing: .06em; margin-top: 1px; }
+
+.sidebar-nav { flex: 1; padding: 16px 0; }
+
+.nav-section {
+  font-size: 9px; font-weight: 600;
+  color: var(--gray-400); letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 12px 20px 6px;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 20px;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  transition: all .15s;
+  font-size: 12px; font-weight: 400;
+  border-left: 2px solid transparent;
+}
+
+.nav-item:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+.nav-item.active { color: var(--white); border-left-color: var(--gold); background: rgba(201,168,76,0.08); font-weight: 500; }
+
+.nav-icon { width: 16px; text-align: center; font-size: 14px; }
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.status-dot {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: rgba(255,255,255,0.5);
+}
+
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #2d7a4f; }
+.dot.pulse { animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* MAIN */
+.main { margin-left: 220px; min-height: 100vh; }
+
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0 28px;
+  height: 52px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+
+.topbar-title { font-size: 15px; font-weight: 600; color: var(--navy); }
+.topbar-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+.btn {
+  padding: 7px 14px; font-size: 12px; font-weight: 500;
+  border-radius: var(--radius); cursor: pointer;
+  border: 1px solid var(--gray-200);
+  background: var(--white); color: var(--text);
+  font-family: 'Montserrat', sans-serif;
+  transition: all .15s; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover { background: var(--gray-100); }
+.btn-primary { background: var(--navy); color: var(--white); border-color: var(--navy); }
+.btn-primary:hover { background: var(--navy-light); }
+.btn-gold { background: var(--gold); color: var(--navy); border-color: var(--gold); font-weight: 600; }
+.btn-gold:hover { background: var(--gold-light); }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+.btn-ghost { border: none; background: transparent; }
+.btn-ghost:hover { background: var(--gray-100); }
+
+.content { padding: 24px 28px; }
+
+/* PANELS */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* STATS ROW */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 14px; margin-bottom: 20px;
+}
+
+.stat-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+
+.stat-card .s-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.stat-card .s-value { font-size: 26px; font-weight: 700; color: var(--navy); line-height: 1; font-family: 'DM Serif Display', serif; }
+.stat-card .s-delta { font-size: 10px; color: var(--success); margin-top: 4px; }
+.stat-card .s-delta.down { color: var(--danger); }
+.stat-card .s-bar { height: 3px; background: var(--gray-100); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+.stat-card .s-bar-fill { height: 100%; border-radius: 2px; background: var(--navy); }
+
+/* SECTION HEADER */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-title { font-size: 13px; font-weight: 600; color: var(--navy); }
+.section-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* TABLE */
+.table-wrap {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  background: var(--navy);
+  color: rgba(255,255,255,0.8);
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .06em;
+  padding: 10px 14px; text-align: left;
+}
+
+tbody tr { border-bottom: 1px solid var(--gray-100); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--off-white); }
+tbody td { padding: 10px 14px; font-size: 12px; color: var(--text); vertical-align: middle; }
+
+/* BADGES */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 20px;
+  white-space: nowrap;
+}
+.badge-navy { background: var(--navy); color: var(--white); }
+.badge-gold { background: var(--gold); color: var(--navy); }
+.badge-success { background: var(--success-bg); color: var(--success); }
+.badge-warning { background: var(--warning-bg); color: var(--warning); }
+.badge-danger { background: var(--danger-bg); color: var(--danger); }
+.badge-info { background: var(--info-bg); color: var(--info); }
+.badge-gray { background: var(--gray-100); color: var(--gray-600); }
+
+/* PIPELINE BOARD */
+.pipeline-board {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.pipeline-col {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.pipeline-col-header {
+  padding: 10px 12px;
+  background: var(--navy);
+  color: var(--white);
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.pipeline-col-count {
+  background: rgba(255,255,255,0.2);
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+}
+
+.pipeline-col-body { padding: 10px; min-height: 80px; }
+
+.pipeline-card {
+  background: var(--off-white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 10px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.pipeline-card:hover { border-color: var(--navy); box-shadow: var(--shadow-md); }
+.pipeline-card .pc-company { font-weight: 600; color: var(--navy); margin-bottom: 3px; }
+.pipeline-card .pc-contact { color: var(--text-muted); }
+.pipeline-card .pc-trigger { margin-top: 6px; }
+
+/* COMPOSE PANEL */
+.compose-layout { display: grid; grid-template-columns: 1fr 1.4fr; gap: 20px; }
+
+.compose-form-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; display: block; text-transform: uppercase; letter-spacing: .05em; }
+.form-control {
+  width: 100%; padding: 8px 10px;
+  font-size: 12px; font-family: 'Montserrat', sans-serif;
+  border: 1px solid var(--gray-200); border-radius: var(--radius);
+  background: var(--white); color: var(--text);
+  transition: border-color .15s;
+}
+.form-control:focus { outline: none; border-color: var(--navy); }
+
+.pitch-output {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  position: relative;
+  min-height: 400px;
+}
+
+.pitch-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.henry-badge {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 700;
+  color: var(--gold); letter-spacing: .08em;
+}
+
+.henry-badge .h-icon {
+  font-family: 'DM Serif Display', serif;
+  font-size: 16px; color: var(--navy);
+  background: var(--gold);
+  width: 22px; height: 22px;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.pitch-body {
+  font-size: 12.5px; line-height: 1.8;
+  color: var(--text);
+  white-space: pre-wrap;
+  min-height: 280px;
+}
+
+.pitch-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 280px; color: var(--text-muted); gap: 10px;
+}
+
+.pitch-empty .big-h {
+  font-family: 'DM Serif Display', serif;
+  font-size: 64px; color: var(--gray-200);
+}
+
+.pitch-actions {
+  display: flex; gap: 8px; margin-top: 14px;
+  padding-top: 14px; border-top: 1px solid var(--gray-100);
+}
+
+/* LOADING */
+.loading {
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px; color: var(--text-muted); gap: 10px;
+}
+
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid var(--gray-200);
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(13,34,64,0.5);
+  z-index: 200;
+  display: none; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  width: 520px;
+  max-height: 80vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.modal-title { font-size: 15px; font-weight: 600; color: var(--navy); }
+
+/* TRIGGERS LIST */
+.trigger-list { display: flex; flex-direction: column; gap: 10px; }
+
+.trigger-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--navy);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all .15s;
+  box-shadow: var(--shadow);
+}
+
+.trigger-card:hover { border-left-color: var(--gold); box-shadow: var(--shadow-md); }
+.trigger-card.high { border-left-color: var(--danger); }
+.trigger-card.medium { border-left-color: var(--warning); }
+
+.trigger-header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.trigger-company { font-weight: 600; font-size: 13px; color: var(--navy); }
+.trigger-time { font-size: 10px; color: var(--text-muted); margin-left: auto; }
+.trigger-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+.trigger-score {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 8px;
+}
+.score-bar { flex: 1; height: 3px; background: var(--gray-100); border-radius: 2px; }
+.score-fill { height: 100%; border-radius: 2px; background: var(--navy); }
+.score-num { font-size: 10px; font-weight: 600; color: var(--navy); }
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center; padding: 40px 20px;
+  color: var(--text-muted);
+}
+.empty-state .es-icon { font-size: 32px; margin-bottom: 10px; }
+.empty-state .es-title { font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+.empty-state .es-sub { font-size: 12px; line-height: 1.6; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--navy); color: var(--white);
+  padding: 12px 18px; border-radius: var(--radius);
+  font-size: 12px; font-weight: 500;
+  box-shadow: var(--shadow-md);
+  transform: translateY(80px); opacity: 0;
+  transition: all .3s;
+  z-index: 300;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-left: 3px solid var(--gold); }
+
+/* CONTACTS TABLE specific */
+.avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* FILTER BAR */
+.filter-bar {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px;
+}
+
+.filter-bar input {
+  flex: 1; padding: 7px 12px;
+  font-size: 12px; font-family: 'Montserrat', sans-serif;
+  border: 1px solid var(--gray-200); border-radius: var(--radius);
+  background: var(--white);
+}
+
+.filter-bar input:focus { outline: none; border-color: var(--navy); }
+
+.filter-bar select {
+  padding: 7px 10px;
+  font-size: 12px; font-family: 'Montserrat', sans-serif;
+  border: 1px solid var(--gray-200); border-radius: var(--radius);
+  background: var(--white); color: var(--text);
+}
+
+/* ANALYTICS */
+.analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+.chart-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.chart-card .cc-title { font-size: 12px; font-weight: 600; color: var(--navy); margin-bottom: 14px; }
+
+.funnel-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+}
+.funnel-label { width: 100px; font-size: 11px; color: var(--text-muted); text-align: right; }
+.funnel-bar-bg { flex: 1; height: 22px; background: var(--gray-100); border-radius: 4px; overflow: hidden; }
+.funnel-bar-fill {
+  height: 100%; border-radius: 4px;
+  display: flex; align-items: center; padding-left: 8px;
+  transition: width .6s ease;
+}
+.funnel-bar-fill span { font-size: 11px; font-weight: 600; }
+.funnel-n { width: 28px; font-size: 11px; font-weight: 600; text-align: right; color: var(--navy); }
+
+.bar-chart-row { display: flex; align-items: flex-end; gap: 8px; height: 100px; margin-top: 8px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+.bar-rect { width: 100%; border-radius: 3px 3px 0 0; cursor: pointer; transition: opacity .2s; }
+.bar-rect:hover { opacity: .75; }
+.bar-lbl { font-size: 9px; color: var(--text-muted); }
+.bar-val { font-size: 9px; font-weight: 600; color: var(--navy); }
+
+/* SETTINGS */
+.settings-section {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+}
+.settings-section h3 { font-size: 13px; font-weight: 600; color: var(--navy); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--gray-100); }
+.settings-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--gray-100); }
+.settings-row:last-child { border-bottom: none; }
+.settings-row .sr-label { font-size: 12px; font-weight: 500; }
+.settings-row .sr-value { font-size: 11px; color: var(--text-muted); }
+.settings-row .sr-badge { }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-h">H</div>
+      <div class="logo-text">
+        <div class="l1">HENRY</div>
+        <div class="l2">KI Sales Assistant</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">Übersicht</div>
+    <div class="nav-item active" onclick="showPanel('dashboard')">
+      <span class="nav-icon">◈</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showPanel('triggers')">
+      <span class="nav-icon">⚡</span> Trigger-Ereignisse
+    </div>
+
+    <div class="nav-section">Vertrieb</div>
+    <div class="nav-item" onclick="showPanel('pipeline')">
+      <span class="nav-icon">▦</span> Pipeline
+    </div>
+    <div class="nav-item" onclick="showPanel('companies')">
+      <span class="nav-icon">◉</span> Unternehmen
+    </div>
+    <div class="nav-item" onclick="showPanel('contacts')">
+      <span class="nav-icon">◎</span> Kontakte
+    </div>
+
+    <div class="nav-section">HENRY</div>
+    <div class="nav-item" onclick="showPanel('compose')">
+      <span class="nav-icon">✦</span> Pitch erstellen
+    </div>
+    <div class="nav-item" onclick="showPanel('outreach')">
+      <span class="nav-icon">◷</span> Outreach-Log
+    </div>
+
+    <div class="nav-section">Auswertung</div>
+    <div class="nav-item" onclick="showPanel('analytics')">
+      <span class="nav-icon">◱</span> Analytics
+    </div>
+    <div class="nav-item" onclick="showPanel('settings')">
+      <span class="nav-icon">◈</span> Einstellungen
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="status-dot">
+      <div class="dot pulse"></div>
+      <span>HENRY aktiv · Signium Austria</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar" id="topbar">
+    <div>
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-sub" id="topbar-sub">Übersicht · Signium Austria Lead Intelligence</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-sm" onclick="refreshData()">↻ Aktualisieren</button>
+      <button class="btn btn-gold btn-sm" onclick="showPanel('compose')">✦ Neuer Pitch</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ======= DASHBOARD ======= -->
+    <div id="panel-dashboard" class="panel active">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card">
+          <div class="s-label">Unternehmen</div>
+          <div class="s-value" id="stat-companies">–</div>
+          <div class="s-delta">in Zielliste</div>
+          <div class="s-bar"><div class="s-bar-fill" style="width:100%"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="s-label">Kontakte</div>
+          <div class="s-value" id="stat-contacts">–</div>
+          <div class="s-delta">identifiziert</div>
+          <div class="s-bar"><div class="s-bar-fill" style="width:80%"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="s-label">Pitches</div>
+          <div class="s-value" id="stat-outreach">–</div>
+          <div class="s-delta">generiert / gesendet</div>
+          <div class="s-bar"><div class="s-bar-fill" style="width:30%"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="s-label">Pipeline</div>
+          <div class="s-value" id="stat-pipeline">–</div>
+          <div class="s-delta">aktive Leads</div>
+          <div class="s-bar"><div class="s-bar-fill" style="width:20%"></div></div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div>
+          <div class="section-title">Zuletzt hinzugefügte Unternehmen</div>
+          <div class="section-sub">Aus den importierten Ziellisten</div>
+        </div>
+        <button class="btn btn-sm" onclick="showPanel('companies')">Alle anzeigen →</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Unternehmen</th>
+              <th>Branche</th>
+              <th>HQ / Region</th>
+              <th>Priorität</th>
+              <th>Quelle</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="dashboard-companies-tbody">
+            <tr><td colspan="6"><div class="loading"><div class="spinner"></div> Lade Daten...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ======= TRIGGERS ======= -->
+    <div id="panel-triggers" class="panel">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Trigger-Ereignisse</div>
+          <div class="section-sub">Erkannte Anlässe für Kontaktaufnahme</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openAddTrigger()">+ Ereignis hinzufügen</button>
+      </div>
+
+      <div id="triggers-list">
+        <div class="empty-state">
+          <div class="es-icon">⚡</div>
+          <div class="es-title">Noch keine Trigger-Ereignisse</div>
+          <div class="es-sub">Füge das erste Ereignis hinzu – z.B. einen CEO-Wechsel<br>oder eine Funding-Runde bei einem Zielunternehmen.</div>
+          <br>
+          <button class="btn btn-primary" onclick="openAddTrigger()">+ Erstes Ereignis hinzufügen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= PIPELINE ======= -->
+    <div id="panel-pipeline" class="panel">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Pipeline</div>
+          <div class="section-sub">Aktive Leads nach Vertriebsphase</div>
+        </div>
+      </div>
+
+      <div class="pipeline-board" id="pipeline-board">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- ======= COMPANIES ======= -->
+    <div id="panel-companies" class="panel">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Zielunternehmen</div>
+          <div class="section-sub" id="companies-count-sub">Alle Unternehmen aus den Ziellisten</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openAddCompany()">+ Unternehmen hinzufügen</button>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" id="company-search" placeholder="Suche nach Name, Branche..." oninput="filterCompanies()">
+        <select id="company-source-filter" onchange="filterCompanies()">
+          <option value="">Alle Quellen</option>
+          <option value="CEE HQs Austria">CEE HQs Austria</option>
+          <option value="Consulting">Consulting</option>
+          <option value="Packaging">Packaging</option>
+          <option value="Construction Materials">Construction Materials</option>
+        </select>
+        <select id="company-priority-filter" onchange="filterCompanies()">
+          <option value="">Alle Prioritäten</option>
+          <option value="Hoch">Hoch</option>
+          <option value="Mittel">Mittel</option>
+          <option value="Niedrig">Niedrig</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Unternehmen</th>
+              <th>Branche</th>
+              <th>HQ / Region</th>
+              <th>CEE Länder</th>
+              <th>Priorität</th>
+              <th>Quelle</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody id="companies-tbody">
+            <tr><td colspan="7"><div class="loading"><div class="spinner"></div> Lade Unternehmen...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ======= CONTACTS ======= -->
+    <div id="panel-contacts" class="panel">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Kontakte</div>
+          <div class="section-sub" id="contacts-count-sub">Alle identifizierten Ansprechpartner</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openAddContact()">+ Kontakt hinzufügen</button>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" id="contact-search" placeholder="Suche nach Name, Rolle..." oninput="filterContacts()">
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Rolle</th>
+              <th>Unternehmen</th>
+              <th>E-Mail</th>
+              <th>Status</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody id="contacts-tbody">
+            <tr><td colspan="6"><div class="loading"><div class="spinner"></div> Lade Kontakte...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ======= COMPOSE ======= -->
+    <div id="panel-compose" class="panel">
+      <div class="compose-layout">
+        <div class="compose-form-card">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--gray-100);">
+            <div style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--gold);background:var(--navy);width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;">H</div>
+            <div style="font-size:13px;font-weight:600;color:var(--navy);">HENRY Pitch Generator</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Trigger-Ereignis</label>
+            <select class="form-control" id="pitch-trigger">
+              <option value="ceo">CEO-Nachfolge</option>
+              <option value="gf">Geschäftsführer-Wechsel</option>
+              <option value="cfo">CFO-Wechsel</option>
+              <option value="vorstand">Neuer Vorstand</option>
+              <option value="funding">Funding / Series A–C</option>
+              <option value="merger">M&A / Fusion</option>
+              <option value="ipo">IPO-Vorbereitung</option>
+              <option value="expansion">DACH-Expansion</option>
+              <option value="intl">Expansion / Internationalisierung</option>
+              <option value="reorg">Restrukturierung</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Zielunternehmen</label>
+            <input class="form-control" type="text" id="pitch-company" placeholder="z.B. Mondi Group">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Ansprechpartner</label>
+            <input class="form-control" type="text" id="pitch-contact" placeholder="z.B. Dr. Thomas Mayer – CHRO">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Kontext / Besonderheit</label>
+            <textarea class="form-control" id="pitch-context" rows="3" placeholder="z.B. Unternehmen hat gerade eine Series B abgeschlossen und sucht CFO..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Sprache</label>
+            <select class="form-control" id="pitch-lang">
+              <option value="de">Deutsch</option>
+              <option value="en">Englisch</option>
+            </select>
+          </div>
+
+          <button class="btn btn-gold" style="width:100%;padding:10px;font-size:13px;" onclick="generatePitch()">
+            ✦ Pitch generieren
+          </button>
+        </div>
+
+        <div class="pitch-output">
+          <div class="pitch-header">
+            <div class="henry-badge">
+              <div class="h-icon">H</div>
+              HENRY · KI-generiert
+            </div>
+            <div style="font-size:10px;color:var(--text-muted);" id="pitch-meta"></div>
+          </div>
+
+          <div class="pitch-body" id="pitch-body">
+            <div class="pitch-empty">
+              <div class="big-h">H</div>
+              <div style="font-size:13px;font-weight:500;color:var(--navy);">Bereit für deinen nächsten Pitch</div>
+              <div style="font-size:11px;color:var(--text-muted);text-align:center;max-width:260px;">Fülle das Formular aus und klicke auf „Pitch generieren" – HENRY erstellt eine personalisierte Nachricht.</div>
+            </div>
+          </div>
+
+          <div class="pitch-actions" id="pitch-actions" style="display:none;">
+            <button class="btn btn-sm" onclick="copyPitch()">Kopieren</button>
+            <button class="btn btn-sm btn-primary" onclick="savePitch()">Als Entwurf speichern</button>
+            <button class="btn btn-sm btn-gold" onclick="approvePitch()">✓ Freigeben</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= OUTREACH LOG ======= -->
+    <div id="panel-outreach" class="panel">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Outreach-Log</div>
+          <div class="section-sub">Alle generierten und gesendeten Pitches</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Kontakt</th>
+              <th>Unternehmen</th>
+              <th>Kanal</th>
+              <th>Status</th>
+              <th>Erstellt</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody id="outreach-tbody">
+            <tr><td colspan="6">
+              <div class="empty-state">
+                <div class="es-icon">◷</div>
+                <div class="es-title">Noch keine Outreach-Aktivitäten</div>
+                <div class="es-sub">Erstelle deinen ersten Pitch im Pitch Generator.</div>
+              </div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ======= ANALYTICS ======= -->
+    <div id="panel-analytics" class="panel">
+      <div class="section-header">
+        <div class="section-title">Analytics</div>
+      </div>
+
+      <div class="analytics-grid">
+        <div class="chart-card">
+          <div class="cc-title">Unternehmen nach Quelle</div>
+          <div class="bar-chart-row" id="source-chart"></div>
+        </div>
+        <div class="chart-card">
+          <div class="cc-title">Outreach Response-Funnel</div>
+          <div id="funnel-chart">
+            <div class="funnel-row"><div class="funnel-label">Generiert</div><div class="funnel-bar-bg"><div class="funnel-bar-fill" style="width:100%;background:var(--navy);"><span style="color:#fff;">100%</span></div></div><div class="funnel-n" id="f-generated">0</div></div>
+            <div class="funnel-row"><div class="funnel-label">Freigegeben</div><div class="funnel-bar-bg"><div class="funnel-bar-fill" style="width:0%;background:#185FA5;" id="f-approved-bar"><span style="color:#fff;">0%</span></div></div><div class="funnel-n" id="f-approved">0</div></div>
+            <div class="funnel-row"><div class="funnel-label">Gesendet</div><div class="funnel-bar-bg"><div class="funnel-bar-fill" style="width:0%;background:#378ADD;" id="f-sent-bar"><span style="color:#fff;">0%</span></div></div><div class="funnel-n" id="f-sent">0</div></div>
+            <div class="funnel-row"><div class="funnel-label">Geantwortet</div><div class="funnel-bar-bg"><div class="funnel-bar-fill" style="width:0%;background:#85B7EB;" id="f-replied-bar"><span style="color:#0D2240;">0%</span></div></div><div class="funnel-n" id="f-replied">0</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:14px;">
+        <div class="cc-title">Pipeline nach Phase</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;" id="pipeline-stats"></div>
+      </div>
+    </div>
+
+    <!-- ======= SETTINGS ======= -->
+    <div id="panel-settings" class="panel">
+      <div class="settings-section">
+        <h3>HENRY Konfiguration</h3>
+        <div class="settings-row">
+          <div class="sr-label">Absender</div>
+          <div class="sr-value">sami.hamid@signium.com</div>
+        </div>
+        <div class="settings-row">
+          <div class="sr-label">Freigabeprozess</div>
+          <span class="badge badge-gold">Manuell – jede E-Mail</span>
+        </div>
+        <div class="settings-row">
+          <div class="sr-label">Tonalität</div>
+          <div class="sr-value">Förmlich · 3–4 Absätze · Deutsch (primär)</div>
+        </div>
+        <div class="settings-row">
+          <div class="sr-label">Referenzmandate</div>
+          <div class="sr-value">Anonym ("ein österreichischer Konzern")</div>
+        </div>
+        <div class="settings-row">
+          <div class="sr-label">Kontaktdaten-Tool</div>
+          <div class="sr-value">Apollo.io (Free → Basic)</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Supabase Verbindung</h3>
+        <div class="settings-row">
+          <div class="sr-label">Project URL</div>
+          <div class="sr-value">https://ftdxhswcnghlmcagrsox.supabase.co</div>
+        </div>
+        <div class="settings-row">
+          <div class="sr-label">Status</div>
+          <span class="badge badge-success" id="db-status">Prüfe...</span>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Trigger-Typen (aktiv)</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+          <span class="badge badge-navy">CEO-Wechsel</span>
+          <span class="badge badge-navy">CFO-Wechsel</span>
+          <span class="badge badge-navy">CHRO-Wechsel</span>
+          <span class="badge badge-navy">Geschäftsführer-Wechsel</span>
+          <span class="badge badge-navy">Neuer Vorstand</span>
+          <span class="badge badge-navy">Funding</span>
+          <span class="badge badge-navy">M&A / Fusion</span>
+          <span class="badge badge-navy">IPO-Vorbereitung</span>
+          <span class="badge badge-navy">DACH-Expansion</span>
+          <span class="badge badge-navy">Expansion / Internationalisierung</span>
+          <span class="badge badge-navy">Restrukturierung</span>
+          <span class="badge badge-navy">Offene Führungsstellen</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- ADD TRIGGER MODAL -->
+<div class="modal-overlay" id="modal-trigger">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Trigger-Ereignis hinzufügen</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-trigger')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Unternehmen</label>
+      <input class="form-control" id="t-company" placeholder="Firmenname eingeben...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Trigger-Typ</label>
+      <select class="form-control" id="t-type">
+        <option>CEO-Wechsel</option>
+        <option>CFO-Wechsel</option>
+        <option>CHRO-Wechsel</option>
+        <option>Geschäftsführer-Wechsel</option>
+        <option>Neuer Vorstand</option>
+        <option>Funding</option>
+        <option>M&A / Fusion</option>
+        <option>IPO-Vorbereitung</option>
+        <option>DACH-Expansion</option>
+        <option>Expansion / Internationalisierung</option>
+        <option>Restrukturierung</option>
+        <option>Offene Führungsstellen</option>
+        <option>Sonstige</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Beschreibung</label>
+      <textarea class="form-control" id="t-desc" rows="3" placeholder="Was ist passiert? Quelle?"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Relevanz-Score (0–100)</label>
+      <input class="form-control" id="t-score" type="number" min="0" max="100" value="75">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn" onclick="closeModal('modal-trigger')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveTrigger()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD COMPANY MODAL -->
+<div class="modal-overlay" id="modal-company">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Unternehmen hinzufügen</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-company')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Name *</label>
+      <input class="form-control" id="c-name" placeholder="Firmenname">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Branche</label>
+      <input class="form-control" id="c-industry" placeholder="z.B. Packaging / Manufacturing">
+    </div>
+    <div class="form-group">
+      <label class="form-label">HQ / Region</label>
+      <input class="form-control" id="c-hq" placeholder="z.B. Wien / Österreich">
+    </div>
+    <div class="form-group">
+      <label class="form-label">CEE Länder</label>
+      <input class="form-control" id="c-cee" placeholder="z.B. PL, CZ, HU, RO">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Priorität</label>
+      <select class="form-control" id="c-priority">
+        <option value="">– keine –</option>
+        <option value="Hoch">Hoch</option>
+        <option value="Mittel">Mittel</option>
+        <option value="Niedrig">Niedrig</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Quelle</label>
+      <select class="form-control" id="c-source">
+        <option>CEE HQs Austria</option>
+        <option>Consulting</option>
+        <option>Packaging</option>
+        <option>Construction Materials</option>
+        <option>Manuell</option>
+        <option>Apollo</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notizen</label>
+      <textarea class="form-control" id="c-notes" rows="2"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn" onclick="closeModal('modal-company')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveCompany()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CONTACT MODAL -->
+<div class="modal-overlay" id="modal-contact">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Kontakt hinzufügen</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-contact')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Name *</label>
+      <input class="form-control" id="ct-name" placeholder="Vollständiger Name">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Rolle</label>
+      <input class="form-control" id="ct-role" placeholder="z.B. CHRO, CEO">
+    </div>
+    <div class="form-group">
+      <label class="form-label">E-Mail</label>
+      <input class="form-control" id="ct-email" type="email" placeholder="name@firma.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">LinkedIn URL</label>
+      <input class="form-control" id="ct-linkedin" placeholder="https://linkedin.com/in/...">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn" onclick="closeModal('modal-contact')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveContact()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://ftdxhswcnghlmcagrsox.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_c8YygosML2xrImmWCpI1rw_6j_pvCRA';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// State
+let allCompanies = [];
+let allContacts = [];
+let allOutreach = [];
+let allPipeline = [];
+let allTriggers = [];
+let currentPitchText = '';
+
+// ---- NAV ----
+const panelTitles = {
+  dashboard: ['Dashboard','Übersicht · Signium Austria Lead Intelligence'],
+  triggers: ['Trigger-Ereignisse','Erkannte Anlässe für Kontaktaufnahme'],
+  pipeline: ['Pipeline','Aktive Leads nach Vertriebsphase'],
+  companies: ['Zielunternehmen','Alle Unternehmen aus den Ziellisten'],
+  contacts: ['Kontakte','Alle identifizierten Ansprechpartner'],
+  compose: ['HENRY Pitch Generator','KI-gestützte Outreach-Nachrichten'],
+  outreach: ['Outreach-Log','Alle generierten und gesendeten Pitches'],
+  analytics: ['Analytics','Performance-Auswertung'],
+  settings: ['Einstellungen','HENRY Konfiguration'],
+};
+
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick')?.includes("'" + name + "'")) n.classList.add('active');
+  });
+  const t = panelTitles[name] || [name, ''];
+  document.getElementById('topbar-title').textContent = t[0];
+  document.getElementById('topbar-sub').textContent = t[1];
+  if (name === 'analytics') renderAnalytics();
+  if (name === 'pipeline') renderPipelineBoard();
+  if (name === 'outreach') loadOutreach();
+}
+
+// ---- LOAD DATA ----
+async function loadAll() {
+  await Promise.all([loadCompanies(), loadContacts(), loadOutreach(), loadPipeline(), loadTriggers(), checkDbStatus()]);
+  updateStats();
+  renderDashboardCompanies();
+}
+
+async function loadCompanies() {
+  const { data, error } = await db.from('companies').select('*').order('created_at', { ascending: false });
+  if (!error && data) {
+    allCompanies = data;
+    renderCompanies();
+  }
+}
+
+async function loadContacts() {
+  const { data, error } = await db.from('contacts').select('*, companies(name)').order('created_at', { ascending: false });
+  if (!error && data) {
+    allContacts = data;
+    renderContacts();
+  }
+}
+
+async function loadOutreach() {
+  const { data, error } = await db.from('outreach').select('*, contacts(full_name), companies(name)').order('created_at', { ascending: false });
+  if (!error && data) {
+    allOutreach = data;
+    renderOutreach();
+  }
+}
+
+async function loadPipeline() {
+  const { data } = await db.from('pipeline').select('*, companies(name), contacts(full_name)').order('created_at', { ascending: false });
+  if (data) allPipeline = data;
+}
+
+async function loadTriggers() {
+  const { data } = await db.from('triggers').select('*, companies(name)').order('created_at', { ascending: false });
+  if (data) { allTriggers = data; renderTriggers(); }
+}
+
+async function checkDbStatus() {
+  const el = document.getElementById('db-status');
+  try {
+    const { error } = await db.from('companies').select('id').limit(1);
+    el.textContent = error ? 'Fehler' : '● Verbunden';
+    el.className = error ? 'badge badge-danger' : 'badge badge-success';
+  } catch { el.textContent = 'Fehler'; el.className = 'badge badge-danger'; }
+}
+
+function updateStats() {
+  document.getElementById('stat-companies').textContent = allCompanies.length;
+  document.getElementById('stat-contacts').textContent = allContacts.length;
+  document.getElementById('stat-outreach').textContent = allOutreach.length;
+  document.getElementById('stat-pipeline').textContent = allPipeline.length;
+}
+
+// ---- RENDER ----
+function priorityBadge(p) {
+  if (!p) return '<span class="badge badge-gray">–</span>';
+  const map = { 'Hoch':'badge-danger','Mittel':'badge-warning','Niedrig':'badge-success' };
+  return `<span class="badge ${map[p]||'badge-gray'}">${p}</span>`;
+}
+
+function sourceBadge(s) {
+  const map = { 'CEE HQs Austria':'badge-info','Consulting':'badge-success','Packaging':'badge-warning','Construction Materials':'badge-gold' };
+  return `<span class="badge ${map[s]||'badge-gray'}">${s||'–'}</span>`;
+}
+
+function statusBadge(s) {
+  const map = { 'Entwurf':'badge-gray','Freigegeben':'badge-info','Gesendet':'badge-navy','Geöffnet':'badge-warning','Geantwortet':'badge-success','Abgelehnt':'badge-danger','Archiviert':'badge-gray' };
+  return `<span class="badge ${map[s]||'badge-gray'}">${s}</span>`;
+}
+
+function initials(name) {
+  if (!name) return '?';
+  return name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
+
+const avatarColors = ['#E6F1FB','#EAF3DE','#FAEEDA','#FBEAF0','#E1F5EE','#FCEBEB'];
+const avatarText = ['#0C447C','#27500A','#633806','#4B1528','#04342C','#501313'];
+
+function renderDashboardCompanies() {
+  const tbody = document.getElementById('dashboard-companies-tbody');
+  const slice = allCompanies.slice(0, 8);
+  if (!slice.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="es-icon">◉</div><div class="es-title">Noch keine Unternehmen</div><div class="es-sub">Importiere deine Masterliste oder füge manuell hinzu.</div></div></td></tr>'; return; }
+  tbody.innerHTML = slice.map(c => `
+    <tr>
+      <td><strong>${c.name}</strong></td>
+      <td>${c.industry||'–'}</td>
+      <td>${c.hq_region||'–'}</td>
+      <td>${priorityBadge(c.priority)}</td>
+      <td>${sourceBadge(c.source)}</td>
+      <td><button class="btn btn-sm" onclick="showPanel('compose');document.getElementById('pitch-company').value='${c.name}'">Pitch →</button></td>
+    </tr>`).join('');
+}
+
+function renderCompanies(data) {
+  const list = data || allCompanies;
+  document.getElementById('companies-count-sub').textContent = `${list.length} Unternehmen`;
+  const tbody = document.getElementById('companies-tbody');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="es-icon">◉</div><div class="es-title">Keine Unternehmen gefunden</div></div></td></tr>'; return; }
+  tbody.innerHTML = list.map(c => `
+    <tr>
+      <td><strong>${c.name}</strong></td>
+      <td>${c.industry||'–'}</td>
+      <td>${c.hq_region||'–'}</td>
+      <td style="font-size:11px;">${c.cee_countries||'–'}</td>
+      <td>${priorityBadge(c.priority)}</td>
+      <td>${sourceBadge(c.source)}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-sm" onclick="showPanel('compose');document.getElementById('pitch-company').value='${c.name.replace(/'/g,"\\'")}'" title="Pitch erstellen">✦</button>
+        <button class="btn btn-sm btn-ghost" onclick="deleteCompany('${c.id}')" title="Löschen">✕</button>
+      </td>
+    </tr>`).join('');
+}
+
+function renderContacts(data) {
+  const list = data || allContacts;
+  document.getElementById('contacts-count-sub').textContent = `${list.length} Kontakte`;
+  const tbody = document.getElementById('contacts-tbody');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="es-icon">◎</div><div class="es-title">Keine Kontakte gefunden</div></div></td></tr>'; return; }
+  tbody.innerHTML = list.map((c,i) => {
+    const ci = i % avatarColors.length;
+    const compName = c.companies?.name || '–';
+    return `<tr>
+      <td style="white-space:nowrap;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="avatar" style="background:${avatarColors[ci]};color:${avatarText[ci]}">${initials(c.full_name)}</div>
+          <div>
+            <div style="font-weight:500;">${c.full_name}</div>
+            <div style="font-size:10px;color:var(--text-muted);">${c.role||''}</div>
+          </div>
+        </div>
+      </td>
+      <td>${c.role||'–'}</td>
+      <td>${compName}</td>
+      <td style="font-size:11px;">${c.email ? `<a href="mailto:${c.email}" style="color:var(--info);">${c.email}</a>` : '–'}</td>
+      <td>${c.verified ? '<span class="badge badge-success">Verifiziert</span>' : '<span class="badge badge-gray">Ausstehend</span>'}</td>
+      <td>
+        <button class="btn btn-sm" onclick="showPanel('compose');document.getElementById('pitch-contact').value='${(c.full_name+(c.role?' – '+c.role:'')).replace(/'/g,"\\'")}'" title="Pitch">✦</button>
+        <button class="btn btn-sm btn-ghost" onclick="deleteContact('${c.id}')" title="Löschen">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTriggers() {
+  const el = document.getElementById('triggers-list');
+  if (!allTriggers.length) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">⚡</div><div class="es-title">Noch keine Trigger-Ereignisse</div><div class="es-sub">Füge das erste Ereignis hinzu.</div><br><button class="btn btn-primary" onclick="openAddTrigger()">+ Erstes Ereignis hinzufügen</button></div>`;
+    return;
+  }
+  const typeMap = {'CEO-Wechsel':'badge-danger','CFO-Wechsel':'badge-danger','CHRO-Wechsel':'badge-warning','Funding':'badge-success','M&A':'badge-warning','DACH-Expansion':'badge-info','Sonstige':'badge-gray'};
+  el.innerHTML = '<div class="trigger-list">' + allTriggers.map(t => {
+    const score = t.relevance_score || 0;
+    const pri = score >= 80 ? 'high' : score >= 50 ? 'medium' : '';
+    const compName = t.companies?.name || '–';
+    const dt = t.created_at ? new Date(t.created_at).toLocaleDateString('de-AT') : '';
+    return `<div class="trigger-card ${pri}" onclick="showPanel('compose');document.getElementById('pitch-company').value='${compName.replace(/'/g,"\\'")}';document.getElementById('pitch-context').value='${(t.description||'').replace(/'/g,"\\'")}'">
+      <div class="trigger-header">
+        <span class="badge ${typeMap[t.trigger_type]||'badge-gray'}">${t.trigger_type}</span>
+        <span class="trigger-company">${compName}</span>
+        <span class="trigger-time">${dt}</span>
+      </div>
+      <div class="trigger-desc">${t.description||''}</div>
+      <div class="trigger-score">
+        <span style="font-size:10px;color:var(--text-muted);">Score</span>
+        <div class="score-bar"><div class="score-fill" style="width:${score}%"></div></div>
+        <span class="score-num">${score}</span>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function renderOutreach() {
+  const tbody = document.getElementById('outreach-tbody');
+  if (!allOutreach.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="es-icon">◷</div><div class="es-title">Noch keine Outreach-Aktivitäten</div><div class="es-sub">Erstelle deinen ersten Pitch im Generator.</div></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = allOutreach.map(o => `
+    <tr>
+      <td>${o.contacts?.full_name||'–'}</td>
+      <td>${o.companies?.name||'–'}</td>
+      <td><span class="badge badge-gray">${o.channel}</span></td>
+      <td>${statusBadge(o.status)}</td>
+      <td style="font-size:11px;color:var(--text-muted);">${o.created_at ? new Date(o.created_at).toLocaleDateString('de-AT') : '–'}</td>
+      <td><button class="btn btn-sm" onclick="viewPitch('${o.id}')">Ansehen</button></td>
+    </tr>`).join('');
+}
+
+function renderPipelineBoard() {
+  const stages = ['Erkannt','Kontaktiert','In Gespräch','Angebot','Mandat','Verloren'];
+  const board = document.getElementById('pipeline-board');
+  const stageColors = { 'Erkannt':'#888780','Kontaktiert':'#185FA5','In Gespräch':'#9a6a00','Angebot':'#0D2240','Mandat':'#2d7a4f','Verloren':'#a32d2d' };
+  board.innerHTML = stages.map(stage => {
+    const items = allPipeline.filter(p => p.stage === stage);
+    return `<div class="pipeline-col">
+      <div class="pipeline-col-header" style="background:${stageColors[stage]}">
+        ${stage}
+        <span class="pipeline-col-count">${items.length}</span>
+      </div>
+      <div class="pipeline-col-body">
+        ${items.length ? items.map(p => `
+          <div class="pipeline-card">
+            <div class="pc-company">${p.companies?.name||'–'}</div>
+            <div class="pc-contact">${p.contacts?.full_name||''}</div>
+            ${p.estimated_value ? `<div class="pc-trigger"><span class="badge badge-gold">€${Math.round(p.estimated_value).toLocaleString('de-AT')}</span></div>` : ''}
+          </div>`).join('') : '<div style="font-size:11px;color:var(--gray-400);text-align:center;padding:16px 0;">Leer</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAnalytics() {
+  // Source bar chart
+  const sources = ['CEE HQs Austria','Consulting','Packaging','Construction Materials'];
+  const counts = sources.map(s => allCompanies.filter(c => c.source === s).length);
+  const max = Math.max(...counts, 1);
+  const colors = ['#185FA5','#2d7a4f','#9a6a00','#7F77DD'];
+  document.getElementById('source-chart').innerHTML = sources.map((s, i) => `
+    <div class="bar-col">
+      <div class="bar-val">${counts[i]}</div>
+      <div class="bar-rect" style="height:${Math.round(counts[i]/max*80)}px;background:${colors[i]};"></div>
+      <div class="bar-lbl">${s.split(' ')[0]}</div>
+    </div>`).join('');
+
+  // Funnel
+  const total = allOutreach.length;
+  const approved = allOutreach.filter(o => ['Freigegeben','Gesendet','Geöffnet','Geantwortet'].includes(o.status)).length;
+  const sent = allOutreach.filter(o => ['Gesendet','Geöffnet','Geantwortet'].includes(o.status)).length;
+  const replied = allOutreach.filter(o => o.status === 'Geantwortet').length;
+  document.getElementById('f-generated').textContent = total;
+  document.getElementById('f-approved').textContent = approved;
+  document.getElementById('f-sent').textContent = sent;
+  document.getElementById('f-replied').textContent = replied;
+  const pct = n => total ? Math.round(n/total*100) : 0;
+  document.getElementById('f-approved-bar').style.width = pct(approved)+'%';
+  document.getElementById('f-approved-bar').innerHTML = `<span style="color:#fff;">${pct(approved)}%</span>`;
+  document.getElementById('f-sent-bar').style.width = pct(sent)+'%';
+  document.getElementById('f-sent-bar').innerHTML = `<span style="color:#fff;">${pct(sent)}%</span>`;
+  document.getElementById('f-replied-bar').style.width = pct(replied)+'%';
+  document.getElementById('f-replied-bar').innerHTML = `<span style="color:#0D2240;">${pct(replied)}%</span>`;
+
+  // Pipeline stages
+  const stages = ['Erkannt','Kontaktiert','In Gespräch','Angebot','Mandat','Verloren'];
+  const sc = {'Erkannt':'badge-gray','Kontaktiert':'badge-info','In Gespräch':'badge-warning','Angebot':'badge-navy','Mandat':'badge-success','Verloren':'badge-danger'};
+  document.getElementById('pipeline-stats').innerHTML = stages.map(s => {
+    const n = allPipeline.filter(p=>p.stage===s).length;
+    return `<div style="text-align:center;padding:12px 16px;background:var(--off-white);border-radius:var(--radius);min-width:80px;"><div style="font-size:20px;font-weight:700;font-family:'DM Serif Display',serif;color:var(--navy);">${n}</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${s}</div></div>`;
+  }).join('');
+}
+
+// ---- FILTERS ----
+function filterCompanies() {
+  const q = document.getElementById('company-search').value.toLowerCase();
+  const src = document.getElementById('company-source-filter').value;
+  const pri = document.getElementById('company-priority-filter').value;
+  const filtered = allCompanies.filter(c =>
+    (!q || c.name?.toLowerCase().includes(q) || c.industry?.toLowerCase().includes(q)) &&
+    (!src || c.source === src) &&
+    (!pri || c.priority === pri)
+  );
+  renderCompanies(filtered);
+}
+
+function filterContacts() {
+  const q = document.getElementById('contact-search').value.toLowerCase();
+  const filtered = allContacts.filter(c =>
+    !q || c.full_name?.toLowerCase().includes(q) || c.role?.toLowerCase().includes(q)
+  );
+  renderContacts(filtered);
+}
+
+// ---- PITCH GENERATION ----
+async function generatePitch() {
+  const trigger = document.getElementById('pitch-trigger').value;
+  const company = document.getElementById('pitch-company').value || 'das Zielunternehmen';
+  const contact = document.getElementById('pitch-contact').value || '';
+  const context = document.getElementById('pitch-context').value || '';
+  const lang = document.getElementById('pitch-lang').value;
+
+  const triggerLabels = {
+    ceo: 'CEO-Nachfolge', gf: 'Geschäftsführer-Wechsel', cfo: 'CFO-Wechsel',
+    vorstand: 'Neuer Vorstand', funding: 'Funding-Runde',
+    merger: 'M&A / Fusion', ipo: 'IPO-Vorbereitung',
+    expansion: 'DACH-Expansion', intl: 'Expansion / Internationalisierung',
+    reorg: 'Restrukturierung'
+  };
+
+  const pitchBody = document.getElementById('pitch-body');
+  const pitchActions = document.getElementById('pitch-actions');
+  pitchBody.innerHTML = '<div class="loading"><div class="spinner"></div> HENRY generiert deinen Pitch...</div>';
+  pitchActions.style.display = 'none';
+  document.getElementById('pitch-meta').textContent = '';
+
+  const prompt = `Du bist Dr. Sami Hamid, Managing Partner bei Signium Austria, einer globalen Executive Search Firma (Signium International, 40+ Länder).
+
+Schreibe einen professionellen, personalisierten Outreach-Pitch (E-Mail) auf Basis folgender Informationen:
+
+Trigger-Ereignis: ${triggerLabels[trigger]}
+Zielunternehmen: ${company}
+${contact ? 'Ansprechpartner: ' + contact : ''}
+${context ? 'Kontext: ' + context : ''}
+Sprache: ${lang === 'de' ? 'Deutsch' : 'Englisch'}
+
+Der Pitch soll:
+- Mit Betreffzeile beginnen (Format: "Betreff: ...")
+- 4 Absätze lang sein
+- Das konkrete Ereignis als Aufhänger nutzen
+- Den spezifischen Führungskräftebedarf ableiten
+- Signiums Expertise glaubwürdig einbringen (Referenz: "ein österreichischer Konzern" oder "ein führendes Industrieunternehmen im DACH-Raum")
+- Mit einem klaren Call-to-Action enden (30-min Austausch)
+- Förmlich aber persönlich klingen ("Sehr geehrte/r...")
+- Keine generischen Floskeln, kein "Ich hoffe diese E-Mail..."
+
+Schreibe NUR die E-Mail (Betreff + Text), keine Erklärungen.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content?.find(b => b.type === 'text')?.text;
+    if (text) {
+      currentPitchText = text;
+      pitchBody.innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.8;">${text}</div>`;
+      pitchActions.style.display = 'flex';
+      document.getElementById('pitch-meta').textContent = `${triggerLabels[trigger]} · ${company} · ${new Date().toLocaleDateString('de-AT')}`;
+    } else {
+      throw new Error('Keine Antwort');
+    }
+  } catch(e) {
+    pitchBody.innerHTML = '<div style="color:var(--danger);padding:20px;font-size:12px;">Fehler beim Generieren. Bitte API-Verbindung prüfen.</div>';
+  }
+}
+
+function copyPitch() {
+  navigator.clipboard.writeText(currentPitchText).then(() => showToast('In Zwischenablage kopiert'));
+}
+
+async function savePitch() {
+  if (!currentPitchText) return;
+  const company = document.getElementById('pitch-company').value;
+  const compMatch = allCompanies.find(c => c.name.toLowerCase() === company.toLowerCase());
+  const { error } = await db.from('outreach').insert({
+    company_id: compMatch?.id || null,
+    channel: 'Email',
+    body: currentPitchText,
+    generated_by: 'HENRY',
+    status: 'Entwurf'
+  });
+  if (!error) {
+    showToast('Entwurf gespeichert ✓', true);
+    loadOutreach();
+  } else {
+    showToast('Fehler beim Speichern');
+  }
+}
+
+async function approvePitch() {
+  if (!currentPitchText) return;
+  const company = document.getElementById('pitch-company').value;
+  const compMatch = allCompanies.find(c => c.name.toLowerCase() === company.toLowerCase());
+  const { error } = await db.from('outreach').insert({
+    company_id: compMatch?.id || null,
+    channel: 'Email',
+    body: currentPitchText,
+    generated_by: 'HENRY',
+    status: 'Freigegeben',
+    approved_by: 'Dr. Sami Hamid',
+    approved_at: new Date().toISOString()
+  });
+  if (!error) {
+    showToast('Pitch freigegeben – bereit zum Senden ✓', true);
+    loadOutreach();
+  }
+}
+
+// ---- MODALS ----
+function openAddTrigger() { document.getElementById('modal-trigger').classList.add('open'); }
+function openAddCompany() { document.getElementById('modal-company').classList.add('open'); }
+function openAddContact() { document.getElementById('modal-contact').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+async function saveTrigger() {
+  const compName = document.getElementById('t-company').value.trim();
+  if (!compName) return;
+  let compId = null;
+  const match = allCompanies.find(c => c.name.toLowerCase() === compName.toLowerCase());
+  if (match) {
+    compId = match.id;
+  } else {
+    const { data } = await db.from('companies').insert({ name: compName, source: 'Manuell' }).select().single();
+    if (data) { compId = data.id; allCompanies.push(data); }
+  }
+  const { error } = await db.from('triggers').insert({
+    company_id: compId,
+    trigger_type: document.getElementById('t-type').value,
+    description: document.getElementById('t-desc').value,
+    relevance_score: parseInt(document.getElementById('t-score').value) || 75,
+  });
+  if (!error) {
+    showToast('Trigger gespeichert ✓', true);
+    closeModal('modal-trigger');
+    loadTriggers();
+  }
+}
+
+async function saveCompany() {
+  const name = document.getElementById('c-name').value.trim();
+  if (!name) return;
+  const { error } = await db.from('companies').insert({
+    name, industry: document.getElementById('c-industry').value,
+    hq_region: document.getElementById('c-hq').value,
+    cee_countries: document.getElementById('c-cee').value,
+    priority: document.getElementById('c-priority').value || null,
+    source: document.getElementById('c-source').value,
+    notes: document.getElementById('c-notes').value,
+  });
+  if (!error) {
+    showToast('Unternehmen gespeichert ✓', true);
+    closeModal('modal-company');
+    loadCompanies();
+  }
+}
+
+async function saveContact() {
+  const name = document.getElementById('ct-name').value.trim();
+  if (!name) return;
+  const { error } = await db.from('contacts').insert({
+    full_name: name,
+    role: document.getElementById('ct-role').value,
+    email: document.getElementById('ct-email').value,
+    linkedin_url: document.getElementById('ct-linkedin').value,
+    source: 'manual',
+  });
+  if (!error) {
+    showToast('Kontakt gespeichert ✓', true);
+    closeModal('modal-contact');
+    loadContacts();
+  }
+}
+
+async function deleteCompany(id) {
+  if (!confirm('Unternehmen löschen?')) return;
+  await db.from('companies').delete().eq('id', id);
+  showToast('Gelöscht');
+  loadCompanies();
+}
+
+async function deleteContact(id) {
+  if (!confirm('Kontakt löschen?')) return;
+  await db.from('contacts').delete().eq('id', id);
+  showToast('Gelöscht');
+  loadContacts();
+}
+
+function refreshData() { loadAll(); showToast('Daten aktualisiert ✓', true); }
+
+function viewPitch(id) {
+  const o = allOutreach.find(x => x.id === id);
+  if (!o) return;
+  currentPitchText = o.body;
+  showPanel('compose');
+  document.getElementById('pitch-body').innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.8;">${o.body}</div>`;
+  document.getElementById('pitch-actions').style.display = 'flex';
+}
+
+// ---- TOAST ----
+function showToast(msg, success) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (success ? ' success' : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+// Init
+loadAll();
+</script>
+</body>
+</html>
