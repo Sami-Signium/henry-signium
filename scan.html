@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>HENRY Scan</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:sans-serif;background:#F7F6F2;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.card{background:#fff;border-radius:16px;padding:40px;max-width:520px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+h1{font-size:18px;font-weight:700;color:#0D2240;margin-bottom:8px}
+p{font-size:13px;color:#666;line-height:1.6;margin-bottom:20px}
+button{width:100%;padding:16px;font-size:15px;font-weight:600;background:#C9A84C;color:#0D2240;border:none;border-radius:10px;cursor:pointer}
+button:disabled{background:#ccc;cursor:not-allowed}
+#msg{margin-top:16px;padding:12px;border-radius:8px;font-size:13px;display:none}
+.info{background:#e6f1fb;color:#185FA5}
+.ok{background:#e8f5ee;color:#2d7a4f}
+.err{background:#fceaea;color:#a32d2d}
+.item{background:#F7F6F2;border-left:3px solid #0D2240;border-radius:6px;padding:12px;margin-top:8px}
+.co{font-weight:600;color:#0D2240}
+.ty{font-size:11px;background:#0D2240;color:#fff;padding:2px 8px;border-radius:20px;display:inline-block;margin:4px 0}
+.de{font-size:12px;color:#666}
+a{display:block;text-align:center;margin-top:20px;font-size:12px;color:#185FA5}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>HENRY Scan</h1>
+<p>Scannt alle aktiven Medienquellen nach Trigger-Ereignissen für deine Zielliste.</p>
+<button id="btn" onclick="run()">⚡ Jetzt scannen</button>
+<div id="msg"></div>
+<div id="res"></div>
+<a href="https://startling-brigadeiros-ad8f99.netlify.app" target="_blank">→ HENRY Dashboard</a>
+</div>
+<script>
+var S='https://ftdxhswcnghlmcagrsox.supabase.co';
+var SK='sb_publishable_c8YygosML2xrImmWCpI1rw_6j_pvCRA';
+var PK='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';
+function msg(t,c){var e=document.getElementById('msg');e.textContent=t;e.className=c;e.style.display='block';}
+async function run(){
+var btn=document.getElementById('btn');
+var res=document.getElementById('res');
+btn.disabled=true;btn.textContent='Scannt...';res.innerHTML='';
+msg('Lade Daten...','info');
+try{
+var r1=await fetch(S+'/rest/v1/sources?is_active=eq.true&select=id,name,url',{headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
+var src=await r1.json();
+var r2=await fetch(S+'/rest/v1/companies?select=id,name',{headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
+var cos=await r2.json();
+if(!src.length){msg('Keine aktiven Quellen.','err');btn.disabled=false;btn.textContent='Jetzt scannen';return;}
+var names=cos.map(function(c){return c.name;}).join(', ');
+var found=[];
+for(var i=0;i<Math.min(src.length,6);i++){
+var s=src[i];
+msg('Scanne '+(i+1)+'/'+Math.min(src.length,6)+': '+s.name,'info');
+try{
+var pr=await fetch('https://api.perplexity.ai/chat/completions',{method:'POST',headers:{'Authorization':'Bearer '+PK,'Content-Type':'application/json'},body:JSON.stringify({model:'llama-3.1-sonar-small-128k-online',max_tokens:800,messages:[{role:'system',content:'Antworte NUR mit JSON-Array.'},{role:'user',content:'Suche auf '+s.url+' nach aktuellen Nachrichten über: '+names+'. Erkenne CEO-Wechsel, CFO-Wechsel, Funding, M&A, Expansion. JSON: [{"company":"","trigger_type":"","description":"","relevance_score":80}] oder [].'}]})});
+var pd=await pr.json();
+var txt=pd.choices&&pd.choices[0]&&pd.choices[0].message?pd.choices[0].message.content:'[]';
+var items=[];try{items=JSON.parse(txt.replace(/```json|```/g,'').trim());}catch(e){}
+for(var j=0;j<items.length;j++){
+var it=items[j];if(!it.company)continue;
+var co=null;
+for(var k=0;k<cos.length;k++){if(cos[k].name.toLowerCase().indexOf(it.company.toLowerCase())>=0||it.company.toLowerCase().indexOf(cos[k].name.toLowerCase())>=0){co=cos[k];break;}}
+if(co){
+await fetch(S+'/rest/v1/triggers',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({company_id:co.id,trigger_type:it.trigger_type||'Sonstige',description:it.description||'',relevance_score:parseInt(it.relevance_score)||75})});
+found.push({company:it.company,trigger_type:it.trigger_type,description:it.description});
+}}
+await fetch(S+'/rest/v1/sources?id=eq.'+s.id,{method:'PATCH',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({last_scanned_at:new Date().toISOString()})});
+}catch(e){console.error(e);}
+await new Promise(function(r){setTimeout(r,500);});
+}
+msg(found.length?'✓ '+found.length+' Ereignisse gefunden':'✓ Keine neuen Ereignisse','ok');
+if(found.length){var h='';for(var f=0;f<found.length;f++){h+='<div class="item"><div class="co">'+found[f].company+'</div><span class="ty">'+found[f].trigger_type+'</span><div class="de">'+found[f].description+'</div></div>';}document.getElementById('res').innerHTML=h;}
+}catch(e){msg('Fehler: '+e.message,'err');}
+btn.disabled=false;btn.textContent='Erneut scannen';
+}
+</script>
+</body>
+</html>
