@@ -6,7 +6,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:sans-serif;background:#F7F6F2;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
-.card{background:#fff;border-radius:16px;padding:40px;max-width:580px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.card{background:#fff;border-radius:16px;padding:40px;max-width:680px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,.08)}
 h1{font-size:18px;font-weight:700;color:#0D2240;margin-bottom:8px}
 p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.6}
 button{width:100%;padding:16px;font-size:15px;font-weight:600;background:#C9A84C;color:#0D2240;border:none;border-radius:10px;cursor:pointer}
@@ -19,15 +19,17 @@ button:disabled{background:#ccc;cursor:not-allowed}
 .co{font-weight:600;color:#0D2240;font-size:14px}
 .ty{font-size:11px;background:#0D2240;color:#fff;padding:2px 8px;border-radius:20px;display:inline-block;margin:4px 0}
 .de{font-size:12px;color:#444;margin-top:4px;line-height:1.5}
+#raw{margin-top:16px;background:#f0f0f0;padding:12px;border-radius:8px;font-size:11px;color:#333;white-space:pre-wrap;word-break:break-all;display:none}
 a.dl{display:block;text-align:center;margin-top:20px;font-size:12px;color:#185FA5}
 </style>
 </head>
 <body>
 <div class="card">
 <h1>HENRY Scan</h1>
-<p>Scannt aktuelle Wirtschaftsnachrichten aus DACH und CEE nach Führungswechseln, Funding und M&A. Timeout: 30 Sekunden.</p>
+<p>Scannt Wirtschaftsnachrichten aus DACH/CEE nach Führungswechseln, Funding und M&A.</p>
 <button id="btn" onclick="window.run()">Jetzt scannen</button>
 <div id="msg"></div>
+<div id="raw"></div>
 <div id="res"></div>
 <a class="dl" href="https://henry-signium.netlify.app" target="_blank">HENRY Dashboard öffnen</a>
 </div>
@@ -37,6 +39,7 @@ var SK='sb_publishable_c8YygosML2xrImmWCpI1rw_6j_pvCRA';
 var PK='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';
 
 function show(t,c){var e=document.getElementById('msg');e.textContent=t;e.className=c;e.style.display='block';}
+function showRaw(t){var e=document.getElementById('raw');e.textContent='PERPLEXITY ANTWORT:\n\n'+t;e.style.display='block';}
 
 function fetchWithTimeout(url,opts,ms){
   return Promise.race([
@@ -49,44 +52,63 @@ window.run=async function(){
   var btn=document.getElementById('btn');
   btn.disabled=true;btn.textContent='Scannt...';
   document.getElementById('res').innerHTML='';
+  document.getElementById('raw').style.display='none';
   show('Lade Unternehmensliste...','info');
 
   try{
-    // 1. Load companies
     var r=await fetchWithTimeout(S+'/rest/v1/companies?select=id,name',
       {headers:{'apikey':SK,'Authorization':'Bearer '+SK}},10000);
     var companies=await r.json();
-    if(!Array.isArray(companies)||companies.length===0){show('Keine Unternehmen in der Datenbank gefunden.','err');btn.disabled=false;btn.textContent='Erneut scannen';return;}
+    if(!Array.isArray(companies)||companies.length===0){
+      show('Keine Unternehmen in der Datenbank.','err');
+      btn.disabled=false;btn.textContent='Erneut scannen';return;
+    }
 
-    show('Scanne Nachrichten (max. 30s)...','info');
-
-    // 2. Single broad Perplexity query
-    var prompt='Welche Fuehrungswechsel (CEO, CFO, COO, CHRO, Vorstand), Aufsichtsratsveraenderungen, Finanzierungsrunden oder M&A-Transaktionen gab es in den letzten 7 Tagen bei Unternehmen in Deutschland, Oesterreich, Schweiz, Polen, Tschechien, Ungarn und Rumaenien? Liste maximal 20 Ereignisse. Antworte NUR mit einem JSON-Array, kein anderer Text: [{"company":"Firmenname","trigger_type":"CEO-Wechsel","description":"Kurze Beschreibung"}]';
+    show('Frage Perplexity (max. 30s)...','info');
 
     var pr=await fetchWithTimeout('https://api.perplexity.ai/chat/completions',{
       method:'POST',
       headers:{'Authorization':'Bearer '+PK,'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'llama-3.1-sonar-small-128k-online',
-        max_tokens:1500,
+        model:'sonar',
+        max_tokens:2000,
         messages:[
-          {role:'system',content:'Antworte ausschliesslich mit einem JSON-Array. Kein Markdown, kein Text davor oder danach.'},
-          {role:'user',content:prompt}
+          {role:'system',content:'You are a business news analyst. Reply ONLY with a JSON array, no other text, no markdown.'},
+          {role:'user',content:'List up to 20 recent business events (last 7 days) from Germany, Austria, Switzerland, Poland, Czech Republic, Hungary, Romania: leadership changes (CEO, CFO, board appointments/resignations), funding rounds, M&A deals. Reply ONLY with this JSON array format: [{"company":"Company Name","trigger_type":"CEO Change","description":"Brief description of what happened"}]'}
         ]
       })
     },30000);
 
     var pd=await pr.json();
-    var txt=(pd.choices&&pd.choices[0]&&pd.choices[0].message)?pd.choices[0].message.content:'[]';
+    var txt='';
+    if(pd.choices&&pd.choices[0]&&pd.choices[0].message){
+      txt=pd.choices[0].message.content||'';
+    } else {
+      showRaw(JSON.stringify(pd,null,2));
+      show('Perplexity hat keine gueltige Antwort geliefert.','err');
+      btn.disabled=false;btn.textContent='Erneut scannen';return;
+    }
+
+    showRaw(txt);
 
     var items=[];
     try{
       var clean=txt.replace(/```json|```/g,'').trim();
-      var start=clean.indexOf('[');var end=clean.lastIndexOf(']');
-      if(start>=0&&end>start)items=JSON.parse(clean.substring(start,end+1));
-    }catch(e){show('Perplexity hat kein gültiges JSON geliefert. Bitte erneut versuchen.','err');btn.disabled=false;btn.textContent='Erneut scannen';return;}
+      var start=clean.indexOf('[');
+      var end=clean.lastIndexOf(']');
+      if(start>=0&&end>start){
+        items=JSON.parse(clean.substring(start,end+1));
+      }
+    }catch(e){
+      show('JSON-Parse fehlgeschlagen. Siehe Rohtext unten.','err');
+      btn.disabled=false;btn.textContent='Erneut scannen';return;
+    }
 
-    // 3. Match against company list and save
+    if(items.length===0){
+      show('Perplexity hat 0 Ereignisse geliefert. Siehe Rohtext unten.','err');
+      btn.disabled=false;btn.textContent='Erneut scannen';return;
+    }
+
     var found=[];
     for(var j=0;j<items.length;j++){
       var it=items[j];
@@ -101,18 +123,12 @@ window.run=async function(){
         await fetch(S+'/rest/v1/triggers',{
           method:'POST',
           headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},
-          body:JSON.stringify({
-            company_id:co.id,
-            trigger_type:it.trigger_type,
-            description:it.description||'',
-            relevance_score:80
-          })
+          body:JSON.stringify({company_id:co.id,trigger_type:it.trigger_type,description:it.description||'',relevance_score:80})
         });
         found.push({company:it.company,trigger_type:it.trigger_type,description:it.description||''});
       }
     }
 
-    // 4. Show results
     if(found.length){
       show('Fertig: '+found.length+' Treffer in Ihrer Zielliste gespeichert.','ok');
       var h='';
@@ -120,8 +136,8 @@ window.run=async function(){
         h+='<div class="item"><div class="co">'+found[f].company+'</div><span class="ty">'+found[f].trigger_type+'</span><div class="de">'+found[f].description+'</div></div>';
       }
       document.getElementById('res').innerHTML=h;
-    }else{
-      show('Scan abgeschlossen. Keine Treffer in Ihrer Zielliste — Perplexity hat '+items.length+' Ereignisse gefunden, keines matched Ihre '+companies.length+' Unternehmen.','ok');
+    } else {
+      show('Perplexity hat '+items.length+' Ereignisse gefunden — kein Match mit Ihren '+companies.length+' Unternehmen.','ok');
     }
 
   }catch(e){
