@@ -6,7 +6,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:sans-serif;background:#F7F6F2;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
-.card{background:#fff;border-radius:16px;padding:40px;max-width:520px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.card{background:#fff;border-radius:16px;padding:40px;max-width:560px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,.08)}
 h1{font-size:18px;font-weight:700;color:#0D2240;margin-bottom:8px}
 p{font-size:13px;color:#666;margin-bottom:20px}
 button{width:100%;padding:16px;font-size:15px;font-weight:600;background:#C9A84C;color:#0D2240;border:none;border-radius:10px;cursor:pointer}
@@ -16,20 +16,21 @@ button:disabled{background:#ccc}
 .ok{background:#e8f5ee;color:#2d7a4f}
 .err{background:#fceaea;color:#a32d2d}
 .item{background:#F7F6F2;border-left:3px solid #0D2240;border-radius:6px;padding:12px;margin-top:8px}
-.co{font-weight:600;color:#0D2240}
+.co{font-weight:600;color:#0D2240;font-size:14px}
 .ty{font-size:11px;background:#0D2240;color:#fff;padding:2px 8px;border-radius:20px;display:inline-block;margin:4px 0}
-.de{font-size:12px;color:#666}
+.de{font-size:12px;color:#444;margin-top:4px;line-height:1.5}
+.src{font-size:10px;color:#888;margin-top:4px}
 a.dl{display:block;text-align:center;margin-top:20px;font-size:12px;color:#185FA5}
 </style>
 </head>
 <body>
 <div class="card">
 <h1>HENRY Scan</h1>
-<p>Scannt alle Medienquellen nach Trigger-Ereignissen.</p>
+<p>Scannt Medienquellen nach aktuellen Fuehrungswechseln, Funding und M&A im DACH/CEE-Raum.</p>
 <button id="btn" onclick="window.run()">Jetzt scannen</button>
 <div id="msg"></div>
 <div id="res"></div>
-<a class="dl" href="https://henry-signium.netlify.app" target="_blank">HENRY Dashboard</a>
+<a class="dl" href="https://henry-signium.netlify.app" target="_blank">HENRY Dashboard oeffnen</a>
 </div>
 <script>
 function show(t,c){var e=document.getElementById('msg');e.textContent=t;e.className=c;e.style.display='block';}
@@ -43,34 +44,34 @@ var SK='sb_publishable_c8YygosML2xrImmWCpI1rw_6j_pvCRA';
 var PK='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';
 try{
 var r1=await fetch(S+'/rest/v1/sources?is_active=eq.true&select=id,name,url',{headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
-var src=await r1.json();
+var sources=await r1.json();
 var r2=await fetch(S+'/rest/v1/companies?select=id,name',{headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
-var cos=await r2.json();
-if(!src.length){show('Keine aktiven Quellen.','err');btn.disabled=false;btn.textContent='Jetzt scannen';return;}
-var names=cos.map(function(c){return c.name;}).join(', ');
+var companies=await r2.json();
+if(!sources.length){show('Keine aktiven Quellen.','err');btn.disabled=false;btn.textContent='Jetzt scannen';return;}
+var companyNames=companies.map(function(c){return c.name;});
 var found=[];
-for(var i=0;i<src.length;i++){
-var s=src[i];
-show('Scanne '+(i+1)+'/'+src.length+': '+s.name,'info');
+for(var i=0;i<sources.length;i++){
+var s=sources[i];
+show('Scanne '+(i+1)+'/'+sources.length+': '+s.name,'info');
 try{
-var pr=await fetch('https://api.perplexity.ai/chat/completions',{method:'POST',headers:{'Authorization':'Bearer '+PK,'Content-Type':'application/json'},body:JSON.stringify({model:'llama-3.1-sonar-small-128k-online',max_tokens:800,messages:[{role:'system',content:'Antworte NUR mit JSON-Array.'},{role:'user',content:'Suche auf '+s.url+' nach aktuellen Nachrichten ueber: '+names+'. Erkenne CEO-Wechsel, CFO-Wechsel, Funding, Expansion. JSON: [{\"company\":\"\",\"trigger_type\":\"\",\"description\":\"\",\"relevance_score\":80}] oder [].'}]})});
+var pr=await fetch('https://api.perplexity.ai/chat/completions',{method:'POST',headers:{'Authorization':'Bearer '+PK,'Content-Type':'application/json'},body:JSON.stringify({model:'llama-3.1-sonar-small-128k-online',max_tokens:1500,messages:[{role:'system',content:'Du bist ein Wirtschaftsjournalist. Antworte NUR mit einem JSON-Array.'},{role:'user',content:'Suche auf '+s.url+' nach aktuellen Meldungen der letzten 14 Tage ueber: Fuehrungswechsel (CEO, CFO, CHRO, Geschaeftsfuehrer, Vorstand), Finanzierungsrunden (Series A/B/C), Fusionen und Uebernahmen (M&A), Markteintritte, Restrukturierungen. Liste alle gefundenen Ereignisse: [{"company":"Firmenname","trigger_type":"CEO-Wechsel","description":"Was ist passiert","relevance_score":85}]. Nur echte aktuelle Meldungen. Wenn nichts gefunden: [].'}]})});
 var pd=await pr.json();
 var txt=pd.choices&&pd.choices[0]&&pd.choices[0].message?pd.choices[0].message.content:'[]';
 var items=[];try{items=JSON.parse(txt.replace(/```json|```/g,'').trim());}catch(e){}
 for(var j=0;j<items.length;j++){
-var it=items[j];if(!it.company)continue;
-var co=null;
-for(var k=0;k<cos.length;k++){if(cos[k].name.toLowerCase().indexOf(it.company.toLowerCase())>=0||it.company.toLowerCase().indexOf(cos[k].name.toLowerCase())>=0){co=cos[k];break;}}
+var it=items[j];if(!it.company||!it.trigger_type)continue;
+var co=null;var itLow=it.company.toLowerCase();
+for(var k=0;k<companyNames.length;k++){var cnLow=companyNames[k].toLowerCase();if(cnLow===itLow||cnLow.indexOf(itLow)>=0||itLow.indexOf(cnLow)>=0){co=companies[k];break;}}
 if(co){
-await fetch(S+'/rest/v1/triggers',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({company_id:co.id,trigger_type:it.trigger_type||'Sonstige',description:it.description||'',relevance_score:parseInt(it.relevance_score)||75})});
-found.push({company:it.company,trigger_type:it.trigger_type,description:it.description});
+await fetch(S+'/rest/v1/triggers',{method:'POST',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({company_id:co.id,trigger_type:it.trigger_type,description:it.description||'',relevance_score:Math.min(100,Math.max(0,parseInt(it.relevance_score)||75))})});
+found.push({company:it.company,trigger_type:it.trigger_type,description:it.description,source:s.name});
 }}
 await fetch(S+'/rest/v1/sources?id=eq.'+s.id,{method:'PATCH',headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json'},body:JSON.stringify({last_scanned_at:new Date().toISOString()})});
-}catch(e){console.error(e);}
-await new Promise(function(r){setTimeout(r,800);});
+}catch(e){console.error(s.name,e.message);}
+await new Promise(function(r){setTimeout(r,1000);});
 }
-show(found.length?'Fertig: '+found.length+' Ereignisse gefunden':'Fertig: Keine neuen Ereignisse','ok');
-if(found.length){var h='';for(var f=0;f<found.length;f++){h+='<div class="item"><div class="co">'+found[f].company+'</div><span class="ty">'+found[f].trigger_type+'</span><div class="de">'+found[f].description+'</div></div>';}document.getElementById('res').innerHTML=h;}
+show(found.length?'Fertig: '+found.length+' Ereignisse gefunden':'Fertig: Keine Treffer in deiner Zielliste','ok');
+if(found.length){var h='';for(var f=0;f<found.length;f++){h+='<div class="item"><div class="co">'+found[f].company+'</div><span class="ty">'+found[f].trigger_type+'</span><div class="de">'+found[f].description+'</div><div class="src">Quelle: '+found[f].source+'</div></div>';}document.getElementById('res').innerHTML=h;}
 }catch(e){show('Fehler: '+e.message,'err');}
 btn.disabled=false;btn.textContent='Erneut scannen';
 };
