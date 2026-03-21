@@ -19,114 +19,115 @@ button:disabled{background:#ccc;cursor:not-allowed}
 .co{font-weight:600;color:#0D2240;font-size:14px}
 .ty{font-size:11px;background:#0D2240;color:#fff;padding:2px 8px;border-radius:20px;display:inline-block;margin:4px 0}
 .de{font-size:12px;color:#444;margin-top:4px;line-height:1.5}
-.src{font-size:10px;color:#888;margin-top:4px}
 a.dl{display:block;text-align:center;margin-top:20px;font-size:12px;color:#185FA5}
 </style>
 </head>
 <body>
 <div class="card">
 <h1>HENRY Scan</h1>
-<p>Scannt aktuelle Wirtschaftsnachrichten aus DACH und CEE nach Führungswechseln, Funding und M&A – quer über alle relevanten Medien.</p>
+<p>Scannt aktuelle Wirtschaftsnachrichten aus DACH und CEE nach Führungswechseln, Funding und M&A. Timeout: 30 Sekunden.</p>
 <button id="btn" onclick="window.run()">Jetzt scannen</button>
 <div id="msg"></div>
 <div id="res"></div>
 <a class="dl" href="https://henry-signium.netlify.app" target="_blank">HENRY Dashboard öffnen</a>
 </div>
 <script>
-function show(t,c){var e=document.getElementById('msg');e.textContent=t;e.className=c;e.style.display='block';}
-
-window.run=async function(){
-var btn=document.getElementById('btn');
-btn.disabled=true;btn.textContent='Scannt...';
-document.getElementById('res').innerHTML='';
-show('Lade Unternehmensliste...','info');
-
 var S='https://ftdxhswcnghlmcagrsox.supabase.co';
 var SK='sb_publishable_c8YygosML2xrImmWCpI1rw_6j_pvCRA';
 var PK='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';
 
-try{
-var r2=await fetch(S+'/rest/v1/companies?select=id,name',{headers:{'apikey':SK,'Authorization':'Bearer '+SK}});
-var companies=await r2.json();
-var companyNames=companies.map(function(c){return c.name;});
+function show(t,c){var e=document.getElementById('msg');e.textContent=t;e.className=c;e.style.display='block';}
 
-var found=[];
+function fetchWithTimeout(url,opts,ms){
+  return Promise.race([
+    fetch(url,opts),
+    new Promise(function(_,rej){setTimeout(function(){rej(new Error('Timeout nach '+ms/1000+'s'));},ms);})
+  ]);
+}
 
-// Scan in 4 thematic rounds covering different event types and regions
-var queries=[
-  'Welche Fuehrungswechsel (CEO, CFO, CHRO, Geschaeftsfuehrer) gab es in den letzten 7 Tagen bei Unternehmen in Deutschland, Oesterreich und der Schweiz? Liste alle Ereignisse mit Firmenname, Position und Beschreibung.',
-  'Welche Aufsichtsratsveraenderungen (Neubestellung, Ruecktritt, Amtsverlaengerung) gab es in den letzten 7 Tagen bei Unternehmen in DACH und CEE? Liste alle Ereignisse.',
-  'Welche Finanzierungsrunden (Series A, B, C, Investitionen) und M&A-Transaktionen (Fusionen, Uebernahmen) wurden in den letzten 7 Tagen in DACH und CEE gemeldet? Liste alle Ereignisse.',
-  'Welche Unternehmen aus Polen, Tschechien, Ungarn, Rumaenien, der Slowakei hatten in den letzten 7 Tagen Fuehrungswechsel, Investitionen oder strategische Veraenderungen?'
-];
-
-for(var q=0;q<queries.length;q++){
-  show('Scanne Runde '+(q+1)+'/'+queries.length+'...','info');
+window.run=async function(){
+  var btn=document.getElementById('btn');
+  btn.disabled=true;btn.textContent='Scannt...';
+  document.getElementById('res').innerHTML='';
+  show('Lade Unternehmensliste...','info');
 
   try{
-    var pr=await fetch('https://api.perplexity.ai/chat/completions',{
+    // 1. Load companies
+    var r=await fetchWithTimeout(S+'/rest/v1/companies?select=id,name',
+      {headers:{'apikey':SK,'Authorization':'Bearer '+SK}},10000);
+    var companies=await r.json();
+    if(!Array.isArray(companies)||companies.length===0){show('Keine Unternehmen in der Datenbank gefunden.','err');btn.disabled=false;btn.textContent='Erneut scannen';return;}
+
+    show('Scanne Nachrichten (max. 30s)...','info');
+
+    // 2. Single broad Perplexity query
+    var prompt='Welche Fuehrungswechsel (CEO, CFO, COO, CHRO, Vorstand), Aufsichtsratsveraenderungen, Finanzierungsrunden oder M&A-Transaktionen gab es in den letzten 7 Tagen bei Unternehmen in Deutschland, Oesterreich, Schweiz, Polen, Tschechien, Ungarn und Rumaenien? Liste maximal 20 Ereignisse. Antworte NUR mit einem JSON-Array, kein anderer Text: [{"company":"Firmenname","trigger_type":"CEO-Wechsel","description":"Kurze Beschreibung"}]';
+
+    var pr=await fetchWithTimeout('https://api.perplexity.ai/chat/completions',{
       method:'POST',
       headers:{'Authorization':'Bearer '+PK,'Content-Type':'application/json'},
       body:JSON.stringify({
         model:'llama-3.1-sonar-small-128k-online',
-        max_tokens:2000,
+        max_tokens:1500,
         messages:[
-          {role:'system',content:'Du bist ein Wirtschaftsjournalist. Antworte NUR mit einem JSON-Array. Kein anderer Text. Kein Markdown.'},
-          {role:'user',content:queries[q]+' Antworte im Format: [{"company":"Firmenname","trigger_type":"CEO-Wechsel","description":"Was genau passiert ist","relevance_score":85}]. Nur echte aktuelle Ereignisse.'}
+          {role:'system',content:'Antworte ausschliesslich mit einem JSON-Array. Kein Markdown, kein Text davor oder danach.'},
+          {role:'user',content:prompt}
         ]
       })
-    });
+    },30000);
 
     var pd=await pr.json();
-    var txt=pd.choices&&pd.choices[0]&&pd.choices[0].message?pd.choices[0].message.content:'[]';
-    var items=[];
-    try{items=JSON.parse(txt.replace(/```json|```/g,'').trim());}catch(e){console.error('Parse error:',txt);}
+    var txt=(pd.choices&&pd.choices[0]&&pd.choices[0].message)?pd.choices[0].message.content:'[]';
 
+    var items=[];
+    try{
+      var clean=txt.replace(/```json|```/g,'').trim();
+      var start=clean.indexOf('[');var end=clean.lastIndexOf(']');
+      if(start>=0&&end>start)items=JSON.parse(clean.substring(start,end+1));
+    }catch(e){show('Perplexity hat kein gültiges JSON geliefert. Bitte erneut versuchen.','err');btn.disabled=false;btn.textContent='Erneut scannen';return;}
+
+    // 3. Match against company list and save
+    var found=[];
     for(var j=0;j<items.length;j++){
       var it=items[j];
       if(!it.company||!it.trigger_type)continue;
       var itLow=it.company.toLowerCase();
-
-      // Match against company list
       var co=null;
-      for(var k=0;k<companyNames.length;k++){
-        var cnLow=companyNames[k].toLowerCase();
-        if(cnLow===itLow||cnLow.indexOf(itLow)>=0||itLow.indexOf(cnLow)>=0){
-          co=companies[k];break;
-        }
+      for(var k=0;k<companies.length;k++){
+        var cnLow=companies[k].name.toLowerCase();
+        if(cnLow===itLow||cnLow.indexOf(itLow)>=0||itLow.indexOf(cnLow)>=0){co=companies[k];break;}
       }
-
       if(co){
         await fetch(S+'/rest/v1/triggers',{
           method:'POST',
           headers:{'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal'},
           body:JSON.stringify({
             company_id:co.id,
-            trigger_type:it.trigger_type||'Sonstige',
+            trigger_type:it.trigger_type,
             description:it.description||'',
-            relevance_score:Math.min(100,Math.max(0,parseInt(it.relevance_score)||75))
+            relevance_score:80
           })
         });
-        found.push({company:it.company,trigger_type:it.trigger_type,description:it.description});
+        found.push({company:it.company,trigger_type:it.trigger_type,description:it.description||''});
       }
     }
 
-  }catch(e){console.error('Query error:',e.message);}
-  await new Promise(function(r){setTimeout(r,1000);});
-}
+    // 4. Show results
+    if(found.length){
+      show('Fertig: '+found.length+' Treffer in Ihrer Zielliste gespeichert.','ok');
+      var h='';
+      for(var f=0;f<found.length;f++){
+        h+='<div class="item"><div class="co">'+found[f].company+'</div><span class="ty">'+found[f].trigger_type+'</span><div class="de">'+found[f].description+'</div></div>';
+      }
+      document.getElementById('res').innerHTML=h;
+    }else{
+      show('Scan abgeschlossen. Keine Treffer in Ihrer Zielliste — Perplexity hat '+items.length+' Ereignisse gefunden, keines matched Ihre '+companies.length+' Unternehmen.','ok');
+    }
 
-show(found.length?'Fertig: '+found.length+' Ereignisse in deiner Zielliste gefunden und gespeichert.':'Fertig: Keine Treffer in deiner Zielliste. Perplexity hat gescannt aber keine Matches gefunden.','ok');
-
-if(found.length){
-  var h='';
-  for(var f=0;f<found.length;f++){
-    h+='<div class="item"><div class="co">'+found[f].company+'</div><span class="ty">'+found[f].trigger_type+'</span><div class="de">'+found[f].description+'</div></div>';
+  }catch(e){
+    show('Fehler: '+e.message,'err');
   }
-  document.getElementById('res').innerHTML=h;
-}
-
-}catch(e){show('Fehler: '+e.message,'err');}
-btn.disabled=false;btn.textContent='Erneut scannen';
+  btn.disabled=false;btn.textContent='Erneut scannen';
 };
 </script>
 </body>
