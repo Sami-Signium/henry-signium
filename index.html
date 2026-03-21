@@ -6616,4 +6616,206 @@ loadAll();
 </script>
 
 
-</body></html>
+</body></html><div class="modal-overlay" id="modal-trigger">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Trigger hinzufügen</div><button class="btn btn-ghost btn-sm" onclick="closeModal('modal-trigger')">✕</button></div>
+    <div class="form-group"><label class="form-label">Unternehmen</label><input class="form-control" id="t-company"></div>
+    <div class="form-group"><label class="form-label">Trigger-Typ</label>
+      <select class="form-control" id="t-type">
+        <option>CEO-Wechsel</option><option>CFO-Wechsel</option><option>CHRO-Wechsel</option><option>Geschäftsführer-Wechsel</option><option>Neuer Vorstand</option><option>Aufsichtsrat-Bestellung</option><option>Aufsichtsrat-Rücktritt</option><option>Aufsichtsrat-Verlängerung</option><option>Funding</option><option>M&A / Fusion</option><option>IPO-Vorbereitung</option><option>DACH-Expansion</option><option>Expansion / Internationalisierung</option><option>Restrukturierung</option><option>Offene Führungsstellen</option><option>Sonstige</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Beschreibung</label><textarea class="form-control" id="t-desc" rows="3"></textarea></div>
+    <div class="form-group"><label class="form-label">Relevanz-Score (0–100)</label><input class="form-control" id="t-score" type="number" value="75"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn" onclick="closeModal('modal-trigger')">Abbrechen</button><button class="btn btn-primary" onclick="saveTrigger()">Speichern</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-company">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Unternehmen hinzufügen</div><button class="btn btn-ghost btn-sm" onclick="closeModal('modal-company')">✕</button></div>
+    <div class="form-group"><label class="form-label">Name *</label><input class="form-control" id="c-name"></div>
+    <div class="form-group"><label class="form-label">Branche</label><input class="form-control" id="c-industry"></div>
+    <div class="form-group"><label class="form-label">HQ / Region</label><input class="form-control" id="c-hq"></div>
+    <div class="form-group"><label class="form-label">CEE Länder</label><input class="form-control" id="c-cee"></div>
+    <div class="form-group"><label class="form-label">Priorität</label><select class="form-control" id="c-priority"><option value="">– keine –</option><option>Hoch</option><option>Mittel</option><option>Niedrig</option></select></div>
+    <div class="form-group"><label class="form-label">Quelle</label><select class="form-control" id="c-source"><option>CEE HQs Austria</option><option>Consulting</option><option>Packaging</option><option>Construction Materials</option><option>Manuell</option><option>Apollo</option></select></div>
+    <div class="form-group"><label class="form-label">Notizen</label><textarea class="form-control" id="c-notes" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn" onclick="closeModal('modal-company')">Abbrechen</button><button class="btn btn-primary" onclick="saveCompany()">Speichern</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-contact">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Kontakt hinzufügen</div><button class="btn btn-ghost btn-sm" onclick="closeModal('modal-contact')">✕</button></div>
+    <div class="form-group"><label class="form-label">Name *</label><input class="form-control" id="ct-name"></div>
+    <div class="form-group"><label class="form-label">Rolle</label><input class="form-control" id="ct-role"></div>
+    <div class="form-group"><label class="form-label">E-Mail</label><input class="form-control" id="ct-email" type="email"></div>
+    <div class="form-group"><label class="form-label">LinkedIn URL</label><input class="form-control" id="ct-linkedin"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button class="btn" onclick="closeModal('modal-contact')">Abbrechen</button><button class="btn btn-primary" onclick="saveContact()">Speichern</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL='https://ftdxhswcnghlmcagrsox.supabase.co';
+const SUPABASE_KEY='sb_publishable_c8YygosML2xrImmWCpI1rw_6j_pvCRA';
+const {createClient}=supabase;
+const db=createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let allCompanies=[],allContacts=[],allTriggers=[],allOutreach=[],currentPitchText='';
+
+const panelTitles={
+  dashboard:['Dashboard','Übersicht · Signium Austria'],
+  triggers:['Trigger-Ereignisse','Erkannte Anlässe'],
+  companies:['Zielunternehmen','Alle Unternehmen'],
+  contacts:['Kontakte','Alle Ansprechpartner'],
+  compose:['HENRY Pitch Generator','KI-gestützte Nachrichten'],
+  outreach:['Outreach-Log','Alle Pitches'],
+  settings:['Einstellungen','Konfiguration'],
+};
+
+function showPanel(name){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const panel=document.getElementById('panel-'+name);
+  if(panel)panel.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')?.includes("'"+name+"'"))n.classList.add('active');});
+  const t=panelTitles[name]||[name,''];
+  document.getElementById('topbar-title').textContent=t[0];
+  document.getElementById('topbar-sub').textContent=t[1];
+}
+
+async function loadAll(){
+  await Promise.all([loadCompanies(),loadContacts(),loadTriggers(),loadOutreach(),checkDb()]);
+  updateStats();
+  renderDashboardTriggers();
+}
+
+async function loadCompanies(){const{data}=await db.from('companies').select('*').order('created_at',{ascending:false});if(data){allCompanies=data;renderCompanies();}}
+async function loadContacts(){const{data}=await db.from('contacts').select('*,companies(name)').order('created_at',{ascending:false});if(data){allContacts=data;renderContacts();}}
+async function loadTriggers(){const{data}=await db.from('triggers').select('*,companies(name)').order('created_at',{ascending:false});if(data){allTriggers=data;renderTriggers();}}
+async function loadOutreach(){const{data}=await db.from('outreach').select('*,companies(name)').order('created_at',{ascending:false});if(data){allOutreach=data;renderOutreach();}}
+
+async function checkDb(){
+  const el=document.getElementById('db-status');
+  try{const{error}=await db.from('companies').select('id').limit(1);el.textContent=error?'Fehler':'● Verbunden';el.className=error?'badge badge-danger':'badge badge-success';}
+  catch{el.textContent='Fehler';el.className='badge badge-danger';}
+}
+
+function updateStats(){
+  document.getElementById('stat-companies').textContent=allCompanies.length;
+  document.getElementById('stat-contacts').textContent=allContacts.length;
+  document.getElementById('stat-triggers').textContent=allTriggers.length;
+  document.getElementById('stat-outreach').textContent=allOutreach.length;
+}
+
+function priorityBadge(p){if(!p)return'<span class="badge badge-gray">–</span>';const m={Hoch:'badge-danger',Mittel:'badge-warning',Niedrig:'badge-success'};return`<span class="badge ${m[p]||'badge-gray'}">${p}</span>`;}
+function sourceBadge(s){const m={'CEE HQs Austria':'badge-info','Consulting':'badge-success','Packaging':'badge-warning','Construction Materials':'badge-gold'};return`<span class="badge ${m[s]||'badge-gray'}">${s||'–'}</span>`;}
+function statusBadge(s){const m={Entwurf:'badge-gray',Freigegeben:'badge-info',Gesendet:'badge-navy',Geantwortet:'badge-success'};return`<span class="badge ${m[s]||'badge-gray'}">${s}</span>`;}
+const aC=['#E6F1FB','#EAF3DE','#FAEEDA','#FBEAF0'];
+const aT=['#0C447C','#27500A','#633806','#4B1528'];
+function initials(n){if(!n)return'?';return n.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase();}
+
+function renderDashboardTriggers(){
+  const tbody=document.getElementById('dashboard-triggers-tbody');
+  const slice=allTriggers.slice(0,8);
+  if(!slice.length){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><div class="es-title">Noch keine Trigger</div><div class="es-sub">Scan starten unter henry-signium.netlify.app/scan.html</div></div></td></tr>';return;}
+  const typeMap={'CEO-Wechsel':'badge-danger','CFO-Wechsel':'badge-danger','Funding':'badge-success','M&A / Fusion':'badge-warning','DACH-Expansion':'badge-info','Aufsichtsrat-Bestellung':'badge-navy','Aufsichtsrat-Rücktritt':'badge-danger','Aufsichtsrat-Verlängerung':'badge-info'};
+  tbody.innerHTML=slice.map(t=>`<tr><td><strong>${t.companies?.name||'–'}</strong></td><td><span class="badge ${typeMap[t.trigger_type]||'badge-gray'}">${t.trigger_type}</span></td><td style="font-size:11px;color:#5F5E5A;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.description||'–'}</td><td><span class="badge badge-gray">${t.relevance_score||'–'}</span></td><td><button class="btn btn-sm" onclick="showPanel('compose');document.getElementById('pitch-company').value='${(t.companies?.name||'').replace(/'/g,"\\'")}';document.getElementById('pitch-context').value='${(t.description||'').replace(/'/g,"\\'")}'" >Pitch →</button></td></tr>`).join('');
+}
+
+function renderTriggers(){
+  const el=document.getElementById('triggers-list');
+  if(!allTriggers.length){el.innerHTML='<div class="empty-state"><div class="es-icon">⚡</div><div class="es-title">Noch keine Trigger-Ereignisse</div><div class="es-sub">Scan starten auf /scan.html oder manuell hinzufügen.</div><br><button class="btn btn-primary" onclick="openModal(\'modal-trigger\')">+ Hinzufügen</button></div>';return;}
+  const typeMap={'CEO-Wechsel':'badge-danger','CFO-Wechsel':'badge-danger','CHRO-Wechsel':'badge-warning','Funding':'badge-success','M&A / Fusion':'badge-warning','DACH-Expansion':'badge-info','Aufsichtsrat-Bestellung':'badge-navy','Aufsichtsrat-Rücktritt':'badge-danger','Aufsichtsrat-Verlängerung':'badge-info'};
+  el.innerHTML='<div class="trigger-list">'+allTriggers.map(t=>{const score=t.relevance_score||0;const dt=t.created_at?new Date(t.created_at).toLocaleDateString('de-AT'):'';return`<div class="trigger-card ${score>=80?'high':''}" onclick="showPanel('compose');document.getElementById('pitch-company').value='${(t.companies?.name||'').replace(/'/g,"\\'")}';document.getElementById('pitch-context').value='${(t.description||'').replace(/'/g,"\\'")}'" ><div class="trigger-header"><span class="badge ${typeMap[t.trigger_type]||'badge-gray'}">${t.trigger_type}</span><span class="trigger-company">${t.companies?.name||'–'}</span><span class="trigger-time">${dt}</span></div><div class="trigger-desc">${t.description||''}</div><div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:10px;color:#5F5E5A">Score</span><div class="score-bar"><div class="score-fill" style="width:${score}%"></div></div><span style="font-size:10px;font-weight:600;color:#0D2240">${score}</span></div></div>`;}).join('')+'</div>';}
+
+function renderCompanies(data){
+  const list=data||allCompanies;
+  document.getElementById('companies-count-sub').textContent=`${list.length} Unternehmen`;
+  const tbody=document.getElementById('companies-tbody');
+  if(!list.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty-state"><div class="es-title">Keine Unternehmen</div></div></td></tr>';return;}
+  tbody.innerHTML=list.map(c=>`<tr><td><strong>${c.name}</strong></td><td>${c.industry||'–'}</td><td>${c.hq_region||'–'}</td><td>${priorityBadge(c.priority)}</td><td>${sourceBadge(c.source)}</td><td><button class="btn btn-sm" onclick="showPanel('compose');document.getElementById('pitch-company').value='${c.name.replace(/'/g,"\\'")}'"  title="Pitch">✦</button> <button class="btn btn-sm btn-ghost" onclick="deleteCompany('${c.id}')" title="Löschen">✕</button></td></tr>`).join('');}
+
+function renderContacts(data){
+  const list=data||allContacts;
+  document.getElementById('contacts-count-sub').textContent=`${list.length} Kontakte`;
+  const tbody=document.getElementById('contacts-tbody');
+  if(!list.length){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><div class="es-title">Keine Kontakte</div></div></td></tr>';return;}
+  tbody.innerHTML=list.map((c,i)=>{const ci=i%aC.length;return`<tr><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="background:${aC[ci]};color:${aT[ci]}">${initials(c.full_name)}</div><div><div style="font-weight:500">${c.full_name}</div><div style="font-size:10px;color:#5F5E5A">${c.role||''}</div></div></div></td><td>${c.role||'–'}</td><td>${c.companies?.name||'–'}</td><td style="font-size:11px">${c.email?`<a href="mailto:${c.email}" style="color:#185FA5">${c.email}</a>`:'–'}</td><td><button class="btn btn-sm" onclick="showPanel('compose');document.getElementById('pitch-contact').value='${(c.full_name+(c.role?' – '+c.role:'')).replace(/'/g,"\\'")}'" >✦</button> <button class="btn btn-sm btn-ghost" onclick="deleteContact('${c.id}')">✕</button></td></tr>`;}).join('');}
+
+function renderOutreach(){
+  const tbody=document.getElementById('outreach-tbody');
+  if(!allOutreach.length){tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><div class="es-icon">◷</div><div class="es-title">Noch keine Aktivitäten</div></div></td></tr>';return;}
+  tbody.innerHTML=allOutreach.map(o=>`<tr><td>${o.companies?.name||'–'}</td><td><span class="badge badge-gray">${o.channel}</span></td><td>${statusBadge(o.status)}</td><td style="font-size:11px;color:#5F5E5A">${o.created_at?new Date(o.created_at).toLocaleDateString('de-AT'):'–'}</td><td><button class="btn btn-sm" onclick="viewPitch('${o.id}')">Ansehen</button></td></tr>`).join('');}
+
+function filterCompanies(){const q=document.getElementById('company-search').value.toLowerCase();const src=document.getElementById('company-source-filter').value;renderCompanies(allCompanies.filter(c=>(!q||c.name?.toLowerCase().includes(q)||c.industry?.toLowerCase().includes(q))&&(!src||c.source===src)));}
+function filterContacts(){const q=document.getElementById('contact-search').value.toLowerCase();renderContacts(allContacts.filter(c=>!q||c.full_name?.toLowerCase().includes(q)||c.role?.toLowerCase().includes(q)));}
+
+async function generatePitch(){
+  const trigger=document.getElementById('pitch-trigger').value;
+  const company=document.getElementById('pitch-company').value||'das Zielunternehmen';
+  const contact=document.getElementById('pitch-contact').value||'';
+  const context=document.getElementById('pitch-context').value||'';
+  const lang=document.getElementById('pitch-lang').value;
+  const labels={ceo:'CEO-Nachfolge',gf:'Geschäftsführer-Wechsel',cfo:'CFO-Wechsel',vorstand:'Neuer Vorstand',ar:'Aufsichtsrat-Bestellung / Verlängerung',funding:'Funding-Runde',merger:'M&A / Fusion',ipo:'IPO-Vorbereitung',expansion:'DACH-Expansion',reorg:'Restrukturierung'};
+  const pitchBody=document.getElementById('pitch-body');
+  const pitchActions=document.getElementById('pitch-actions');
+  pitchBody.innerHTML='<div class="loading"><div class="spinner"></div> HENRY generiert Pitch...</div>';
+  pitchActions.style.display='none';
+  const prompt=`Du bist Dr. Sami Hamid, Managing Partner bei Signium Austria (globales Executive Search, 40+ Länder).\n\nSchreibe einen professionellen Outreach-Pitch:\nTrigger: ${labels[trigger]}\nUnternehmen: ${company}\n${contact?'Ansprechpartner: '+contact:''}\n${context?'Kontext: '+context:''}\nSprache: ${lang==='de'?'Deutsch':'Englisch'}\n\nDer Pitch soll:\n- Mit Betreffzeile beginnen\n- 4 Absätze sein\n- Das Ereignis als Aufhänger nutzen\n- Signiums Expertise einbringen (Referenz: "ein österreichischer Konzern")\n- Mit Call-to-Action enden (30-min Austausch)\n- Förmlich aber persönlich\n\nNur die E-Mail, keine Erklärungen.`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const d=await r.json();
+    const text=d.content?.find(b=>b.type==='text')?.text;
+    if(text){currentPitchText=text;pitchBody.innerHTML=`<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.8">${text}</div>`;pitchActions.style.display='flex';document.getElementById('pitch-meta').textContent=`${labels[trigger]} · ${company} · ${new Date().toLocaleDateString('de-AT')}`;}
+    else throw new Error('Keine Antwort');
+  }catch(e){pitchBody.innerHTML='<div style="color:#a32d2d;padding:20px;font-size:12px">Fehler beim Generieren.</div>';}
+}
+
+function copyPitch(){navigator.clipboard.writeText(currentPitchText).then(()=>showToast('Kopiert ✓'));}
+async function savePitch(){if(!currentPitchText)return;const company=document.getElementById('pitch-company').value;const comp=allCompanies.find(c=>c.name.toLowerCase()===company.toLowerCase());const{error}=await db.from('outreach').insert({company_id:comp?.id||null,channel:'Email',body:currentPitchText,generated_by:'HENRY',status:'Entwurf'});if(!error){showToast('Entwurf gespeichert ✓',true);loadOutreach();}else showToast('Fehler');}
+async function approvePitch(){if(!currentPitchText)return;const company=document.getElementById('pitch-company').value;const comp=allCompanies.find(c=>c.name.toLowerCase()===company.toLowerCase());const{error}=await db.from('outreach').insert({company_id:comp?.id||null,channel:'Email',body:currentPitchText,generated_by:'HENRY',status:'Freigegeben',approved_by:'Dr. Sami Hamid',approved_at:new Date().toISOString()});if(!error){showToast('Pitch freigegeben ✓',true);loadOutreach();};}
+function viewPitch(id){const o=allOutreach.find(x=>x.id===id);if(!o)return;currentPitchText=o.body;showPanel('compose');document.getElementById('pitch-body').innerHTML=`<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.8">${o.body}</div>`;document.getElementById('pitch-actions').style.display='flex';}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+async function saveTrigger(){
+  const compName=document.getElementById('t-company').value.trim();
+  if(!compName)return;
+  let compId=null;
+  const match=allCompanies.find(c=>c.name.toLowerCase()===compName.toLowerCase());
+  if(match){compId=match.id;}else{const{data}=await db.from('companies').insert({name:compName,source:'Manuell'}).select().single();if(data){compId=data.id;allCompanies.push(data);}}
+  const{error}=await db.from('triggers').insert({company_id:compId,trigger_type:document.getElementById('t-type').value,description:document.getElementById('t-desc').value,relevance_score:parseInt(document.getElementById('t-score').value)||75});
+  if(!error){showToast('Trigger gespeichert ✓',true);closeModal('modal-trigger');loadTriggers();}
+}
+
+async function saveCompany(){
+  const name=document.getElementById('c-name').value.trim();
+  if(!name)return;
+  const{error}=await db.from('companies').insert({name,industry:document.getElementById('c-industry').value,hq_region:document.getElementById('c-hq').value,cee_countries:document.getElementById('c-cee').value,priority:document.getElementById('c-priority').value||null,source:document.getElementById('c-source').value,notes:document.getElementById('c-notes').value});
+  if(!error){showToast('Unternehmen gespeichert ✓',true);closeModal('modal-company');loadCompanies();}else showToast('Fehler: '+error.message);
+}
+
+async function saveContact(){
+  const name=document.getElementById('ct-name').value.trim();
+  if(!name)return;
+  const{error}=await db.from('contacts').insert({full_name:name,role:document.getElementById('ct-role').value,email:document.getElementById('ct-email').value,linkedin_url:document.getElementById('ct-linkedin').value,source:'manual'});
+  if(!error){showToast('Kontakt gespeichert ✓',true);closeModal('modal-contact');loadContacts();}
+}
+
+async function deleteCompany(id){if(!confirm('Löschen?'))return;await db.from('companies').delete().eq('id',id);showToast('Gelöscht');loadCompanies();}
+async function deleteContact(id){if(!confirm('Löschen?'))return;await db.from('contacts').delete().eq('id',id);showToast('Gelöscht');loadContacts();}
+function refreshData(){loadAll();showToast('Aktualisiert ✓',true);}
+
+function showToast(msg,success){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(success?' success':'');setTimeout(()=>t.className='toast',3000);}
+
+document.querySelectorAll('.modal-overlay').forEach(o=>{o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');});});
+
+loadAll();
+</script>
+</body>
+</html>
