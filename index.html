@@ -648,7 +648,7 @@ async function startScan() {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + PK, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'sonar',
+        model: 'sonar-pro',
         max_tokens: 2000,
         messages: [
           { role: 'system', content: 'You are a business news analyst. Reply ONLY with a JSON array, no other text, no markdown.' },
