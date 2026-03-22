@@ -321,7 +321,7 @@ tbody td{padding:10px 14px;font-size:12px;color:var(--text);vertical-align:middl
         <h3 style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--gray-100)">HENRY Konfiguration</h3>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Absender</span><span style="font-size:11px;color:var(--text-muted)">sami.hamid@signium.com</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Supabase</span><span class="badge badge-success" id="db-status">● Verbunden</span></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Perplexity Modell</span><span style="font-size:11px;color:var(--text-muted)">sonar</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Scan Engine</span><span style="font-size:11px;color:var(--text-muted)">Claude Web Search</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0"><span style="font-size:12px;font-weight:500">Kontaktdaten</span><span style="font-size:11px;color:var(--text-muted)">Apollo.io</span></div>
       </div>
     </div>
@@ -642,39 +642,40 @@ async function startScan() {
       return;
     }
 
-    setScanMsg('Frage Perplexity (max. 30s)...', 'info');
+    setScanMsg('Scanne mit Claude Web-Suche (max. 45s)...', 'info');
 
-    const pr = await fetchWithTimeout('https://api.perplexity.ai/chat/completions', {
+    const pr = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + PK, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'sonar-pro',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
-        messages: [
-          { role: 'system', content: 'You are a business news analyst. Reply ONLY with a JSON array, no other text, no markdown.' },
-          { role: 'user', content: 'Search the web for recent news from the last 7 days about executive changes, CEO appointments, CFO changes, board changes, funding rounds, mergers and acquisitions at companies in Germany, Austria, Switzerland, Poland, Czech Republic, Hungary and Romania. Find real, specific events with company names. Return ONLY a JSON array with no other text: [{"company":"Actual Company Name","trigger_type":"CEO Change","description":"Specific description of what happened"}]. Include at least 10 events if possible. Do not return an empty array.' }
-        ]
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{
+          role: 'user',
+          content: 'Search the web for real business news from the last 7 days: executive changes (CEO, CFO, CHRO, board appointments/resignations), funding rounds, M&A deals at companies in Germany, Austria, Switzerland, Poland, Czech Republic, Hungary, Romania. Find at least 10 specific real events. Reply ONLY with a JSON array, no other text: [{"company":"Company Name","trigger_type":"CEO Change","description":"What happened specifically"}]'
+        }]
       })
-    }, 30000);
+    }, 45000);
 
     const pd = await pr.json();
     let txt = '';
-    if (pd.choices && pd.choices[0] && pd.choices[0].message) {
-      txt = pd.choices[0].message.content || '';
+    const textBlock = pd.content ? pd.content.find(function(b){ return b.type === 'text'; }) : null;
+    if (textBlock) {
+      txt = textBlock.text || '';
     } else {
-      rawEl.textContent = 'PERPLEXITY RESPONSE:\n\n' + JSON.stringify(pd, null, 2);
+      rawEl.textContent = 'CLAUDE RESPONSE:\n\n' + JSON.stringify(pd, null, 2);
       rawEl.style.display = 'block';
-      setScanMsg('Perplexity hat keine gültige Antwort geliefert.', 'err');
+      setScanMsg('Claude hat keine gültige Antwort geliefert.', 'err');
       btn.disabled = false; btn.textContent = '⚡ Jetzt scannen';
       return;
     }
 
     // Show raw response
-    rawEl.textContent = 'PERPLEXITY ANTWORT:\n\n' + txt;
+    rawEl.textContent = 'CLAUDE ANTWORT:\n\n' + txt;
     rawEl.style.display = 'block';
 
-    // Parse JSON
-    let items = [];
+    // Parse JSON;
     try {
       const clean = txt.replace(/```json|```/g, '').trim();
       const start = clean.indexOf('[');
@@ -687,7 +688,7 @@ async function startScan() {
     }
 
     if (!items.length) {
-      setScanMsg('Perplexity hat 0 Ereignisse geliefert. Siehe Rohtext oben.', 'err');
+      setScanMsg('Claude hat 0 Ereignisse geliefert. Siehe Rohtext oben.', 'err');
       btn.disabled = false; btn.textContent = '⚡ Jetzt scannen';
       return;
     }
@@ -729,8 +730,8 @@ async function startScan() {
         </div>`
       ).join('') + '</div>';
     } else {
-      setScanMsg('Perplexity fand ' + items.length + ' Ereignisse — kein Match mit Ihren ' + companies.length + ' Zielunternehmen. Marktbeobachtung aktiv.', 'ok');
-      resList.innerHTML = '<div class="empty-state"><div class="es-icon">✓</div><div class="es-title">Keine Matches heute</div><div class="es-sub">Perplexity fand ' + items.length + ' Ereignisse, keines trifft Ihre Zielliste.<br>Scan läuft täglich automatisch um 03:00.</div></div>';
+      setScanMsg('Claude fand ' + items.length + ' Ereignisse — kein Match mit Ihren ' + companies.length + ' Zielunternehmen. Marktbeobachtung aktiv.', 'ok');
+      resList.innerHTML = '<div class="empty-state"><div class="es-icon">✓</div><div class="es-title">Keine Matches heute</div><div class="es-sub">Claude fand ' + items.length + ' Ereignisse, keines trifft Ihre Zielliste.<br>Scan läuft täglich automatisch um 03:00.</div></div>';
     }
 
     if (subEl) subEl.textContent = items.length + ' Events · ' + found.length + ' Matches · ' + new Date().toLocaleString('de-AT');
