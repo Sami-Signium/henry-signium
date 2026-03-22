@@ -2,7 +2,6 @@ import { schedule } from "@netlify/functions";
 
 const SURL = "https://ftdxhswcnghlmcagrsox.supabase.co";
 const SK = "sb_publishable_c8YygosML2xrImmWCpI1rw_6j_pvCRA";
-const PK = process.env.PERPLEXITY_API_KEY;
 
 async function sbGet(path) {
   const r = await fetch(SURL+"/rest/v1/"+path, {
@@ -19,30 +18,77 @@ async function sbPost(body) {
   });
 }
 
-const handler = schedule("0 3 * * *", async () => {
+const handler = schedule("0 7 * * *", async () => {
   const companies = await sbGet("companies?select=id,name");
   if (!companies.length) return { statusCode: 200 };
 
   let found = 0;
 
   try {
-    const r = await fetch("https://api.perplexity.ai/chat/completions", {
+    // First call — Claude initiates web search
+    const headers = {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "anthropic-beta": "web-search-2025-03-05"
+    };
+
+    const messages = [{
+      role: "user",
+      content: "Search the web for real business news from the last 24 hours: CEO, CFO, CHRO changes, board appointments, funding rounds, M&A deals at companies in Germany, Austria, Switzerland, Poland, Romania, Czech Republic, Hungary. Find at least 15 specific events. Reply ONLY with a JSON array: [{\"company\":\"Name\",\"trigger_type\":\"CEO Change\",\"description\":\"What happened\"}]"
+    }];
+
+    let response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: { "Authorization": "Bearer "+PK, "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
-        model: "sonar",
+        model: "claude-haiku-4-5-20251001",
         max_tokens: 2000,
-        messages: [
-          { role: "system", content: "You are a business news analyst. Reply ONLY with a JSON array, no other text." },
-          { role: "user", content: "Find 15 real business news from the last 7 days: CEO/CFO/board changes, funding rounds, M&A deals at companies in Germany, Austria, Switzerland, Poland, Romania, Czech Republic, Hungary. Return ONLY JSON array: [{\"company\":\"Name\",\"trigger_type\":\"CEO Change\",\"description\":\"What happened\"}]" }
-        ]
+        tools: [{ type: "web_search_20250305", name: "web_search" }],
+        messages
       })
     });
 
-    const d = await r.json();
-    const txt = d.choices?.[0]?.message?.content || "[]";
+    let data = await response.json();
+
+    // If Claude used web search, continue the conversation
+    while (data.stop_reason === "tool_use") {
+      messages.push({ role: "assistant", content: data.content });
+      
+      const toolResults = data.content
+        .filter(b => b.type === "server_tool_use")
+        .map(b => ({
+          type: "tool_result",
+          tool_use_id: b.id,
+          content: "Search completed"
+        }));
+
+      messages.push({ role: "user", content: toolResults });
+
+      response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 2000,
+          tools: [{ type: "web_search_20250305", name: "web_search" }],
+          messages
+        })
+      });
+
+      data = await response.json();
+    }
+
+    const textBlock = data.content?.find(b => b.type === "text");
+    const txt = textBlock?.text || "[]";
+    
     let items = [];
-    try { items = JSON.parse(txt.replace(/```json|```/g,"").trim()); } catch(e) {}
+    try {
+      const clean = txt.replace(/```json|```/g, "").trim();
+      const start = clean.indexOf("[");
+      const end = clean.lastIndexOf("]");
+      if (start >= 0 && end > start) items = JSON.parse(clean.substring(start, end + 1));
+    } catch(e) {}
 
     for (const item of items) {
       if (!item.company) continue;
@@ -64,7 +110,7 @@ const handler = schedule("0 3 * * *", async () => {
     console.error("HENRY nightly scan error:", e.message);
   }
 
-  console.log("HENRY nightly scan done. Matches found: "+found);
+  console.log("HENRY morning scan done. Matches found: "+found);
   return { statusCode: 200, body: JSON.stringify({ found }) };
 });
 
