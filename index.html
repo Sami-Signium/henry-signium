@@ -117,12 +117,17 @@ tbody td{padding:10px 14px;font-size:12px;color:var(--text);vertical-align:middl
 .filter-bar input{flex:1}
 .filter-bar input:focus,.filter-bar select:focus{outline:none;border-color:var(--navy)}
 .avatar{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
-/* SCAN PANEL */
 .scan-msg{padding:12px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
 .scan-msg.info{background:var(--info-bg);color:var(--info)}
 .scan-msg.ok{background:var(--success-bg);color:var(--success)}
 .scan-msg.err{background:var(--danger-bg);color:var(--danger)}
-.scan-raw{background:#f0f0f0;padding:12px;border-radius:8px;font-size:11px;color:#333;white-space:pre-wrap;word-break:break-all;margin-bottom:16px;max-height:200px;overflow-y:auto;display:none}
+/* API Key Setup */
+.api-setup{background:#fff;border:2px solid var(--gold);border-radius:var(--radius-lg);padding:20px;margin-bottom:20px;display:none}
+.api-setup.visible{display:block}
+.api-setup h3{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:8px}
+.api-setup p{font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6}
+.api-input-row{display:flex;gap:8px}
+.api-input-row input{flex:1;padding:8px 10px;font-size:12px;font-family:'Montserrat',sans-serif;border:1px solid var(--gray-200);border-radius:var(--radius)}
 </style>
 </head>
 <body>
@@ -205,7 +210,6 @@ tbody td{padding:10px 14px;font-size:12px;color:var(--text);vertical-align:middl
         <button class="btn btn-gold" id="scan-btn-main" onclick="startScan()">⚡ Jetzt scannen</button>
       </div>
       <div id="scan-msg" class="scan-msg"></div>
-      <div id="scan-raw" class="scan-raw"></div>
       <div id="scan-results">
         <div class="empty-state">
           <div class="es-icon">⚡</div>
@@ -321,8 +325,17 @@ tbody td{padding:10px 14px;font-size:12px;color:var(--text);vertical-align:middl
         <h3 style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--gray-100)">HENRY Konfiguration</h3>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Absender</span><span style="font-size:11px;color:var(--text-muted)">sami.hamid@signium.com</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Supabase</span><span class="badge badge-success" id="db-status">● Verbunden</span></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Scan Engine</span><span style="font-size:11px;color:var(--text-muted)">Claude Web Search</span></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0"><span style="font-size:12px;font-weight:500">Kontaktdaten</span><span style="font-size:11px;color:var(--text-muted)">Apollo.io</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Scan Engine</span><span style="font-size:11px;color:var(--text-muted)">Claude Web Search (direkt)</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Anthropic API Key</span><span class="badge" id="api-key-status">● Nicht gesetzt</span></div>
+        <div style="margin-top:16px">
+          <div class="form-label" style="margin-bottom:6px">Anthropic API Key eingeben</div>
+          <div class="api-input-row">
+            <input type="password" id="settings-api-key" class="form-control" placeholder="sk-ant-...">
+            <button class="btn btn-primary btn-sm" onclick="saveApiKey()">Speichern</button>
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:6px">Wird nur lokal in Ihrem Browser gespeichert. Nie an Dritte übermittelt.</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;margin-top:8px"><span style="font-size:12px;font-weight:500">Kontaktdaten</span><span style="font-size:11px;color:var(--text-muted)">Apollo.io</span></div>
       </div>
     </div>
 
@@ -386,12 +399,32 @@ tbody td{padding:10px 14px;font-size:12px;color:var(--text);vertical-align:middl
 <script>
 const SU = 'https://ftdxhswcnghlmcagrsox.supabase.co';
 const SK = 'sb_publishable_c8YygosML2xrImmWCpI1rw_6j_pvCRA';
-const PK = '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';
 const { createClient } = supabase;
 const db = createClient(SU, SK);
 
 let allCompanies = [], allContacts = [], allTriggers = [], allOutreach = [];
 let currentPitchText = '';
+
+// API Key management - stored in localStorage
+function getApiKey() { return localStorage.getItem('henry_anthropic_key') || ''; }
+function saveApiKey() {
+  const key = document.getElementById('settings-api-key').value.trim();
+  if (!key.startsWith('sk-ant-')) { showToast('Ungültiger Key — muss mit sk-ant- beginnen'); return; }
+  localStorage.setItem('henry_anthropic_key', key);
+  updateApiKeyStatus();
+  showToast('API Key gespeichert ✓', true);
+}
+function updateApiKeyStatus() {
+  const key = getApiKey();
+  const el = document.getElementById('api-key-status');
+  if (key) {
+    el.textContent = '● Aktiv';
+    el.className = 'badge badge-success';
+  } else {
+    el.textContent = '● Nicht gesetzt';
+    el.className = 'badge badge-danger';
+  }
+}
 
 const panelTitles = {
   dashboard: ['Dashboard', 'Übersicht · Signium Austria Lead Intelligence'],
@@ -430,11 +463,11 @@ document.querySelectorAll('.modal-overlay').forEach(o => {
   o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
 });
 
-// ---- LOAD ----
 async function loadAll() {
   await Promise.all([loadCompanies(), loadContacts(), loadTriggers(), loadOutreach(), checkDb()]);
   updateStats();
   renderDashboard();
+  updateApiKeyStatus();
 }
 
 async function loadCompanies() {
@@ -471,7 +504,6 @@ function updateStats() {
 
 function refreshData() { loadAll(); showToast('Aktualisiert ✓', true); }
 
-// ---- RENDER ----
 function priorityBadge(p) {
   if (!p) return '<span class="badge badge-gray">–</span>';
   const m = { Hoch: 'badge-danger', Mittel: 'badge-warning', Niedrig: 'badge-success' };
@@ -485,21 +517,21 @@ function statusBadge(s) {
   const m = { Entwurf: 'badge-gray', Freigegeben: 'badge-info', Gesendet: 'badge-navy', Geantwortet: 'badge-success' };
   return `<span class="badge ${m[s] || 'badge-gray'}">${s}</span>`;
 }
-const aC = ['#E6F1FB', '#EAF3DE', '#FAEEDA', '#FBEAF0', '#E1F5EE', '#FCEBEB'];
-const aT = ['#0C447C', '#27500A', '#633806', '#4B1528', '#04342C', '#501313'];
-function initials(n) { if (!n) return '?'; return n.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase(); }
-const typeMap = { 'CEO-Wechsel': 'badge-danger', 'CFO-Wechsel': 'badge-danger', 'CHRO-Wechsel': 'badge-warning', 'Funding': 'badge-success', 'M&A / Fusion': 'badge-warning', 'DACH-Expansion': 'badge-info', 'Aufsichtsrat-Bestellung': 'badge-navy', 'Aufsichtsrat-Rücktritt': 'badge-danger', 'CEO Change': 'badge-danger', 'CFO Change': 'badge-danger', 'CFO Appointment': 'badge-danger', 'CEO Resignation': 'badge-warning', 'Board Appointment': 'badge-navy' };
+const aC = ['#E6F1FB','#EAF3DE','#FAEEDA','#FBEAF0','#E1F5EE','#FCEBEB'];
+const aT = ['#0C447C','#27500A','#633806','#4B1528','#04342C','#501313'];
+function initials(n) { if (!n) return '?'; return n.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+const typeMap = { 'CEO-Wechsel':'badge-danger','CFO-Wechsel':'badge-danger','CHRO-Wechsel':'badge-warning','Funding':'badge-success','M&A / Fusion':'badge-warning','DACH-Expansion':'badge-info','Aufsichtsrat-Bestellung':'badge-navy','Aufsichtsrat-Rücktritt':'badge-danger','CEO Change':'badge-danger','CFO Change':'badge-danger','CFO Appointment':'badge-danger','CEO Resignation':'badge-warning','Board Appointment':'badge-navy','Funding Round':'badge-success','M&A':'badge-warning','Executive Change':'badge-danger' };
 
 function renderDashboard() {
   const el = document.getElementById('dashboard-triggers');
-  const slice = allTriggers.slice(0, 6);
+  const slice = allTriggers.slice(0,6);
   if (!slice.length) {
     el.innerHTML = '<div class="empty-state"><div class="es-icon">⚡</div><div class="es-title">Noch keine Trigger</div><div class="es-sub">Scan starten um Ereignisse zu erkennen.</div><br><button class="btn btn-primary" onclick="showPanel(\'scan\')">⚡ Scan starten</button></div>';
     return;
   }
-  el.innerHTML = '<div class="trigger-list">' + slice.map(t => {
+  el.innerHTML = '<div class="trigger-list">'+slice.map(t=>{
     const dt = t.created_at ? new Date(t.created_at).toLocaleDateString('de-AT') : '';
-    return `<div class="trigger-card ${(t.relevance_score||0) >= 80 ? 'high' : ''}" onclick="showPanel('compose');document.getElementById('pitch-company').value='${(t.companies?.name||'').replace(/'/g,"\\'")}';document.getElementById('pitch-context').value='${(t.description||'').replace(/'/g,"\\'")}'">
+    return `<div class="trigger-card ${(t.relevance_score||0)>=80?'high':''}" onclick="showPanel('compose');document.getElementById('pitch-company').value='${(t.companies?.name||'').replace(/'/g,"\\'")}';document.getElementById('pitch-context').value='${(t.description||'').replace(/'/g,"\\'")}'">
       <div class="trigger-header">
         <span class="badge ${typeMap[t.trigger_type]||'badge-gray'}">${t.trigger_type}</span>
         <span class="trigger-company">${t.companies?.name||'–'}</span>
@@ -507,7 +539,7 @@ function renderDashboard() {
       </div>
       <div class="trigger-desc">${t.description||''}</div>
     </div>`;
-  }).join('') + '</div>';
+  }).join('')+'</div>';
 }
 
 function renderTriggers() {
@@ -516,10 +548,10 @@ function renderTriggers() {
     el.innerHTML = '<div class="empty-state"><div class="es-icon">⚡</div><div class="es-title">Noch keine Trigger-Ereignisse</div><div class="es-sub">Scan starten oder manuell hinzufügen.</div></div>';
     return;
   }
-  el.innerHTML = '<div class="trigger-list">' + allTriggers.map(t => {
-    const score = t.relevance_score || 0;
+  el.innerHTML = '<div class="trigger-list">'+allTriggers.map(t=>{
+    const score = t.relevance_score||0;
     const dt = t.created_at ? new Date(t.created_at).toLocaleDateString('de-AT') : '';
-    return `<div class="trigger-card ${score >= 80 ? 'high' : ''}" onclick="showPanel('compose');document.getElementById('pitch-company').value='${(t.companies?.name||'').replace(/'/g,"\\'")}';document.getElementById('pitch-context').value='${(t.description||'').replace(/'/g,"\\'")}'">
+    return `<div class="trigger-card ${score>=80?'high':''}" onclick="showPanel('compose');document.getElementById('pitch-company').value='${(t.companies?.name||'').replace(/'/g,"\\'")}';document.getElementById('pitch-context').value='${(t.description||'').replace(/'/g,"\\'")}'">
       <div class="trigger-header">
         <span class="badge ${typeMap[t.trigger_type]||'badge-gray'}">${t.trigger_type}</span>
         <span class="trigger-company">${t.companies?.name||'–'}</span>
@@ -530,18 +562,18 @@ function renderTriggers() {
         <span style="font-size:10px;color:var(--text-muted)">Score</span>
         <div class="score-bar"><div class="score-fill" style="width:${score}%"></div></div>
         <span style="font-size:10px;font-weight:600;color:var(--navy)">${score}</span>
-        <button class="btn btn-gold btn-sm" style="margin-left:auto" onclick="event.stopPropagation();showPanel('compose');document.getElementById('pitch-company').value='${(t.companies?.name||'').replace(/'/g,"\\'")}'" >✦ Pitch</button>
+        <button class="btn btn-gold btn-sm" style="margin-left:auto" onclick="event.stopPropagation();showPanel('compose');document.getElementById('pitch-company').value='${(t.companies?.name||'').replace(/'/g,"\\'")}'">✦ Pitch</button>
       </div>
     </div>`;
-  }).join('') + '</div>';
+  }).join('')+'</div>';
 }
 
 function renderCompanies(data) {
-  const list = data || allCompanies;
-  document.getElementById('companies-sub').textContent = list.length + ' Unternehmen';
+  const list = data||allCompanies;
+  document.getElementById('companies-sub').textContent = list.length+' Unternehmen';
   const tbody = document.getElementById('companies-tbody');
-  if (!list.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="es-title">Keine Unternehmen</div></div></td></tr>'; return; }
-  tbody.innerHTML = list.map(c => `
+  if (!list.length) { tbody.innerHTML='<tr><td colspan="7"><div class="empty-state"><div class="es-title">Keine Unternehmen</div></div></td></tr>'; return; }
+  tbody.innerHTML = list.map(c=>`
     <tr>
       <td><strong>${c.name}</strong></td>
       <td>${c.industry||'–'}</td>
@@ -557,12 +589,12 @@ function renderCompanies(data) {
 }
 
 function renderContacts(data) {
-  const list = data || allContacts;
-  document.getElementById('contacts-sub').textContent = list.length + ' Kontakte';
+  const list = data||allContacts;
+  document.getElementById('contacts-sub').textContent = list.length+' Kontakte';
   const tbody = document.getElementById('contacts-tbody');
-  if (!list.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="es-title">Keine Kontakte</div></div></td></tr>'; return; }
-  tbody.innerHTML = list.map((c, i) => {
-    const ci = i % aC.length;
+  if (!list.length) { tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><div class="es-title">Keine Kontakte</div></div></td></tr>'; return; }
+  tbody.innerHTML = list.map((c,i)=>{
+    const ci = i%aC.length;
     return `<tr>
       <td><div style="display:flex;align-items:center;gap:8px">
         <div class="avatar" style="background:${aC[ci]};color:${aT[ci]}">${initials(c.full_name)}</div>
@@ -570,7 +602,7 @@ function renderContacts(data) {
       </div></td>
       <td>${c.role||'–'}</td>
       <td>${c.companies?.name||'–'}</td>
-      <td style="font-size:11px">${c.email ? `<a href="mailto:${c.email}" style="color:var(--info)">${c.email}</a>` : '–'}</td>
+      <td style="font-size:11px">${c.email?`<a href="mailto:${c.email}" style="color:var(--info)">${c.email}</a>`:'–'}</td>
       <td>
         <button class="btn btn-sm" onclick="showPanel('compose');document.getElementById('pitch-contact').value='${(c.full_name+(c.role?' – '+c.role:'')).replace(/'/g,"\\'")}'" >✦</button>
         <button class="btn btn-sm btn-ghost" onclick="deleteContact('${c.id}')">✕</button>
@@ -581,168 +613,185 @@ function renderContacts(data) {
 
 function renderOutreach() {
   const tbody = document.getElementById('outreach-tbody');
-  if (!allOutreach.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="es-icon">◷</div><div class="es-title">Noch keine Aktivitäten</div></div></td></tr>'; return; }
-  tbody.innerHTML = allOutreach.map(o => `
+  if (!allOutreach.length) { tbody.innerHTML='<tr><td colspan="5"><div class="empty-state"><div class="es-icon">◷</div><div class="es-title">Noch keine Aktivitäten</div></div></td></tr>'; return; }
+  tbody.innerHTML = allOutreach.map(o=>`
     <tr>
       <td>${o.companies?.name||'–'}</td>
       <td><span class="badge badge-gray">${o.channel||'Email'}</span></td>
       <td>${statusBadge(o.status)}</td>
-      <td style="font-size:11px;color:var(--text-muted)">${o.created_at ? new Date(o.created_at).toLocaleDateString('de-AT') : '–'}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${o.created_at?new Date(o.created_at).toLocaleDateString('de-AT'):'–'}</td>
       <td><button class="btn btn-sm" onclick="viewPitch('${o.id}')">Ansehen</button></td>
     </tr>`).join('');
 }
 
-// ---- FILTERS ----
 function filterCompanies() {
   const q = document.getElementById('company-search').value.toLowerCase();
   const src = document.getElementById('company-source-filter').value;
-  renderCompanies(allCompanies.filter(c => (!q || c.name?.toLowerCase().includes(q) || c.industry?.toLowerCase().includes(q)) && (!src || c.source === src)));
+  renderCompanies(allCompanies.filter(c=>(!q||c.name?.toLowerCase().includes(q)||c.industry?.toLowerCase().includes(q))&&(!src||c.source===src)));
 }
 function filterContacts() {
   const q = document.getElementById('contact-search').value.toLowerCase();
-  renderContacts(allContacts.filter(c => !q || c.full_name?.toLowerCase().includes(q) || c.role?.toLowerCase().includes(q)));
-}
-
-// ---- SCAN ----
-function fetchWithTimeout(url, opts, ms) {
-  return Promise.race([
-    fetch(url, opts),
-    new Promise((_, rej) => setTimeout(() => rej(new Error('Timeout nach ' + ms / 1000 + 's')), ms))
-  ]);
+  renderContacts(allContacts.filter(c=>!q||c.full_name?.toLowerCase().includes(q)||c.role?.toLowerCase().includes(q)));
 }
 
 function setScanMsg(txt, cls) {
   const el = document.getElementById('scan-msg');
   el.textContent = txt;
-  el.className = 'scan-msg ' + cls;
+  el.className = 'scan-msg '+cls;
   el.style.display = 'block';
 }
 
+// SCAN — calls Anthropic API directly from browser
 async function startScan() {
-  const btn = document.getElementById('scan-btn-main');
-  const rawEl = document.getElementById('scan-raw');
-  const subEl = document.getElementById('scan-sub');
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    setScanMsg('Bitte zuerst den Anthropic API Key in den Einstellungen hinterlegen.', 'err');
+    setTimeout(() => showPanel('settings'), 1500);
+    return;
+  }
 
+  const btn = document.getElementById('scan-btn-main');
   btn.disabled = true;
   btn.textContent = '⚡ Scannt...';
-  rawEl.style.display = 'none';
   setScanMsg('Lade Unternehmensliste...', 'info');
 
   try {
-    // Load companies
-    const r = await fetchWithTimeout(
-      SU + '/rest/v1/companies?select=id,name',
-      { headers: { 'apikey': SK, 'Authorization': 'Bearer ' + SK } },
-      10000
-    );
+    // Load companies from Supabase
+    const r = await fetch(SU+'/rest/v1/companies?select=id,name', {
+      headers: { 'apikey': SK, 'Authorization': 'Bearer '+SK }
+    });
     const companies = await r.json();
-    if (!Array.isArray(companies) || !companies.length) {
+    if (!Array.isArray(companies)||!companies.length) {
       setScanMsg('Keine Unternehmen in der Datenbank.', 'err');
-      btn.disabled = false; btn.textContent = '⚡ Jetzt scannen';
+      btn.disabled=false; btn.textContent='⚡ Jetzt scannen';
       return;
     }
 
-    setScanMsg('Scanne mit Claude Web-Suche (max. 45s)...', 'info');
+    setScanMsg('Scanne aktuelle Nachrichten via Claude Web Search...', 'info');
 
-    const pr = await fetchWithTimeout('/api/scan', {
+    // Call Anthropic API directly
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({})
-    }, 45000);
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'web-search-2025-03-05'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{
+          role: 'user',
+          content: 'Search the web for real business news from the last 7 days about executive changes (CEO, CFO, CHRO, board appointments/resignations), funding rounds, M&A deals at companies in Germany, Austria, Switzerland, Poland, Czech Republic, Hungary, Romania. Find at least 10 specific real events. Reply ONLY with a JSON array, no other text, no markdown: [{"company":"Company Name","trigger_type":"CEO Change","description":"What happened specifically"}]'
+        }]
+      })
+    });
 
-    const pd = await pr.json();
-    let txt = pd.text || '';
-
-    if (pd.error) {
-      rawEl.textContent = 'FEHLER:\n\n' + pd.error;
-      rawEl.style.display = 'block';
-      setScanMsg('Fehler: ' + pd.error, 'err');
-      btn.disabled = false; btn.textContent = '⚡ Jetzt scannen';
+    if (!response.ok) {
+      const err = await response.json();
+      setScanMsg('API Fehler: '+(err.error?.message||response.status), 'err');
+      btn.disabled=false; btn.textContent='⚡ Jetzt scannen';
       return;
     }
 
-    // Show raw response
-    rawEl.textContent = 'CLAUDE ANTWORT:\n\n' + txt;
-    rawEl.style.display = 'block';
+    const data = await response.json();
+    const textBlock = data.content ? data.content.find(b => b.type === 'text') : null;
+    const txt = textBlock ? textBlock.text : '';
 
-    // Parse JSON;
+    if (!txt) {
+      setScanMsg('Keine Antwort von Claude erhalten.', 'err');
+      btn.disabled=false; btn.textContent='⚡ Jetzt scannen';
+      return;
+    }
+
+    // Parse JSON
+    let items = [];
     try {
-      const clean = txt.replace(/```json|```/g, '').trim();
+      const clean = txt.replace(/```json|```/g,'').trim();
       const start = clean.indexOf('[');
       const end = clean.lastIndexOf(']');
-      if (start >= 0 && end > start) items = JSON.parse(clean.substring(start, end + 1));
-    } catch (e) {
-      setScanMsg('JSON-Parse fehlgeschlagen. Siehe Rohtext oben.', 'err');
-      btn.disabled = false; btn.textContent = '⚡ Jetzt scannen';
+      if (start>=0&&end>start) items = JSON.parse(clean.substring(start,end+1));
+    } catch(e) {
+      setScanMsg('Antwort konnte nicht verarbeitet werden. Versuchen Sie es nochmals.', 'err');
+      btn.disabled=false; btn.textContent='⚡ Jetzt scannen';
       return;
     }
 
     if (!items.length) {
-      setScanMsg('Claude hat 0 Ereignisse geliefert. Siehe Rohtext oben.', 'err');
-      btn.disabled = false; btn.textContent = '⚡ Jetzt scannen';
+      setScanMsg('Keine Ereignisse gefunden. Versuchen Sie es nochmals.', 'err');
+      btn.disabled=false; btn.textContent='⚡ Jetzt scannen';
       return;
     }
 
-    // Match against company list and save
+    // Match against company list and save to Supabase
     const found = [];
     for (const it of items) {
-      if (!it.company || !it.trigger_type) continue;
+      if (!it.company||!it.trigger_type) continue;
       const itLow = it.company.toLowerCase();
       let co = null;
       for (const c of companies) {
         const cnLow = c.name.toLowerCase();
-        if (cnLow === itLow || cnLow.indexOf(itLow) >= 0 || itLow.indexOf(cnLow) >= 0) { co = c; break; }
+        if (cnLow===itLow||cnLow.indexOf(itLow)>=0||itLow.indexOf(cnLow)>=0) { co=c; break; }
       }
       if (co) {
-        await fetch(SU + '/rest/v1/triggers', {
+        await fetch(SU+'/rest/v1/triggers', {
           method: 'POST',
-          headers: { 'apikey': SK, 'Authorization': 'Bearer ' + SK, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ company_id: co.id, trigger_type: it.trigger_type, description: it.description || '', relevance_score: 80 })
+          headers: { 'apikey':SK,'Authorization':'Bearer '+SK,'Content-Type':'application/json','Prefer':'return=minimal' },
+          body: JSON.stringify({ company_id:co.id, trigger_type:it.trigger_type, description:it.description||'', relevance_score:80 })
         });
-        found.push({ company: it.company, trigger_type: it.trigger_type, description: it.description || '' });
+        found.push({ company:it.company, trigger_type:it.trigger_type, description:it.description||'' });
       }
     }
 
     // Render results
     const resList = document.getElementById('scan-results');
     if (found.length) {
-      setScanMsg('Fertig: ' + found.length + ' Treffer in Ihrer Zielliste gespeichert.', 'ok');
-      resList.innerHTML = '<div class="trigger-list">' + found.map(f =>
-        `<div class="trigger-card high" onclick="showPanel('compose');document.getElementById('pitch-company').value='${f.company.replace(/'/g, "\\'")}';document.getElementById('pitch-context').value='${f.description.replace(/'/g, "\\'")}'">
+      setScanMsg('✓ Fertig: '+found.length+' Treffer in Ihrer Zielliste gespeichert.', 'ok');
+      resList.innerHTML = '<div class="trigger-list">'+found.map(f=>
+        `<div class="trigger-card high" onclick="showPanel('compose');document.getElementById('pitch-company').value='${f.company.replace(/'/g,"\\'")}';document.getElementById('pitch-context').value='${f.description.replace(/'/g,"\\'")}'">
           <div class="trigger-header">
-            <span class="badge ${typeMap[f.trigger_type] || 'badge-gray'}">${f.trigger_type}</span>
+            <span class="badge ${typeMap[f.trigger_type]||'badge-gray'}">${f.trigger_type}</span>
             <span class="trigger-company">${f.company}</span>
           </div>
           <div class="trigger-desc">${f.description}</div>
           <div style="margin-top:8px">
-            <button class="btn btn-gold btn-sm" onclick="event.stopPropagation();showPanel('compose');document.getElementById('pitch-company').value='${f.company.replace(/'/g, "\\'")}'" >✦ Pitch erstellen</button>
+            <button class="btn btn-gold btn-sm" onclick="event.stopPropagation();showPanel('compose');document.getElementById('pitch-company').value='${f.company.replace(/'/g,"\\'")}'">✦ Pitch erstellen</button>
           </div>
         </div>`
-      ).join('') + '</div>';
+      ).join('')+'</div>';
+      loadTriggers(); updateStats(); renderDashboard();
     } else {
-      setScanMsg('Claude fand ' + items.length + ' Ereignisse — kein Match mit Ihren ' + companies.length + ' Zielunternehmen. Marktbeobachtung aktiv.', 'ok');
-      resList.innerHTML = '<div class="empty-state"><div class="es-icon">✓</div><div class="es-title">Keine Matches heute</div><div class="es-sub">Claude fand ' + items.length + ' Ereignisse, keines trifft Ihre Zielliste.<br>Scan läuft täglich automatisch um 03:00.</div></div>';
+      setScanMsg('Claude fand '+items.length+' Ereignisse — kein Match mit Ihren '+companies.length+' Zielunternehmen.', 'ok');
+      resList.innerHTML = '<div class="empty-state"><div class="es-icon">✓</div><div class="es-title">Keine Matches heute</div><div class="es-sub">Claude fand '+items.length+' Ereignisse, keines trifft Ihre Zielliste.</div></div>';
     }
 
-    if (subEl) subEl.textContent = items.length + ' Events · ' + found.length + ' Matches · ' + new Date().toLocaleString('de-AT');
-    if (found.length) { loadTriggers(); updateStats(); renderDashboard(); }
+    document.getElementById('scan-sub').textContent = items.length+' Events · '+found.length+' Matches · '+new Date().toLocaleString('de-AT');
 
-  } catch (e) {
-    setScanMsg('Fehler: ' + e.message, 'err');
+  } catch(e) {
+    setScanMsg('Fehler: '+e.message, 'err');
   }
 
-  btn.disabled = false;
-  btn.textContent = '⚡ Jetzt scannen';
+  btn.disabled=false;
+  btn.textContent='⚡ Jetzt scannen';
 }
 
-// ---- PITCH ----
+// PITCH — calls Anthropic API directly
 async function generatePitch() {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    showToast('Bitte zuerst API Key in Einstellungen hinterlegen');
+    showPanel('settings');
+    return;
+  }
+
   const trigger = document.getElementById('pitch-trigger').value;
-  const company = document.getElementById('pitch-company').value || 'das Zielunternehmen';
-  const contact = document.getElementById('pitch-contact').value || '';
-  const context = document.getElementById('pitch-context').value || '';
+  const company = document.getElementById('pitch-company').value||'das Zielunternehmen';
+  const contact = document.getElementById('pitch-contact').value||'';
+  const context = document.getElementById('pitch-context').value||'';
   const lang = document.getElementById('pitch-lang').value;
-  const labels = { ceo: 'CEO-Nachfolge', gf: 'Geschäftsführer-Wechsel', cfo: 'CFO-Wechsel', vorstand: 'Neuer Vorstand', ar: 'Aufsichtsrat-Bestellung', funding: 'Funding-Runde', merger: 'M&A / Fusion', expansion: 'DACH-Expansion', reorg: 'Restrukturierung' };
+  const labels = { ceo:'CEO-Nachfolge',gf:'Geschäftsführer-Wechsel',cfo:'CFO-Wechsel',vorstand:'Neuer Vorstand',ar:'Aufsichtsrat-Bestellung',funding:'Funding-Runde',merger:'M&A / Fusion',expansion:'DACH-Expansion',reorg:'Restrukturierung' };
 
   const pitchBody = document.getElementById('pitch-body');
   const pitchActions = document.getElementById('pitch-actions');
@@ -754,9 +803,9 @@ async function generatePitch() {
 Schreibe einen professionellen Outreach-Pitch:
 Trigger: ${labels[trigger]}
 Unternehmen: ${company}
-${contact ? 'Ansprechpartner: ' + contact : ''}
-${context ? 'Kontext: ' + context : ''}
-Sprache: ${lang === 'de' ? 'Deutsch' : 'Englisch'}
+${contact?'Ansprechpartner: '+contact:''}
+${context?'Kontext: '+context:''}
+Sprache: ${lang==='de'?'Deutsch':'Englisch'}
 
 Der Pitch soll:
 - Mit Betreffzeile beginnen (Format: "Betreff: ...")
@@ -769,44 +818,52 @@ Der Pitch soll:
 Nur die E-Mail, keine Erklärungen.`;
 
   try {
-    const response = await fetch('/api/pitch', {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{ role:'user', content:prompt }]
+      })
     });
     const data = await response.json();
-    const text = data.text;
+    const text = data.content?.find(b=>b.type==='text')?.text||'';
     if (text) {
       currentPitchText = text;
       pitchBody.innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.8">${text}</div>`;
       pitchActions.style.display = 'flex';
       document.getElementById('pitch-meta').textContent = `${labels[trigger]} · ${company} · ${new Date().toLocaleDateString('de-AT')}`;
     } else throw new Error('Keine Antwort');
-  } catch (e) {
-    pitchBody.innerHTML = '<div style="color:var(--danger);padding:20px;font-size:12px">Fehler beim Generieren.</div>';
+  } catch(e) {
+    pitchBody.innerHTML = '<div style="color:var(--danger);padding:20px;font-size:12px">Fehler: '+e.message+'</div>';
   }
 }
 
-function copyPitch() { navigator.clipboard.writeText(currentPitchText).then(() => showToast('Kopiert ✓')); }
+function copyPitch() { navigator.clipboard.writeText(currentPitchText).then(()=>showToast('Kopiert ✓')); }
 
 async function savePitch() {
   if (!currentPitchText) return;
   const company = document.getElementById('pitch-company').value;
-  const comp = allCompanies.find(c => c.name.toLowerCase() === company.toLowerCase());
-  const { error } = await db.from('outreach').insert({ company_id: comp?.id || null, channel: 'Email', body: currentPitchText, generated_by: 'HENRY', status: 'Entwurf' });
-  if (!error) { showToast('Entwurf gespeichert ✓', true); loadOutreach(); } else showToast('Fehler');
+  const comp = allCompanies.find(c=>c.name.toLowerCase()===company.toLowerCase());
+  const { error } = await db.from('outreach').insert({ company_id:comp?.id||null, channel:'Email', body:currentPitchText, generated_by:'HENRY', status:'Entwurf' });
+  if (!error) { showToast('Entwurf gespeichert ✓',true); loadOutreach(); } else showToast('Fehler');
 }
 
 async function approvePitch() {
   if (!currentPitchText) return;
   const company = document.getElementById('pitch-company').value;
-  const comp = allCompanies.find(c => c.name.toLowerCase() === company.toLowerCase());
-  const { error } = await db.from('outreach').insert({ company_id: comp?.id || null, channel: 'Email', body: currentPitchText, generated_by: 'HENRY', status: 'Freigegeben', approved_by: 'Dr. Sami Hamid', approved_at: new Date().toISOString() });
-  if (!error) { showToast('Pitch freigegeben ✓', true); loadOutreach(); }
+  const comp = allCompanies.find(c=>c.name.toLowerCase()===company.toLowerCase());
+  const { error } = await db.from('outreach').insert({ company_id:comp?.id||null, channel:'Email', body:currentPitchText, generated_by:'HENRY', status:'Freigegeben', approved_by:'Dr. Sami Hamid', approved_at:new Date().toISOString() });
+  if (!error) { showToast('Pitch freigegeben ✓',true); loadOutreach(); }
 }
 
 function viewPitch(id) {
-  const o = allOutreach.find(x => x.id === id);
+  const o = allOutreach.find(x=>x.id===id);
   if (!o) return;
   currentPitchText = o.body;
   showPanel('compose');
@@ -814,139 +871,38 @@ function viewPitch(id) {
   document.getElementById('pitch-actions').style.display = 'flex';
 }
 
-// ---- CRUD ----
 async function saveTrigger() {
   const compName = document.getElementById('t-company').value.trim();
   if (!compName) return;
   let compId = null;
-  const match = allCompanies.find(c => c.name.toLowerCase() === compName.toLowerCase());
-  if (match) { compId = match.id; }
+  const match = allCompanies.find(c=>c.name.toLowerCase()===compName.toLowerCase());
+  if (match) { compId=match.id; }
   else {
-    const { data } = await db.from('companies').insert({ name: compName, source: 'Manuell' }).select().single();
-    if (data) { compId = data.id; allCompanies.push(data); }
+    const { data } = await db.from('companies').insert({ name:compName, source:'Manuell' }).select().single();
+    if (data) { compId=data.id; allCompanies.push(data); }
   }
-  const { error } = await db.from('triggers').insert({ company_id: compId, trigger_type: document.getElementById('t-type').value, description: document.getElementById('t-desc').value, relevance_score: parseInt(document.getElementById('t-score').value) || 75 });
-  if (!error) { showToast('Trigger gespeichert ✓', true); closeModal('modal-trigger'); loadTriggers(); updateStats(); }
+  const { error } = await db.from('triggers').insert({ company_id:compId, trigger_type:document.getElementById('t-type').value, description:document.getElementById('t-desc').value, relevance_score:parseInt(document.getElementById('t-score').value)||75 });
+  if (!error) { showToast('Trigger gespeichert ✓',true); closeModal('modal-trigger'); loadTriggers(); updateStats(); }
 }
 
 async function saveCompany() {
   const name = document.getElementById('c-name').value.trim();
   if (!name) return;
-  const { error } = await db.from('companies').insert({ name, industry: document.getElementById('c-industry').value, hq_region: document.getElementById('c-hq').value, cee_countries: document.getElementById('c-cee').value, priority: document.getElementById('c-priority').value || null, source: document.getElementById('c-source').value });
-  if (!error) { showToast('Gespeichert ✓', true); closeModal('modal-company'); loadCompanies(); } else showToast('Fehler: ' + error.message);
+  const { error } = await db.from('companies').insert({ name, industry:document.getElementById('c-industry').value, hq_region:document.getElementById('c-hq').value, cee_countries:document.getElementById('c-cee').value, priority:document.getElementById('c-priority').value||null, source:document.getElementById('c-source').value });
+  if (!error) { showToast('Gespeichert ✓',true); closeModal('modal-company'); loadCompanies(); } else showToast('Fehler: '+error.message);
 }
 
 async function saveContact() {
   const name = document.getElementById('ct-name').value.trim();
   if (!name) return;
-  const { error } = await db.from('contacts').insert({ full_name: name, role: document.getElementById('ct-role').value, email: document.getElementById('ct-email').value, linkedin_url: document.getElementById('ct-linkedin').value, source: 'manual' });
-  if (!error) { showToast('Gespeichert ✓', true); closeModal('modal-contact'); loadContacts(); }
+  const { error } = await db.from('contacts').insert({ full_name:name, role:document.getElementById('ct-role').value, email:document.getElementById('ct-email').value, linkedin_url:document.getElementById('ct-linkedin').value, source:'manual' });
+  if (!error) { showToast('Gespeichert ✓',true); closeModal('modal-contact'); loadContacts(); }
 }
 
-async function deleteCompany(id) { if (!confirm('Löschen?')) return; await db.from('companies').delete().eq('id', id); showToast('Gelöscht'); loadCompanies(); }
-async function deleteContact(id) { if (!confirm('Löschen?')) return; await db.from('contacts').delete().eq('id', id); showToast('Gelöscht'); loadContacts(); }
+async function deleteCompany(id) { if (!confirm('Löschen?')) return; await db.from('companies').delete().eq('id',id); showToast('Gelöscht'); loadCompanies(); }
+async function deleteContact(id) { if (!confirm('Löschen?')) return; await db.from('contacts').delete().eq('id',id); showToast('Gelöscht'); loadContacts(); }
 
-// ---- INIT ----
 loadAll();
 </script>
 </body>
-</html>export default async function handler(req, context) {
-  if (req.method === 'OPTIONS') {
-    return new Response('', {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      }
-    });
-  }
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'web-search-2025-03-05'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [{
-          role: 'user',
-          content: 'Search the web for real business news from the last 7 days: executive changes (CEO, CFO, CHRO, board appointments/resignations), funding rounds, M&A deals at companies in Germany, Austria, Switzerland, Poland, Czech Republic, Hungary, Romania. Find at least 10 specific real events. Reply ONLY with a JSON array, no other text: [{"company":"Company Name","trigger_type":"CEO Change","description":"What happened specifically"}]'
-        }]
-      })
-    });
-
-    const data = await response.json();
-    const textBlock = data.content ? data.content.find(b => b.type === 'text') : null;
-    const text = textBlock ? textBlock.text : '[]';
-
-    return new Response(JSON.stringify({ text }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      }
-    });
-
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
-  }
-}
-
-export const config = { path: '/api/scan' };
-export default async function handler(req, context) {
-  if (req.method === 'OPTIONS') {
-    return new Response('', {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      }
-    });
-  }
-
-  try {
-    const body = await req.json();
-    const { prompt } = body;
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-
-    const data = await response.json();
-    const text = data.content?.find(b => b.type === 'text')?.text || '';
-
-    return new Response(JSON.stringify({ text }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      }
-    });
-
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
-  }
-}
-
-export const config = { path: '/api/pitch' };
-
+</html>
