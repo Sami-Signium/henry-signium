@@ -649,13 +649,6 @@ function startScan() {
 
 // PITCH — calls Anthropic API directly
 async function generatePitch() {
-  const apiKey = getApiKey();
-  if (!apiKey) {
-    showToast('Bitte zuerst API Key in Einstellungen hinterlegen');
-    showPanel('settings');
-    return;
-  }
-
   const trigger = document.getElementById('pitch-trigger').value;
   const company = document.getElementById('pitch-company').value||'das Zielunternehmen';
   const contact = document.getElementById('pitch-contact').value||'';
