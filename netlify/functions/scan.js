@@ -18,33 +18,25 @@ export default async function handler(req, context) {
         'anthropic-beta': 'web-search-2025-03-05'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 3000,
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1000,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         messages: [{
           role: 'user',
-          content: 'Please search the web now and find at least 10 real business news stories from the past 7 days. Focus on: CEO changes, CFO changes, board appointments, funding rounds, M&A deals at companies based in Germany, Austria, Switzerland, Poland, Romania, Czech Republic, or Hungary. After searching, reply ONLY with a valid JSON array, no markdown, no explanation: [{"company":"Company Name","trigger_type":"CEO Change","description":"What happened"}]'
+          content: 'Search web for CEO, CFO, board changes, M&A, funding news last 7 days in Germany, Austria, Switzerland, Poland, Romania. Reply ONLY with JSON array: [{"company":"Name","trigger_type":"CEO Change","description":"What happened"}]'
         }]
       })
     });
 
     const data = await response.json();
-    
-    // Log full response for debugging
-    const fullResponse = JSON.stringify(data);
-    
-    // Extract text from content blocks
     let text = '[]';
     if (data.content && Array.isArray(data.content)) {
       const textBlock = data.content.find(b => b.type === 'text');
       if (textBlock) text = textBlock.text;
     }
 
-    return new Response(JSON.stringify({ text, debug: fullResponse.substring(0, 500) }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      }
+    return new Response(JSON.stringify({ text, debug: JSON.stringify(data).substring(0, 300) }), {
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
     });
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
