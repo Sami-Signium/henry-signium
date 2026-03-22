@@ -644,29 +644,19 @@ async function startScan() {
 
     setScanMsg('Scanne mit Claude Web-Suche (max. 45s)...', 'info');
 
-    const pr = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
+    const pr = await fetchWithTimeout('/api/scan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        messages: [{
-          role: 'user',
-          content: 'Search the web for real business news from the last 7 days: executive changes (CEO, CFO, CHRO, board appointments/resignations), funding rounds, M&A deals at companies in Germany, Austria, Switzerland, Poland, Czech Republic, Hungary, Romania. Find at least 10 specific real events. Reply ONLY with a JSON array, no other text: [{"company":"Company Name","trigger_type":"CEO Change","description":"What happened specifically"}]'
-        }]
-      })
+      body: JSON.stringify({})
     }, 45000);
 
     const pd = await pr.json();
-    let txt = '';
-    const textBlock = pd.content ? pd.content.find(function(b){ return b.type === 'text'; }) : null;
-    if (textBlock) {
-      txt = textBlock.text || '';
-    } else {
-      rawEl.textContent = 'CLAUDE RESPONSE:\n\n' + JSON.stringify(pd, null, 2);
+    let txt = pd.text || '';
+
+    if (pd.error) {
+      rawEl.textContent = 'FEHLER:\n\n' + pd.error;
       rawEl.style.display = 'block';
-      setScanMsg('Claude hat keine gültige Antwort geliefert.', 'err');
+      setScanMsg('Fehler: ' + pd.error, 'err');
       btn.disabled = false; btn.textContent = '⚡ Jetzt scannen';
       return;
     }
@@ -779,13 +769,13 @@ Der Pitch soll:
 Nur die E-Mail, keine Erklärungen.`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('/api/pitch', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ prompt })
     });
     const data = await response.json();
-    const text = data.content?.find(b => b.type === 'text')?.text;
+    const text = data.text;
     if (text) {
       currentPitchText = text;
       pitchBody.innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.8">${text}</div>`;
