@@ -9,53 +9,32 @@ export default async function handler(req, context) {
     });
   }
   try {
-    const headers = {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-beta': 'web-search-2025-03-05'
-    };
-
-    const body = {
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1000,
-      tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-      messages: [{
-        role: 'user',
-        content: 'Search web for CEO, CFO, board changes, M&A, funding news last 7 days in Germany, Austria, Switzerland, Poland, Romania. Reply ONLY with JSON array: [{"company":"Name","trigger_type":"CEO Change","description":"What happened"}]'
-      }]
-    };
-
-    // First call
-    let response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST', headers, body: JSON.stringify(body)
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'web-search-2025-03-05'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        system: 'You are a business news analyst. You MUST reply ONLY with a valid JSON array. No explanations, no text, just the JSON array. Example: [{"company":"Siemens","trigger_type":"CEO Change","description":"New CEO appointed"}]',
+        messages: [{
+          role: 'user',
+          content: 'Search for business news from March 2026: CEO, CFO, board changes, M&A, funding at companies in Germany, Austria, Switzerland, Poland, Romania. Return ONLY a JSON array, nothing else.'
+        }]
+      })
     });
-    let data = await response.json();
 
-    // If Claude used web search tool, make second call with results
-    if (data.stop_reason === 'tool_use') {
-      const toolUse = data.content.find(b => b.type === 'server_tool_use');
-      const toolResult = data.content.find(b => b.type === 'server_tool_result') || 
-                         { type: 'server_tool_result', tool_use_id: toolUse?.id, content: '' };
-
-      body.messages = [
-        body.messages[0],
-        { role: 'assistant', content: data.content },
-        { role: 'user', content: [{ 
-          type: 'tool_result', 
-          tool_use_id: toolUse?.id, 
-          content: toolResult.content || 'Search completed'
-        }]}
-      ];
-
-      response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST', headers, body: JSON.stringify(body)
-      });
-      data = await response.json();
+    const data = await response.json();
+    let text = '[]';
+    if (data.content && Array.isArray(data.content)) {
+      const textBlock = data.content.find(b => b.type === 'text');
+      if (textBlock) text = textBlock.text;
     }
-
-    const textBlock = data.content?.find(b => b.type === 'text');
-    const text = textBlock?.text || '[]';
 
     return new Response(JSON.stringify({ text }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
