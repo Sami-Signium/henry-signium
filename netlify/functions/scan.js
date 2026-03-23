@@ -13,7 +13,7 @@ export default async function handler(req, context) {
     // Step 1: Fetch news from NewsAPI
     const newsUrl = 'https://newsapi.org/v2/everything?' + new URLSearchParams({
       q: 'CEO OR CFO OR Vorstand OR Geschäftsführer OR Fusion OR Übernahme OR Funding',
-      language: 'de',
+      language: 'en',
       sortBy: 'publishedAt',
       pageSize: 20,
       apiKey: '4bc455fcb3de4648a707d4b3cd96a091'
