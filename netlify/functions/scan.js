@@ -14,21 +14,21 @@ export default async function handler(req, context) {
 
     const [deRes, atRes, ceeRes] = await Promise.all([
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '"Vorstandswechsel" OR "neuer CEO" OR "neuer Vorstand" OR "Vorstandsvorsitzender" OR "Geschäftsführerwechsel" OR "Fusion abgeschlossen" OR "Übernahme abgeschlossen" OR "Finanzierungsrunde"',
+        q: 'Managementwechsel OR Vorstandswechsel OR Führungswechsel OR Personalwechsel OR "neuer Vorstand" OR "neuer Geschäftsführer" OR "Fusion abgeschlossen" OR "Übernahme abgeschlossen" OR Finanzierungsrunde OR Restrukturierung',
         language: 'de',
         sortBy: 'publishedAt',
         pageSize: 30,
         apiKey: NEWS_API_KEY
       })),
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: 'Wien Vorstand OR Österreich CEO OR Österreich Übernahme OR Wien Geschäftsführer OR Austria merger OR Vienna acquisition',
+        q: 'Wien Managementwechsel OR Wien Vorstandswechsel OR Österreich Führungswechsel OR Österreich Übernahme OR Wien Geschäftsführer OR Austria merger OR Vienna acquisition OR Vienna CEO',
         language: 'de',
         sortBy: 'publishedAt',
         pageSize: 30,
         apiKey: NEWS_API_KEY
       })),
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '(CEO OR CFO OR executive OR merger OR acquisition OR funding) AND (Poland OR Romania OR Hungary OR Prague OR Warsaw OR Bucharest OR Budapest)',
+        q: '(CEO appointed OR CFO appointed OR management change OR board appointment OR merger OR acquisition OR funding round) AND (Poland OR Romania OR Hungary OR Czech OR Warsaw OR Bucharest OR Budapest OR Prague OR Vienna OR Austria)',
         language: 'en',
         sortBy: 'publishedAt',
         pageSize: 30,
