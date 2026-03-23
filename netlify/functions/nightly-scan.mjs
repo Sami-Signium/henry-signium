@@ -2,112 +2,126 @@ import { schedule } from "@netlify/functions";
 
 const SURL = "https://ftdxhswcnghlmcagrsox.supabase.co";
 const SK = "sb_publishable_c8YygosML2xrImmWCpI1rw_6j_pvCRA";
+const NEWS_API_KEY = "4bc455fcb3de4648a707d4b3cd96a091";
 
 async function sbGet(path) {
-  const r = await fetch(SURL+"/rest/v1/"+path, {
-    headers: { apikey: SK, Authorization: "Bearer "+SK }
+  const r = await fetch(SURL + "/rest/v1/" + path, {
+    headers: { apikey: SK, Authorization: "Bearer " + SK }
   });
   return r.json();
 }
 
 async function sbPost(table, body) {
-  const r = await fetch(SURL+"/rest/v1/"+table, {
+  const r = await fetch(SURL + "/rest/v1/" + table, {
     method: "POST",
-    headers: { apikey: SK, Authorization: "Bearer "+SK, "Content-Type": "application/json", Prefer: "return=representation" },
+    headers: { apikey: SK, Authorization: "Bearer " + SK, "Content-Type": "application/json", Prefer: "return=representation" },
     body: JSON.stringify(body)
   });
   return r.json();
 }
 
-const handler = schedule("0 13 * * *", async () => {
-  const companies = await sbGet("companies?select=id,name");
-  if (!companies.length) return { statusCode: 200 };
-
-  let found = 0;
-
+const handler = schedule("0 7 * * *", async () => {
   try {
-    const headers = {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "anthropic-beta": "web-search-2025-03-05"
-    };
+    const companies = await sbGet("companies?select=id,name");
+    if (!companies.length) return { statusCode: 200 };
 
-    const messages = [{
-      role: "user",
-      content: "Search the web for real business news from the last 24 hours: CEO, CFO, CHRO changes, board appointments, funding rounds, M&A deals at companies in Germany, Austria, Switzerland, Poland, Romania, Czech Republic, Hungary. Find at least 15 specific events. Reply ONLY with a JSON array: [{\"company\":\"Name\",\"trigger_type\":\"CEO Change\",\"description\":\"What happened\"}]"
-    }];
+    // Three parallel news searches: Germany + Austria + CEE
+    const [deRes, atRes, ceeRes] = await Promise.all([
+      fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
+        q: '"Vorstandswechsel" OR "neuer CEO" OR "neuer Vorstand" OR "Vorstandsvorsitzender" OR "Geschäftsführerwechsel" OR "Fusion abgeschlossen" OR "Übernahme abgeschlossen" OR "Finanzierungsrunde"',
+        language: 'de',
+        sortBy: 'publishedAt',
+        pageSize: 30,
+        apiKey: NEWS_API_KEY
+      })),
+      fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
+        q: 'Wien Vorstand OR Österreich CEO OR Österreich Übernahme OR Wien Geschäftsführer OR Austria merger OR Vienna acquisition',
+        language: 'de',
+        sortBy: 'publishedAt',
+        pageSize: 30,
+        apiKey: NEWS_API_KEY
+      })),
+      fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
+        q: '(CEO OR CFO OR executive OR merger OR acquisition OR funding) AND (Poland OR Romania OR Hungary OR Prague OR Warsaw OR Bucharest OR Budapest)',
+        language: 'en',
+        sortBy: 'publishedAt',
+        pageSize: 30,
+        apiKey: NEWS_API_KEY
+      }))
+    ]);
 
-    let response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers,
+    const [deData, atData, ceeData] = await Promise.all([deRes.json(), atRes.json(), ceeRes.json()]);
+
+    const allArticles = [
+      ...(deData.articles || []),
+      ...(atData.articles || []),
+      ...(ceeData.articles || [])
+    ];
+
+    // Deduplicate
+    const seen = new Set();
+    const unique = allArticles.filter(a => {
+      if (seen.has(a.title)) return false;
+      seen.add(a.title);
+      return true;
+    });
+
+    if (!unique.length) {
+      console.log("PAUL nightly scan: no articles found");
+      return { statusCode: 200 };
+    }
+
+    const summaries = unique
+      .slice(0, 50)
+      .map(a => `- ${a.title}${a.description ? ' | ' + a.description : ''}`)
+      .join('\n');
+
+    // Claude extracts trigger events
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 2000,
-        tools: [{ type: "web_search_20250305", name: "web_search" }],
-        messages
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1500,
+        messages: [{
+          role: 'user',
+          content: `Extrahiere Business-Ereignisse aus diesen Nachrichten. Nur: Vorstandswechsel, CEO/CFO/CHRO-Wechsel, Aufsichtsratsbestellungen, M&A, Funding, Restrukturierungen. Fokus auf DACH und CEE Unternehmen.
+
+Antworte NUR mit JSON-Array (kein anderer Text):
+[{"company":"Firmenname","trigger_type":"CEO-Wechsel","description":"Was passiert ist"}]
+
+Nachrichten:
+${summaries}`
+        }]
       })
     });
 
-    let data = await response.json();
-
-    // Continue conversation until Claude stops using tools
-    while (data.stop_reason === "tool_use") {
-      messages.push({ role: "assistant", content: data.content });
-
-      const toolResults = data.content
-        .filter(b => b.type === "server_tool_use")
-        .map(b => ({
-          type: "tool_result",
-          tool_use_id: b.id,
-          content: "Search completed"
-        }));
-
-      messages.push({ role: "user", content: toolResults });
-
-      response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 2000,
-          tools: [{ type: "web_search_20250305", name: "web_search" }],
-          messages
-        })
-      });
-
-      data = await response.json();
-    }
-
-    const textBlock = data.content?.find(b => b.type === "text");
-    const txt = textBlock?.text || "[]";
+    const claudeData = await claudeRes.json();
+    const raw = claudeData.content?.find(b => b.type === 'text')?.text || '[]';
+    const clean = raw.replace(/```json|```/g, '').trim();
 
     let items = [];
-    try {
-      const clean = txt.replace(/```json|```/g, "").trim();
-      const start = clean.indexOf("[");
-      const end = clean.lastIndexOf("]");
-      if (start >= 0 && end > start) items = JSON.parse(clean.substring(start, end + 1));
-    } catch(e) {}
+    try { items = JSON.parse(clean); } catch(e) {}
 
+    let found = 0;
     for (const item of items) {
       if (!item.company) continue;
 
-      // Check if company exists in list
+      // Find or create company
       let comp = companies.find(c =>
         c.name.toLowerCase().includes(item.company.toLowerCase()) ||
         item.company.toLowerCase().includes(c.name.toLowerCase())
       );
 
-      // If not found — create it automatically
       if (!comp) {
-        const created = await sbPost("companies", {
-          name: item.company,
-          source: "Auto-Scan"
-        });
+        const created = await sbPost("companies", { name: item.company, source: "Auto-Scan" });
         if (created && created[0]) {
           comp = created[0];
-          companies.push(comp); // add to local list
+          companies.push(comp);
         }
       }
 
@@ -122,12 +136,13 @@ const handler = schedule("0 13 * * *", async () => {
       }
     }
 
-  } catch(e) {
-    console.error("HENRY nightly scan error:", e.message);
-  }
+    console.log(`PAUL morning scan done. Articles: ${unique.length}, Triggers saved: ${found}`);
+    return { statusCode: 200, body: JSON.stringify({ found }) };
 
-  console.log("HENRY morning scan done. Total triggers saved: "+found);
-  return { statusCode: 200, body: JSON.stringify({ found }) };
+  } catch(e) {
+    console.error("PAUL nightly scan error:", e.message);
+    return { statusCode: 200 };
+  }
 });
 
 export { handler };
