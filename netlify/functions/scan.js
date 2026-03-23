@@ -18,7 +18,7 @@ export default async function handler(req, context) {
         q: '"Vorstandswechsel" OR "neuer CEO" OR "neuer Vorstand" OR "Vorstandsvorsitzender" OR "Geschäftsführerwechsel" OR "Fusion abgeschlossen" OR "Übernahme abgeschlossen" OR "Finanzierungsrunde"',
         language: 'de',
         sortBy: 'publishedAt',
-        pageSize: 20,
+        pageSize: 30,
         apiKey: NEWS_API_KEY
       })),
       // Austria: specific Austrian business news
@@ -26,7 +26,7 @@ export default async function handler(req, context) {
         q: 'Wien Vorstand OR Österreich CEO OR Österreich Übernahme OR Wien Geschäftsführer OR Austria merger OR Vienna acquisition',
         language: 'de',
         sortBy: 'publishedAt',
-        pageSize: 20,
+        pageSize: 30,
         apiKey: NEWS_API_KEY
       })),
       // CEE: English language
@@ -34,7 +34,7 @@ export default async function handler(req, context) {
         q: '(CEO OR CFO OR executive OR merger OR acquisition OR funding) AND (Poland OR Romania OR Hungary OR Prague OR Warsaw OR Bucharest OR Budapest)',
         language: 'en',
         sortBy: 'publishedAt',
-        pageSize: 20,
+        pageSize: 30,
         apiKey: NEWS_API_KEY
       }))
     ]);
@@ -62,7 +62,7 @@ export default async function handler(req, context) {
     }
 
     const summaries = unique
-      .slice(0, 35)
+      .slice(0, 50)
       .map(a => `- ${a.title}${a.description ? ' | ' + a.description : ''}`)
       .join('\n');
 
