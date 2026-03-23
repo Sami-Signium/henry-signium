@@ -12,24 +12,26 @@ export default async function handler(req, context) {
   try {
     const NEWS_API_KEY = '4bc455fcb3de4648a707d4b3cd96a091';
 
-    // Three parallel searches: German executive news + Austrian news + CEE English news
     const [deRes, atRes, ceeRes] = await Promise.all([
+      // Germany: executive changes
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '"Vorstandswechsel" OR "neuer CEO" OR "neuer Vorstand" OR "Vorstandsvorsitzender" OR "Geschäftsführerwechsel" OR "Aufsichtsratsvorsitz" OR "Fusion abgeschlossen" OR "Übernahme abgeschlossen" OR "Finanzierungsrunde"',
+        q: '"Vorstandswechsel" OR "neuer CEO" OR "neuer Vorstand" OR "Vorstandsvorsitzender" OR "Geschäftsführerwechsel" OR "Fusion abgeschlossen" OR "Übernahme abgeschlossen" OR "Finanzierungsrunde"',
         language: 'de',
         sortBy: 'publishedAt',
         pageSize: 20,
         apiKey: NEWS_API_KEY
       })),
+      // Austria: specific Austrian business news
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: 'Österreich OR Austria CEO OR Vorstand OR Geschäftsführer OR Übernahme OR Wien',
+        q: 'Wien Vorstand OR Österreich CEO OR Österreich Übernahme OR Wien Geschäftsführer OR Austria merger OR Vienna acquisition',
         language: 'de',
         sortBy: 'publishedAt',
         pageSize: 20,
         apiKey: NEWS_API_KEY
       })),
+      // CEE: English language
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '(CEO OR CFO OR executive OR merger OR acquisition OR funding) AND (Poland OR Romania OR Czech OR Hungary OR Vienna OR Warsaw OR Bucharest OR Budapest OR Prague)',
+        q: '(CEO OR CFO OR executive OR merger OR acquisition OR funding) AND (Poland OR Romania OR Hungary OR Prague OR Warsaw OR Bucharest OR Budapest)',
         language: 'en',
         sortBy: 'publishedAt',
         pageSize: 20,
@@ -60,7 +62,7 @@ export default async function handler(req, context) {
     }
 
     const summaries = unique
-      .slice(0, 30)
+      .slice(0, 35)
       .map(a => `- ${a.title}${a.description ? ' | ' + a.description : ''}`)
       .join('\n');
 
