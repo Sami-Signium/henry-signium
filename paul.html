@@ -1431,6 +1431,7 @@ function renderTriggers() {
         <div class="score-bar"><div class="score-fill" style="width:${score}%"></div></div>
         <span style="font-size:10px;font-weight:600;color:var(--navy)">${score}</span>
         <button class="btn btn-orange btn-sm" style="margin-left:auto" onclick="event.stopPropagation();showPanel('compose');document.getElementById('pitch-company').value='${(t.companies?.name||'').replace(/'/g,"\\'")}'">✦ Pitch</button>
+        ${t.source_url ? `<a href="${t.source_url}" target="_blank" class="btn btn-sm" onclick="event.stopPropagation()" style="font-size:11px">→ Artikel</a>` : ''}
         <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();deleteTrigger('${t.id}')" title="Löschen" style="color:var(--danger)">✕</button>
       </div>
     </div>`;
@@ -1591,9 +1592,9 @@ async function startScan() {
         await fetch(SU + '/rest/v1/triggers', {
           method: 'POST',
           headers: { apikey: SK, Authorization: 'Bearer ' + SK, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-          body: JSON.stringify({ company_id: comp.id, trigger_type: it.trigger_type || 'Sonstige', description: it.description || '', relevance_score: 80 })
+          body: JSON.stringify({ company_id: comp.id, trigger_type: it.trigger_type || 'Sonstige', description: it.description || '', source_url: it.source_url || null, relevance_score: 80 })
         });
-        found.push({ company: it.company, trigger_type: it.trigger_type, description: it.description || '' });
+        found.push({ company: it.company, trigger_type: it.trigger_type, description: it.description || '', source_url: it.source_url || null });
       }
     }
 
@@ -1606,8 +1607,9 @@ async function startScan() {
             <span class="trigger-company">${f.company}</span>
           </div>
           <div class="trigger-desc">${f.description}</div>
-          <div style="margin-top:10px">
+          <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
             <button class="btn btn-orange btn-sm" onclick="event.stopPropagation();showPanel('compose');document.getElementById('pitch-company').value='${f.company.replace(/'/g,"\\'")}'">✦ Pitch erstellen</button>
+            ${f.source_url ? `<a href="${f.source_url}" target="_blank" class="btn btn-sm" onclick="event.stopPropagation()" style="font-size:11px">→ Artikel lesen</a>` : ''}
           </div>
         </div>`
       ).join('') + '</div>';
@@ -1773,4 +1775,3 @@ loadAll();
 </script>
 </body>
 </html>
-
