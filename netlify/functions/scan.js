@@ -12,7 +12,7 @@ export default async function handler(req, context) {
   try {
     // Step 1: Fetch news from NewsAPI
     const newsUrl = 'https://newsapi.org/v2/everything?' + new URLSearchParams({
-      q: '(CEO OR CFO OR executive OR acquisition OR merger OR funding) AND (Germany OR Austria OR Switzerland OR Poland OR Romania OR Czechia OR Hungary OR Vienna OR Berlin OR Warsaw OR Bucharest)',
+      q:'CEO Germany OR CFO Austria OR executive Austria OR merger Germany OR acquisition Poland OR funding Vienna OR executive Berlin',
       language: 'en',
       sortBy: 'publishedAt',
       pageSize: 100,
