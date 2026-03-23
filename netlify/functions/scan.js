@@ -18,7 +18,7 @@ export default async function handler(req, context) {
         q: 'Vorstandswechsel OR Führungswechsel OR "neuer Vorstand" OR "neuer Geschäftsführer" OR "neuer CEO" OR "bestellt zum" OR "ernannt zum" OR "übernimmt die Leitung" OR "tritt zurück" OR Aufsichtsrat',
         language: 'de',
         sortBy: 'publishedAt',
-        pageSize: 30,
+        pageSize: 40,
         apiKey: NEWS_API_KEY
       })),
       // M&A and Funding DACH
@@ -26,7 +26,7 @@ export default async function handler(req, context) {
         q: '"Übernahme abgeschlossen" OR "Fusion abgeschlossen" OR "übernimmt" OR "kauft" OR Finanzierungsrunde OR "erhält Finanzierung" OR Restrukturierung OR Insolvenz',
         language: 'de',
         sortBy: 'publishedAt',
-        pageSize: 20,
+        pageSize: 30,
         apiKey: NEWS_API_KEY
       })),
       // CEE English
@@ -34,7 +34,7 @@ export default async function handler(req, context) {
         q: '(CEO appointed OR CFO appointed OR management change OR board appointment OR merger OR acquisition OR funding round) AND (Poland OR Romania OR Hungary OR Czech OR Warsaw OR Bucharest OR Budapest OR Prague OR Vienna OR Austria)',
         language: 'en',
         sortBy: 'publishedAt',
-        pageSize: 20,
+        pageSize: 30,
         apiKey: NEWS_API_KEY
       }))
     ]);
