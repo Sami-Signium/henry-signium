@@ -10,31 +10,44 @@ export default async function handler(req, context) {
   }
 
   try {
-    // Step 1: Fetch news from NewsAPI
-    const newsUrl = 'https://newsapi.org/v2/everything?' + new URLSearchParams({
-      q:'CEO Germany OR CFO Austria OR executive Austria OR merger Germany OR acquisition Poland OR funding Vienna OR executive Berlin',
-      language: 'en',
-      sortBy: 'publishedAt',
-      pageSize: 100,
-      apiKey: '4bc455fcb3de4648a707d4b3cd96a091'
-    });
+    const NEWS_API_KEY = '4bc455fcb3de4648a707d4b3cd96a091';
 
-    const newsRes = await fetch(newsUrl);
-    const newsData = await newsRes.json();
+    // Two parallel searches: German personal news + English DACH business news
+    const [deRes, enRes] = await Promise.all([
+      fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
+        q: 'Vorstand OR Geschäftsführer OR CEO OR CFO OR CHRO OR Aufsichtsrat OR Fusion OR Übernahme OR Finanzierung OR Restrukturierung',
+        language: 'de',
+        sortBy: 'publishedAt',
+        pageSize: 50,
+        apiKey: NEWS_API_KEY
+      })),
+      fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
+        q: 'appointed CEO OR new CFO OR board appointment OR merger OR acquisition OR funding round AND (Germany OR Austria OR Switzerland OR Poland OR Romania OR Hungary OR Vienna OR Berlin)',
+        language: 'en',
+        sortBy: 'publishedAt',
+        pageSize: 50,
+        apiKey: NEWS_API_KEY
+      }))
+    ]);
 
-    if (!newsData.articles || !newsData.articles.length) {
-      return new Response(JSON.stringify({ text: '[]', debug: 'No articles from NewsAPI' }), {
+    const [deData, enData] = await Promise.all([deRes.json(), enRes.json()]);
+
+    const deArticles = deData.articles || [];
+    const enArticles = enData.articles || [];
+    const allArticles = [...deArticles, ...enArticles].slice(0, 30);
+
+    if (!allArticles.length) {
+      return new Response(JSON.stringify({ text: '[]', debug: 'No articles found' }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
     }
 
-    // Step 2: Prepare article summaries for Claude
-    const summaries = newsData.articles
-      .slice(0, 15)
-      .map(a => `${a.title} — ${a.description || ''}`)
+    // Prepare summaries for Claude
+    const summaries = allArticles
+      .map(a => `- ${a.title}${a.description ? ' | ' + a.description : ''}`)
       .join('\n');
 
-    // Step 3: Ask Claude to extract trigger events
+    // Claude extracts trigger events
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -44,11 +57,17 @@ export default async function handler(req, context) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1000,
+        max_tokens: 1500,
         messages: [{
           role: 'user',
-          content: `Analysiere diese Nachrichtentexte und extrahiere Business-Ereignisse (CEO/CFO/Vorstand-Wechsel, M&A, Funding, Expansion, Restrukturierung). Antworte NUR mit einem JSON-Array, kein anderer Text:
-[{"company":"Firmenname","trigger_type":"CEO-Wechsel","description":"Was genau passiert ist"}]
+          content: `Du bist ein Business Intelligence Analyst. Analysiere diese Nachrichten und extrahiere NUR relevante Business-Ereignisse für Executive Search: Vorstandswechsel, CEO/CFO/CHRO-Wechsel, Aufsichtsratsbestellungen, M&A-Deals, Funding-Runden, Restrukturierungen, DACH/CEE-Expansionen.
+
+Ignoriere: Produktnews, technische Updates, allgemeine Marktberichte ohne Personalrelevanz.
+
+Antworte NUR mit einem JSON-Array (kein anderer Text, keine Erklärungen):
+[{"company":"Firmenname","trigger_type":"CEO-Wechsel","description":"Konkrete Beschreibung was passiert ist"}]
+
+Wenn keine relevanten Ereignisse gefunden: []
 
 Nachrichten:
 ${summaries}`
