@@ -13,7 +13,6 @@ export default async function handler(req, context) {
     const NEWS_API_KEY = '4bc455fcb3de4648a707d4b3cd96a091';
 
     const [deRes, atRes, ceeRes] = await Promise.all([
-      // Germany: executive changes
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
         q: '"Vorstandswechsel" OR "neuer CEO" OR "neuer Vorstand" OR "Vorstandsvorsitzender" OR "Geschäftsführerwechsel" OR "Fusion abgeschlossen" OR "Übernahme abgeschlossen" OR "Finanzierungsrunde"',
         language: 'de',
@@ -21,7 +20,6 @@ export default async function handler(req, context) {
         pageSize: 30,
         apiKey: NEWS_API_KEY
       })),
-      // Austria: specific Austrian business news
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
         q: 'Wien Vorstand OR Österreich CEO OR Österreich Übernahme OR Wien Geschäftsführer OR Austria merger OR Vienna acquisition',
         language: 'de',
@@ -29,7 +27,6 @@ export default async function handler(req, context) {
         pageSize: 30,
         apiKey: NEWS_API_KEY
       })),
-      // CEE: English language
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
         q: '(CEO OR CFO OR executive OR merger OR acquisition OR funding) AND (Poland OR Romania OR Hungary OR Prague OR Warsaw OR Bucharest OR Budapest)',
         language: 'en',
@@ -61,9 +58,13 @@ export default async function handler(req, context) {
       });
     }
 
+    // Build article map: title -> url for later lookup
+    const articleMap = {};
+    unique.forEach(a => { articleMap[a.title] = a.url; });
+
     const summaries = unique
       .slice(0, 50)
-      .map(a => `- ${a.title}${a.description ? ' | ' + a.description : ''}`)
+      .map(a => `[TITLE: ${a.title}] [URL: ${a.url}] ${a.description || ''}`)
       .join('\n');
 
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -75,13 +76,13 @@ export default async function handler(req, context) {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1500,
+        max_tokens: 2000,
         messages: [{
           role: 'user',
           content: `Extrahiere Business-Ereignisse aus diesen Nachrichten. Nur: Vorstandswechsel, CEO/CFO/CHRO-Wechsel, Aufsichtsratsbestellungen, M&A, Funding, Restrukturierungen. Fokus auf DACH und CEE Unternehmen.
 
-Antworte NUR mit JSON-Array (kein anderer Text):
-[{"company":"Firmenname","trigger_type":"CEO-Wechsel","description":"Was passiert ist"}]
+Antworte NUR mit JSON-Array (kein anderer Text). Füge die URL des Artikels ein:
+[{"company":"Firmenname","trigger_type":"CEO-Wechsel","description":"Was passiert ist","source_url":"https://..."}]
 
 Nachrichten:
 ${summaries}`
