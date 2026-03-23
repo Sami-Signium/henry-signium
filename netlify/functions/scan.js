@@ -24,7 +24,7 @@ export default async function handler(req, context) {
     const articles = newsData.articles || [];
 
     if (!articles.length) {
-      return new Response(JSON.stringify({ text: '[]' }), {
+      return new Response(JSON.stringify({ text: '[]', debug: JSON.stringify(newsData).substring(0, 300) }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
     }
