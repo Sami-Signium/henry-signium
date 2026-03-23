@@ -8,33 +8,56 @@ export default async function handler(req, context) {
       }
     });
   }
+
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // Step 1: Fetch news from NewsAPI
+    const newsUrl = 'https://newsapi.org/v2/everything?' + new URLSearchParams({
+      q: 'CEO OR CFO OR Vorstand OR Geschäftsführer OR Fusion OR Übernahme OR Funding',
+      language: 'de',
+      sortBy: 'publishedAt',
+      pageSize: 20,
+      apiKey: '4bc455fcb3de4648a707d4b3cd96a091'
+    });
+
+    const newsRes = await fetch(newsUrl);
+    const newsData = await newsRes.json();
+
+    if (!newsData.articles || !newsData.articles.length) {
+      return new Response(JSON.stringify({ text: '[]', debug: 'No articles from NewsAPI' }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+
+    // Step 2: Prepare article summaries for Claude
+    const summaries = newsData.articles
+      .slice(0, 15)
+      .map(a => `${a.title} — ${a.description || ''}`)
+      .join('\n');
+
+    // Step 3: Ask Claude to extract trigger events
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'web-search-2025-03-05'
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 2000,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        system: 'You are a business news analyst. You MUST reply ONLY with a valid JSON array. No explanations, no text, just the JSON array. Example: [{"company":"Siemens","trigger_type":"CEO Change","description":"New CEO appointed"}]',
+        max_tokens: 1000,
         messages: [{
           role: 'user',
-          content: 'Search for business news from March 2026: CEO, CFO, board changes, M&A, funding at companies in Germany, Austria, Switzerland, Poland, Romania. Return ONLY a JSON array, nothing else.'
+          content: `Analysiere diese Nachrichtentexte und extrahiere Business-Ereignisse (CEO/CFO/Vorstand-Wechsel, M&A, Funding, Expansion, Restrukturierung). Antworte NUR mit einem JSON-Array, kein anderer Text:
+[{"company":"Firmenname","trigger_type":"CEO-Wechsel","description":"Was genau passiert ist"}]
+
+Nachrichten:
+${summaries}`
         }]
       })
     });
 
-    const data = await response.json();
-    let text = '[]';
-    if (data.content && Array.isArray(data.content)) {
-      const textBlock = data.content.find(b => b.type === 'text');
-      if (textBlock) text = textBlock.text;
-    }
+    const claudeData = await claudeRes.json();
+    const text = claudeData.content?.find(b => b.type === 'text')?.text || '[]';
 
     return new Response(JSON.stringify({ text }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
