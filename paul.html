@@ -991,6 +991,13 @@ tbody td {
           <button class="btn btn-sm" onclick="openModal('modal-trigger')">+ Manuell</button>
         </div>
       </div>
+      <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="btn btn-sm" id="tab-all" onclick="filterTriggers('all')" style="background:var(--navy);color:white;border-color:var(--navy)">Alle</button>
+        <button class="btn btn-sm" id="tab-mgmt" onclick="filterTriggers('mgmt')">👤 Management</button>
+        <button class="btn btn-sm" id="tab-ma" onclick="filterTriggers('ma')">🤝 M&amp;A</button>
+        <button class="btn btn-sm" id="tab-funding" onclick="filterTriggers('funding')">💰 Funding</button>
+        <button class="btn btn-sm" id="tab-other" onclick="filterTriggers('other')">◈ Sonstige</button>
+      </div>
       <div id="triggers-list"></div>
     </div>
 
@@ -1416,7 +1423,16 @@ function renderTriggers() {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚡</div><div class="empty-title">Noch keine Trigger-Ereignisse</div><div class="empty-sub">Scan starten oder manuell hinzufügen.</div></div>`;
     return;
   }
-  el.innerHTML = '<div class="trigger-list">' + allTriggers.map(t => {
+  let filtered = allTriggers;
+  if (currentTriggerFilter === 'mgmt') filtered = allTriggers.filter(t => mgmtTypes.some(m => (t.trigger_type||'').toLowerCase().includes(m.toLowerCase())));
+  else if (currentTriggerFilter === 'ma') filtered = allTriggers.filter(t => maTypes.some(m => (t.trigger_type||'').toLowerCase().includes(m.toLowerCase())));
+  else if (currentTriggerFilter === 'funding') filtered = allTriggers.filter(t => fundingTypes.some(m => (t.trigger_type||'').toLowerCase().includes(m.toLowerCase())));
+  else if (currentTriggerFilter === 'other') filtered = allTriggers.filter(t => !mgmtTypes.concat(maTypes).concat(fundingTypes).some(m => (t.trigger_type||'').toLowerCase().includes(m.toLowerCase())));
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚡</div><div class="empty-title">Keine Einträge in dieser Kategorie</div></div>`;
+    return;
+  }
+  el.innerHTML = '<div class="trigger-list">' + filtered.map(t => {
     const score = t.relevance_score || 0;
     const dt = t.created_at ? new Date(t.created_at).toLocaleDateString('de-AT') : '';
     return `<div class="trigger-card ${score>=80?'high':''}" onclick="showPanel('compose');document.getElementById('pitch-company').value='${(t.companies?.name||'').replace(/'/g,"\\'")}';document.getElementById('pitch-context').value='${(t.description||'').replace(/'/g,"\\'")}'">
@@ -1436,6 +1452,26 @@ function renderTriggers() {
       </div>
     </div>`;
   }).join('') + '</div>';
+}
+
+const mgmtTypes = ['CEO-Wechsel','CFO-Wechsel','CHRO-Wechsel','Vorstandswechsel','Geschäftsführer-Wechsel','Neuer Vorstand','Aufsichtsrat-Bestellung','Aufsichtsrat-Rücktritt','Executive Change','Management Change','Führungswechsel','Managementwechsel'];
+const maTypes = ['M&A / Fusion','M&A','Fusion','Übernahme','DACH-Expansion','Expansion','Restrukturierung','Insolvenz'];
+const fundingTypes = ['Funding','Funding Round','Finanzierungsrunde'];
+
+let currentTriggerFilter = 'all';
+
+function filterTriggers(cat) {
+  currentTriggerFilter = cat;
+  // Update button styles
+  ['all','mgmt','ma','funding','other'].forEach(t => {
+    const el = document.getElementById('tab-' + t);
+    if (el) {
+      el.style.background = t === cat ? 'var(--navy)' : '';
+      el.style.color = t === cat ? 'white' : '';
+      el.style.borderColor = t === cat ? 'var(--navy)' : '';
+    }
+  });
+  renderTriggers();
 }
 
 async function deleteTrigger(id) {
