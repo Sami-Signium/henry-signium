@@ -19,7 +19,7 @@ async function sbPost(table, body) {
   return r.json();
 }
 
-const handler = schedule("0 7 * * *", async () => {
+const handler = schedule("0 13 * * *", async () => {
   const companies = await sbGet("companies?select=id,name");
   if (!companies.length) return { statusCode: 200 };
 
