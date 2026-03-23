@@ -641,9 +641,48 @@ function setScanMsg(txt, cls) {
   el.style.display = 'block';
 }
 
-// SCAN — automated daily at 07:00
-function startScan() {
-  setScanMsg('Der automatische Scan läuft täglich um 07:00 Uhr. Neue Matches erscheinen dann automatisch im Dashboard.', 'ok');
+// SCAN — manual trigger
+async function startScan() {
+  const btn = document.getElementById('scan-btn-main');
+  btn.disabled = true;
+  btn.textContent = '⚡ Scannt...';
+  setScanMsg('Scan läuft — bitte warten (ca. 30 Sekunden)...', 'info');
+  try {
+    const r = await fetch('/api/scan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+    const d = await r.json();
+    if (d.error) { setScanMsg('Fehler: ' + d.error, 'err'); btn.disabled=false; btn.textContent='⚡ Jetzt scannen'; return; }
+    let items = [];
+    try {
+      const clean = (d.text||'').replace(/```json|```/g,'').trim();
+      const s = clean.indexOf('['), e = clean.lastIndexOf(']');
+      if (s>=0&&e>s) items = JSON.parse(clean.substring(s,e+1));
+    } catch(e) {}
+    if (!items.length) { setScanMsg('Scan abgeschlossen — keine Ereignisse gefunden.', 'ok'); btn.disabled=false; btn.textContent='⚡ Jetzt scannen'; return; }
+    const cr = await fetch('https://ftdxhswcnghlmcagrsox.supabase.co/rest/v1/companies?select=id,name', { headers: { apikey: SK, Authorization: 'Bearer '+SK } });
+    const companies = await cr.json();
+    const found = [];
+    for (const it of items) {
+      if (!it.company) continue;
+      let comp = companies.find(c => c.name.toLowerCase().includes(it.company.toLowerCase()) || it.company.toLowerCase().includes(c.name.toLowerCase()));
+      if (!comp) {
+        const nr = await fetch('https://ftdxhswcnghlmcagrsox.supabase.co/rest/v1/companies', { method:'POST', headers:{ apikey:SK, Authorization:'Bearer '+SK, 'Content-Type':'application/json', Prefer:'return=representation' }, body:JSON.stringify({ name:it.company, source:'Auto-Scan' }) });
+        const nd = await nr.json();
+        if (nd&&nd[0]) { comp=nd[0]; companies.push(comp); }
+      }
+      if (comp) {
+        await fetch('https://ftdxhswcnghlmcagrsox.supabase.co/rest/v1/triggers', { method:'POST', headers:{ apikey:SK, Authorization:'Bearer '+SK, 'Content-Type':'application/json', Prefer:'return=minimal' }, body:JSON.stringify({ company_id:comp.id, trigger_type:it.trigger_type||'Sonstige', description:it.description||'', relevance_score:80 }) });
+        found.push({ company:it.company, trigger_type:it.trigger_type, description:it.description||'' });
+      }
+    }
+    if (found.length) {
+      setScanMsg('✓ ' + found.length + ' Trigger gespeichert.', 'ok');
+      document.getElementById('scan-results').innerHTML = '<div class="trigger-list">'+found.map(f=>'<div class="trigger-card high"><div class="trigger-header"><span class="badge '+(typeMap[f.trigger_type]||'badge-gray')+'">'+f.trigger_type+'</span><span class="trigger-company">'+f.company+'</span></div><div class="trigger-desc">'+f.description+'</div></div>').join('')+'</div>';
+      loadTriggers(); updateStats(); renderDashboard();
+    } else {
+      setScanMsg('Scan abgeschlossen — ' + items.length + ' Ereignisse, keine Matches.', 'ok');
+    }
+  } catch(e) { setScanMsg('Fehler: ' + e.message, 'err'); }
+  btn.disabled=false; btn.textContent='⚡ Jetzt scannen';
 }
 
 
