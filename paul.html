@@ -908,7 +908,10 @@ tbody td {
     <div class="nav-item" onclick="showPanel('outreach')">
       <span class="nav-icon">◷</span> Outreach-Log
     </div>
-
+<div class="nav-section">Unterlagen</div>
+<div class="nav-item" onclick="showPanel('documents')">
+  <span class="nav-icon">📄</span> Unterlagen
+</div>
     <div class="nav-section">System</div>
     <div class="nav-item" onclick="showPanel('settings')">
       <span class="nav-icon">◈</span> Einstellungen
@@ -1179,7 +1182,42 @@ tbody td {
         </table>
       </div>
     </div>
-
+<!-- DOCUMENTS -->
+<div id="panel-documents" class="panel">
+  <div class="section-header">
+    <div>
+      <div class="brand-line"></div>
+      <div class="section-title">Unterlagen-Bibliothek</div>
+      <div class="section-sub">Zum Pitch hinzufügen oder direkt versenden</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px">
+    <div class="stat-card" style="cursor:pointer" onclick="toggleDoc('presentation')">
+      <div style="font-size:28px;margin-bottom:8px">📊</div>
+      <div style="font-weight:600;font-family:'Petrona',Georgia,serif;color:var(--navy);margin-bottom:4px">Signium Präsentation</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Institutional Presentation · 33 Seiten</div>
+      <div id="doc-presentation-status" style="font-size:10px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.08em">Nicht ausgewählt</div>
+      <a href="https://henry-signium.netlify.app/Signium_Presentation_CLEAN_VERSION.pdf" target="_blank" class="btn btn-sm" style="margin-top:10px;width:100%;justify-content:center" onclick="event.stopPropagation()">→ Öffnen</a>
+    </div>
+    <div class="stat-card" style="cursor:pointer" onclick="toggleDoc('whitepaper')">
+      <div style="font-size:28px;margin-bottom:8px">📝</div>
+      <div style="font-weight:600;font-family:'Petrona',Georgia,serif;color:var(--navy);margin-bottom:4px">Whitepaper 100 Tage</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Executive Insights · 13 Seiten</div>
+      <div id="doc-whitepaper-status" style="font-size:10px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.08em">Nicht ausgewählt</div>
+      <a href="https://henry-signium.netlify.app/Signium_Whitepaper_100Tage_v3.pdf" target="_blank" class="btn btn-sm" style="margin-top:10px;width:100%;justify-content:center" onclick="event.stopPropagation()">→ Öffnen</a>
+    </div>
+    <div class="stat-card" style="cursor:pointer" onclick="toggleDoc('references')">
+      <div style="font-size:28px;margin-bottom:8px">📋</div>
+      <div style="font-weight:600;font-family:'Petrona',Georgia,serif;color:var(--navy);margin-bottom:4px">CEE Referenzliste</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Reference List Central Eastern Europe</div>
+      <div id="doc-references-status" style="font-size:10px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.08em">Nicht ausgewählt</div>
+      <a href="https://henry-signium.netlify.app/SigniumCEE_reference_list.pdf" target="_blank" class="btn btn-sm" style="margin-top:10px;width:100%;justify-content:center" onclick="event.stopPropagation()">→ Öffnen</a>
+    </div>
+  </div>
+  <div style="margin-top:20px;padding:14px 16px;background:var(--info-bg);border-radius:var(--radius);border-left:3px solid var(--lightblue);font-size:12px;color:var(--lightblue)" id="doc-selection-info">
+    Kein Dokument ausgewählt — Karte anklicken um Unterlagen für den nächsten Pitch auszuwählen.
+  </div>
+</div>
     <!-- SETTINGS -->
     <div id="panel-settings" class="panel">
       <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:24px;max-width:580px;box-shadow:var(--shadow)">
