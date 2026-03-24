@@ -1399,10 +1399,26 @@ function initials(n) { if (!n) return '?'; return n.split(' ').filter(Boolean).s
 
 function renderDashboard() {
   const el = document.getElementById('dashboard-triggers');
-  const slice = allTriggers.slice(0, 6);
+  const today = new Date().toDateString();
+  const todayTriggers = allTriggers.filter(t => t.created_at && new Date(t.created_at).toDateString() === today);
+  const slice = todayTriggers.slice(0, 20);
   if (!slice.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚡</div><div class="empty-title">Noch keine Trigger</div><div class="empty-sub">Scan starten um Ereignisse zu erkennen.</div><br><button class="btn btn-primary btn-sm" onclick="showPanel('scan')">⚡ Scan starten</button></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚡</div><div class="empty-title">Heute noch keine Trigger</div><div class="empty-sub">Scan starten um Ereignisse zu erkennen.</div><br><button class="btn btn-primary btn-sm" onclick="showPanel('scan')">⚡ Scan starten</button></div>`;
     return;
+  }
+  el.innerHTML = '<div class="trigger-list">' + slice.map(t => {
+    const dt = t.created_at ? new Date(t.created_at).toLocaleDateString('de-AT') : '';
+    return `<div class="trigger-card ${(t.relevance_score||0)>=80?'high':''}" onclick="showPanel('compose');document.getElementById('pitch-company').value='${(t.companies?.name||'').replace(/'/g,"\\'")}';document.getElementById('pitch-context').value='${(t.description||'').replace(/'/g,"\\'")}'">
+      <div class="trigger-header">
+        <span class="badge ${typeMap[t.trigger_type]||'badge-gray'}">${t.trigger_type}</span>
+        <span class="trigger-company">${t.companies?.name||'–'}</span>
+        <span class="trigger-time">${dt}</span>
+        <button class="btn btn-sm btn-ghost" style="margin-left:8px;color:var(--danger);padding:2px 6px" onclick="event.stopPropagation();deleteTrigger('${t.id}')" title="Löschen">✕</button>
+      </div>
+      <div class="trigger-desc">${t.description||''}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
   }
   el.innerHTML = '<div class="trigger-list">' + slice.map(t => {
     const dt = t.created_at ? new Date(t.created_at).toLocaleDateString('de-AT') : '';
