@@ -79,7 +79,7 @@ export default async function handler(req, context) {
           role: 'user',
           content: `Extrahiere Business-Ereignisse aus diesen Nachrichten. Kategorien: Vorstandswechsel, CEO/CFO/CHRO-Wechsel, Aufsichtsratsbestellungen, M&A, Funding, Restrukturierungen. Fokus auf DACH und CEE.
 
-Antworte NUR mit JSON-Array. Wichtig: Maximal 3 Funding-Einträge, bevorzuge Vorstandswechsel und M&A. Mindestens 50% der Ergebnisse sollen Managementwechsel oder M&A sein:
+Antworte NUR mit JSON-Array. Erfasse alle relevanten Ereignisse gleichwertig — Funding, Vorstandswechsel, M&A, Restrukturierungen:
 [{"company":"Firmenname","trigger_type":"CEO-Wechsel","description":"Was passiert ist","source_url":"https://..."}]
 
 Nachrichten:
