@@ -348,7 +348,7 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
       <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:24px;max-width:580px;box-shadow:var(--shadow)">
         <div class="brand-line"></div>
         <div class="section-title" style="margin-bottom:18px">PAUL Konfiguration</div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Absender</span><span style="font-size:11px;color:var(--text-muted)">sami.hamid@signium.com</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Absender</span><span style="font-size:11px;color:var(--text-muted)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8efdefe3e7a0e6efe3e7eacefde7e9e0e7fbe3a0ede1e3">[email&#160;protected]</a></span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Datenbank</span><span class="badge" id="db-status">● Verbinden...</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Scan Engine</span><span style="font-size:11px;color:var(--text-muted)">NewsAPI · tägl. 08:00</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0"><span style="font-size:12px;font-weight:500">Unterlagen</span><span style="font-size:11px;color:var(--text-muted)">3 Dokumente verfügbar</span></div>
@@ -402,7 +402,7 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
 
 <div class="toast" id="toast"></div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 const SU = 'https://ftdxhswcnghlmcagrsox.supabase.co';
 const SK = 'sb_publishable_c8YygosML2xrImmWCpI1rw_6j_pvCRA';
 const { createClient } = supabase;
@@ -731,7 +731,8 @@ Nur die E-Mail, keine Erklärungen.`;
     const text = data.text;
     if (text) {
       currentPitchText = text;
-      pitchBody.innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.85">${text}</div>`;
+      const linkedText = text.replace(/(https?:\/\/[^\s\n]+)/g, '<a href="$1" target="_blank" style="color:var(--lightblue)">$1</a>');
+      pitchBody.innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.85">${linkedText}</div>`;
       pitchActions.style.display = 'flex';
       document.getElementById('pitch-meta').textContent = `${labels[trigger]} · ${company} · ${new Date().toLocaleDateString('de-AT')}`;
     } else throw new Error('Keine Antwort');
@@ -790,10 +791,4 @@ async function saveContact() {
   if (!error) { showToast('Gespeichert ✓'); closeModal('modal-contact'); loadContacts(); }
 }
 
-async function deleteCompany(id) { if (!confirm('Unternehmen löschen?')) return; await db.from('companies').delete().eq('id', id); showToast('Gelöscht'); loadCompanies(); }
-async function deleteContact(id) { if (!confirm('Kontakt löschen?')) return; await db.from('contacts').delete().eq('id', id); showToast('Gelöscht'); loadContacts(); }
-
-loadAll();
-</script>
-</body>
-</html>
+async function deleteCompany(id) { if (!confirm('Unternehmen löschen?')) return; await db.from('companies').delete().eq('id', id); showToast('Gelös
