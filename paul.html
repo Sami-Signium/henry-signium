@@ -1324,6 +1324,30 @@ const { createClient } = supabase;
 const db = createClient(SU, SK);
 
 let allCompanies = [], allContacts = [], allTriggers = [], allOutreach = [];
+let selectedDocs = { presentation: false, whitepaper: false, references: false };
+const docUrls = {
+  presentation: 'https://henry-signium.netlify.app/Signium_Presentation_CLEAN_VERSION.pdf',
+  whitepaper: 'https://henry-signium.netlify.app/Signium_Whitepaper_100Tage_v3.pdf',
+  references: 'https://henry-signium.netlify.app/SigniumCEE_reference_list.pdf'
+};
+const docNames = {
+  presentation: 'Signium Präsentation',
+  whitepaper: 'Whitepaper 100 Tage',
+  references: 'CEE Referenzliste'
+};
+function toggleDoc(key) {
+  selectedDocs[key] = !selectedDocs[key];
+  const el = document.getElementById('doc-' + key + '-status');
+  el.textContent = selectedDocs[key] ? '✓ Ausgewählt' : 'Nicht ausgewählt';
+  el.style.color = selectedDocs[key] ? 'var(--success)' : 'var(--gray-400)';
+  const selected = Object.keys(selectedDocs).filter(k => selectedDocs[k]);
+  const info = document.getElementById('doc-selection-info');
+  if (selected.length === 0) {
+    info.textContent = 'Kein Dokument ausgewählt — Karte anklicken um Unterlagen für den nächsten Pitch auszuwählen.';
+  } else {
+    info.textContent = '✓ ' + selected.map(k => docNames[k]).join(', ') + ' — wird automatisch in den nächsten Pitch-Text eingefügt.';
+  }
+}
 let currentPitchText = '';
 
 const typeMap = {
