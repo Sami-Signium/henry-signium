@@ -303,7 +303,8 @@ const params = new URLSearchParams(window.location.search);
 const pitchText = params.get('text');
 if (pitchText) {
   const decoded = decodeURIComponent(pitchText);
-  document.getElementById('letter-body').textContent = decoded;
+  const linked = decoded.replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank" style="color:#24629B">$1</a>');
+  document.getElementById('letter-body').innerHTML = linked.replace(/\n/g, '<br>');
 }
 </script>
 </body>
