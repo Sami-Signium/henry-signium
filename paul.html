@@ -748,20 +748,8 @@ const text = data.text;UcurrentPitchText = text;
 function printBrief() {
   if (!currentPitchText) { showToast('Bitte zuerst Pitch generieren'); return; }
   window.open('/brief_template.html?text=' + encodeURIComponent(currentPitchText), '_blank');
-}function copyPitch() { 
-  let t = currentPitchText;
-  t = t.replace(/Signium_Presentation_CLEAN_VERSION\.pdf/g, 'Signium_Presentation_pdf.pdf');
-  t = t.replace(/SigniumCEE_reference_list\.pdf/g, 'Signium_CEE_reference_list.pdf');
-  t = t.replace(/henry-signium\.netlify\.app/g, 'paul-signium.netlify.app');
-  navigator.clipboard.writeText(t).then(() => showToast('Kopiert ✓')); 
-
-async function savePitch() {
-  if (!currentPitchText) return;
-  const company = document.getElementById('pitch-company').value;
-  const comp = allCompanies.find(c => c.name.toLowerCase() === company.toLowerCase());
-  const { error } = await db.from('outreach').insert({ company_id: comp?.id || null, channel: 'Email', body: currentPitchText, generated_by: 'PAUL', status: 'Entwurf' });
-  if (!error) { showToast('Entwurf gespeichert ✓'); loadOutreach(); }
 }
+function copyPitch() { navigator.clipboard.writeText(currentPitchText).then(() => showToast('Kopiert ✓')); }
 
 async function approvePitch() {
   if (!currentPitchText) return;
