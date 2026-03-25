@@ -40,12 +40,14 @@ body {
 
 .page {
   width: 210mm;
+  max-width: 210mm;
   background: white;
   box-shadow: 0 2px 20px rgba(0,0,0,0.3);
   padding: 12mm 20mm 8mm 20mm;
   display: flex;
   flex-direction: column;
   gap: 0;
+  overflow: hidden;
 }
 
 .logo-row {
@@ -82,13 +84,6 @@ body {
   line-height: 1.65;
   flex: 1;
   margin-bottom: 8mm;
-}
-
-.footer-divider {
-  border: none;
-  border-top: 2px solid #081D4D;
-  margin: 0 -20mm;
-  width: calc(100% + 40mm);
 }
 
 .footer-row {
@@ -132,14 +127,11 @@ Land</div>
 
   <div class="letter-body" id="letter-body" contenteditable="true">Brieftext...</div>
 
-  <hr class="footer-divider">
-  
-  <div class="footer-row">
+  <div class="footer-row" style="border-top:2px solid #081D4D;padding-top:4mm;margin-top:6mm;display:flex;justify-content:flex-end;">
     <div class="footer-text">
       <div class="footer-co">Signium International Austria</div>
       <div class="footer-addr">SIGNIUM – STEIN &amp; PARTNER GMBH<br>Rathausstraße 21/13, A-1010 Vienna, Austria</div>
     </div>
-  </div>
 
 </div>
 </div>
