@@ -297,7 +297,6 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
           </div>
           <div class="pitch-actions" id="pitch-actions" style="display:none">
             <button class="btn btn-sm" onclick="copyPitch()">Kopieren</button>
-            <button class="btn btn-sm" onclick="printBrief()">🖨️ Als Brief drucken</button>
             <button class="btn btn-sm btn-primary" onclick="savePitch()">Als Entwurf</button>
             <button class="btn btn-sm btn-orange" onclick="approvePitch()">✓ Freigeben</button>
           </div>
@@ -322,21 +321,21 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
           <div style="font-weight:600;font-family:'Petrona',Georgia,serif;color:var(--navy);margin-bottom:4px;font-size:14px">Signium Präsentation</div>
           <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Institutional Presentation · 33 Seiten</div>
           <div id="doc-presentation-status" style="font-size:10px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Nicht ausgewählt</div>
-          <a href="https://paul-signium.netlify.app/Signium_Presentation.pdf" target="_blank" class="btn btn-sm" style="width:100%;justify-content:center" onclick="event.stopPropagation()">→ Öffnen</a>
+          <a href="https://henry-signium.netlify.app/Signium_Presentation_CLEAN_VERSION.pdf" target="_blank" class="btn btn-sm" style="width:100%;justify-content:center" onclick="event.stopPropagation()">→ Öffnen</a>
         </div>
         <div class="doc-card" id="doccard-whitepaper" onclick="toggleDoc('whitepaper')">
           <div style="font-size:32px;margin-bottom:12px">📝</div>
           <div style="font-weight:600;font-family:'Petrona',Georgia,serif;color:var(--navy);margin-bottom:4px;font-size:14px">Whitepaper 100 Tage</div>
           <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Executive Insights · 13 Seiten</div>
           <div id="doc-whitepaper-status" style="font-size:10px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Nicht ausgewählt</div>
-          <a href="https://paul-signium.netlify.app/Signium_Whitepaper_100Tage_v3.pdf" target="_blank" class="btn btn-sm" style="width:100%;justify-content:center" onclick="event.stopPropagation()">→ Öffnen</a>
+          <a href="https://henry-signium.netlify.app/Signium_Whitepaper_100Tage_v3.pdf" target="_blank" class="btn btn-sm" style="width:100%;justify-content:center" onclick="event.stopPropagation()">→ Öffnen</a>
         </div>
         <div class="doc-card" id="doccard-references" onclick="toggleDoc('references')">
           <div style="font-size:32px;margin-bottom:12px">📋</div>
           <div style="font-weight:600;font-family:'Petrona',Georgia,serif;color:var(--navy);margin-bottom:4px;font-size:14px">CEE Referenzliste</div>
           <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Reference List Central Eastern Europe</div>
           <div id="doc-references-status" style="font-size:10px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Nicht ausgewählt</div>
-          <a href="https://paul-signium.netlify.app/Signium_CEE_reference_list.pdf" target="_blank" class="btn btn-sm" style="width:100%;justify-content:center" onclick="event.stopPropagation()">→ Öffnen</a>
+          <a href="https://henry-signium.netlify.app/SigniumCEE_reference_list.pdf" target="_blank" class="btn btn-sm" style="width:100%;justify-content:center" onclick="event.stopPropagation()">→ Öffnen</a>
         </div>
       </div>
       <div style="margin-top:20px;padding:14px 16px;background:var(--info-bg);border-radius:var(--radius);border-left:3px solid var(--lightblue);font-size:12px;color:var(--lightblue)" id="doc-selection-info">
@@ -349,7 +348,7 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
       <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:24px;max-width:580px;box-shadow:var(--shadow)">
         <div class="brand-line"></div>
         <div class="section-title" style="margin-bottom:18px">PAUL Konfiguration</div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Absender</span><span style="font-size:11px;color:var(--text-muted)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8efdefe3e7a0e6efe3e7eacefde7e9e0e7fbe3a0ede1e3">[email&#160;protected]</a></span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Absender</span><span style="font-size:11px;color:var(--text-muted)">sami.hamid@signium.com</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Datenbank</span><span class="badge" id="db-status">● Verbinden...</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Scan Engine</span><span style="font-size:11px;color:var(--text-muted)">NewsAPI · tägl. 08:00</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0"><span style="font-size:12px;font-weight:500">Unterlagen</span><span style="font-size:11px;color:var(--text-muted)">3 Dokumente verfügbar</span></div>
@@ -403,7 +402,7 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
 
 <div class="toast" id="toast"></div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 const SU = 'https://ftdxhswcnghlmcagrsox.supabase.co';
 const SK = 'sb_publishable_c8YygosML2xrImmWCpI1rw_6j_pvCRA';
 const { createClient } = supabase;
@@ -413,9 +412,9 @@ let allCompanies = [], allContacts = [], allTriggers = [], allOutreach = [];
 let currentPitchText = '';
 
 const docUrls = {
-  presentation: 'https://paul-signium.netlify.app/Signium_Presentation.pdf',
-  whitepaper: 'https://paul-signium.netlify.app/Signium_Whitepaper_100Tage_v3.pdf',
-  references: 'https://paul-signium.netlify.app/Signium_CEE_reference_list.pdf'
+  presentation: 'https://henry-signium.netlify.app/Signium_Presentation_CLEAN_VERSION.pdf',
+  whitepaper: 'https://henry-signium.netlify.app/Signium_Whitepaper_100Tage_v3.pdf',
+  references: 'https://henry-signium.netlify.app/SigniumCEE_reference_list.pdf'
 };
 const docNames = {
   presentation: 'Signium Präsentation',
@@ -732,19 +731,13 @@ Nur die E-Mail, keine Erklärungen.`;
     const text = data.text;
     if (text) {
       currentPitchText = text;
-      const linkedText = text.replace(/(https?:\/\/[^\s\n]+)/g, '<a href="$1" target="_blank" style="color:var(--lightblue)">$1</a>');
-      pitchBody.innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.85">${linkedText}</div>`;
+      pitchBody.innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.85">${text}</div>`;
       pitchActions.style.display = 'flex';
       document.getElementById('pitch-meta').textContent = `${labels[trigger]} · ${company} · ${new Date().toLocaleDateString('de-AT')}`;
     } else throw new Error('Keine Antwort');
   } catch (e) { pitchBody.innerHTML = `<div style="color:var(--danger);padding:20px;font-size:12px">Fehler: ${e.message}</div>`; }
 }
 
-function printBrief() {
-  if (!currentPitchText) { showToast("Bitte zuerst Pitch generieren"); return; }
-  const url = "/brief_template.html?text=" + encodeURIComponent(currentPitchText);
-  window.open(url, "_blank");
-}
 function copyPitch() { navigator.clipboard.writeText(currentPitchText).then(() => showToast('Kopiert ✓')); }
 
 async function savePitch() {
@@ -799,11 +792,7 @@ async function saveContact() {
 
 async function deleteCompany(id) { if (!confirm('Unternehmen löschen?')) return; await db.from('companies').delete().eq('id', id); showToast('Gelöscht'); loadCompanies(); }
 async function deleteContact(id) { if (!confirm('Kontakt löschen?')) return; await db.from('contacts').delete().eq('id', id); showToast('Gelöscht'); loadContacts(); }
-function printBrief() {
-  if (!currentPitchText) { showToast('Bitte zuerst Pitch generieren'); return; }
-  const url = '/brief_template.html?text=' + encodeURIComponent(currentPitchText);
-  window.open(url, '_blank');
-}
+
 loadAll();
 </script>
 </body>
