@@ -724,9 +724,6 @@ Der Pitch soll:
 - Förmlich aber persönlich
 - Verwende KEINE Markdown-Formatierung (keine ** um Namen oder Texte)
 - Schreibe deinen vollen Namen am Ende ohne ** Zeichen
-- Verwende die URLs EXAKT so wie angegeben, ändere sie nicht
-${selectedDocLinks ? '\'\\nWeiterführende Unterlagen:\\n\' + selectedDocLinks : \'\'}
-
 Nur die E-Mail, keine Erklärungen.`;
 
   try {
@@ -738,6 +735,16 @@ Nur die E-Mail, keine Erklärungen.`;
       text = text.replace(/Signium_Presentation_CLEAN_VERSION\.pdf/g, 'Signium_Presentation_pdf.pdf');
       text = text.replace(/SigniumCEE_reference_list\.pdf/g, 'Signium_CEE_reference_list.pdf');
       text = text.replace(/henry-signium\.netlify\.app/g, 'paul-signium.netlify.app');
+      // Fix any wrong URLs Claude may have generated
+      text = text.replace(/Signium_Presentation[^\s"')\]<]*/g, 'Signium_Presentation_pdf.pdf');
+      text = text.replace(/SigniumCEE_reference[^\s"')\]<]*/g, 'Signium_CEE_reference_list.pdf');
+      text = text.replace(/henry-signium\.netlify\.app/g, 'paul-signium.netlify.app');
+      // Append selected doc links directly (not via Claude)
+      const selectedKeys = ['presentation','whitepaper','references'].filter(k => document.getElementById('doc-check-'+k)?.checked);
+      if (selectedKeys.length > 0) {
+        const linkLines = selectedKeys.map(k => docNames[k] + ': ' + docUrls[k]).join('\n');
+        text = text + '\n\nWeiterführende Unterlagen:\n' + linkLines;
+      }
       currentPitchText = text;
       const linkedText = text.replace(/(https?:\/\/[^\s\n]+)/g, '<a href="$1" target="_blank" style="color:var(--lightblue)">$1</a>');
       pitchBody.innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.85">${linkedText}</div>`;
