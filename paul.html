@@ -797,4 +797,14 @@ async function saveContact() {
   if (!error) { showToast('Gespeichert ✓'); closeModal('modal-contact'); loadContacts(); }
 }
 
-async function deleteCompany(id) { if (!confirm('Unternehmen löschen?')) return; await db.from('companies').delete().eq('id', id); showToast('Gelös
+async function deleteCompany(id) { if (!confirm('Unternehmen löschen?')) return; await db.from('companies').delete().eq('id', id); showToast('Gelöscht'); loadCompanies(); }
+async function deleteContact(id) { if (!confirm('Kontakt löschen?')) return; await db.from('contacts').delete().eq('id', id); showToast('Gelöscht'); loadContacts(); }
+function printBrief() {
+  if (!currentPitchText) { showToast('Bitte zuerst Pitch generieren'); return; }
+  const url = '/brief_template.html?text=' + encodeURIComponent(currentPitchText);
+  window.open(url, '_blank');
+}
+loadAll();
+</script>
+</body>
+</html>
