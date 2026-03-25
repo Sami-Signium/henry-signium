@@ -722,7 +722,9 @@ Der Pitch soll:
 - Signiums Expertise einbringen
 - Mit Call-to-Action enden (30-min Austausch)
 - Förmlich aber persönlich
-${selectedDocLinks ? '\nFüge am Ende einen Abschnitt "Weiterführende Unterlagen:" ein mit:\n' + selectedDocLinks : ''}
+- Verwende KEINE Markdown-Formatierung (keine ** um Namen oder Texte)
+- Schreibe deinen vollen Namen am Ende ohne ** Zeichen
+${selectedDocLinks ? '\'\\nWeiterführende Unterlagen:\\n\' + selectedDocLinks : \'\'}
 
 Nur die E-Mail, keine Erklärungen.`;
 
