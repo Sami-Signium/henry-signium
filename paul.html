@@ -740,7 +740,11 @@ Nur die E-Mail, keine Erklärungen.`;
     } else throw new Error('Keine Antwort');
   } catch (e) { pitchBody.innerHTML = `<div style="color:var(--danger);padding:20px;font-size:12px">Fehler: ${e.message}</div>`; }
 }
-
+function printBrief() {
+  if (!currentPitchText) return;
+  const url = '/brief_template.html?text=' + encodeURIComponent(currentPitchText);
+  window.open(url, '_blank');
+}
 function copyPitch() { navigator.clipboard.writeText(currentPitchText).then(() => showToast('Kopiert ✓')); }
 
 async function savePitch() {
