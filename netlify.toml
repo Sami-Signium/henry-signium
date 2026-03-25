@@ -4,6 +4,6 @@
   publish = "."
 
 [[redirects]]
-  from = "/"
+  from = "/*"
   to = "/paul.html"
   status = 200
