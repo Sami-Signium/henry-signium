@@ -729,7 +729,7 @@ Nur die E-Mail, keine Erklärungen.`;
   try {
     const response = await fetch('/api/pitch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt }) });
     const data = await response.json();
-    const text = data.text;
+    let text = data.text;
     if (text) {
       text = text.split('Signium_Presentation_CLEAN_VERSION.pdf').join('Signium_Presentation_pdf.pdf');
       text = text.split('henry-signium.netlify.app').join('paul-signium.netlify.app');
