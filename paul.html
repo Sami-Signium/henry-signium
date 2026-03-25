@@ -748,7 +748,12 @@ const text = data.text;UcurrentPitchText = text;
 function printBrief() {
   if (!currentPitchText) { showToast('Bitte zuerst Pitch generieren'); return; }
   window.open('/brief_template.html?text=' + encodeURIComponent(currentPitchText), '_blank');
-}function copyPitch() { navigator.clipboard.writeText(currentPitchText).then(() => showToast('Kopiert ✓')); }
+}function copyPitch() { 
+  let t = currentPitchText;
+  t = t.replace(/Signium_Presentation_CLEAN_VERSION\.pdf/g, 'Signium_Presentation_pdf.pdf');
+  t = t.replace(/SigniumCEE_reference_list\.pdf/g, 'Signium_CEE_reference_list.pdf');
+  t = t.replace(/henry-signium\.netlify\.app/g, 'paul-signium.netlify.app');
+  navigator.clipboard.writeText(t).then(() => showToast('Kopiert ✓')); 
 
 async function savePitch() {
   if (!currentPitchText) return;
