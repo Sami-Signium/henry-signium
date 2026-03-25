@@ -759,7 +759,13 @@ function printBrief() {
   const url = "/brief_template.html?text=" + encodeURIComponent(currentPitchText);
   window.open(url, "_blank");
 }
-function copyPitch() { navigator.clipboard.writeText(currentPitchText).then(() => showToast('Kopiert ✓')); }
+function copyPitch() { 
+  let t = currentPitchText;
+  t = t.split('Signium_Presentation_CLEAN_VERSION.pdf').join('Signium_Presentation_pdf.pdf');
+  t = t.split('SigniumCEE_reference_list.pdf').join('Signium_CEE_reference_list.pdf');
+  t = t.split('henry-signium.netlify.app').join('paul-signium.netlify.app');
+  navigator.clipboard.writeText(t).then(() => showToast('Kopiert ✓')); 
+}
 
 async function savePitch() {
   if (!currentPitchText) return;
