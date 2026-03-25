@@ -297,7 +297,8 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
           </div>
           <div class="pitch-actions" id="pitch-actions" style="display:none">
             <button class="btn btn-sm" onclick="copyPitch()">Kopieren</button>
-            <button class="btn btn-sm btn-primary" onclick="savePitch()">Als Entwurf</button>
+            <button class="btn btn-sm btn-primary" onclick="savePitch()">Als Entwurf</button><button class="btn btn-sm" onclick="printBrief()">🖨️ Als Brief drucken</button>
+```
             <button class="btn btn-sm btn-orange" onclick="approvePitch()">✓ Freigeben</button>
           </div>
         </div>
@@ -738,7 +739,10 @@ Nur die E-Mail, keine Erklärungen.`;
   } catch (e) { pitchBody.innerHTML = `<div style="color:var(--danger);padding:20px;font-size:12px">Fehler: ${e.message}</div>`; }
 }
 
-function copyPitch() { navigator.clipboard.writeText(currentPitchText).then(() => showToast('Kopiert ✓')); }
+function printBrief() {
+  if (!currentPitchText) { showToast('Bitte zuerst Pitch generieren'); return; }
+  window.open('/brief_template.html?text=' + encodeURIComponent(currentPitchText), '_blank');
+}function copyPitch() { navigator.clipboard.writeText(currentPitchText).then(() => showToast('Kopiert ✓')); }
 
 async function savePitch() {
   if (!currentPitchText) return;
