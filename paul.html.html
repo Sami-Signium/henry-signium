@@ -729,17 +729,12 @@ Nur die E-Mail, keine Erklärungen.`;
   try {
     const response = await fetch('/api/pitch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt }) });
     const data = await response.json();
-    const text = data.text;
-    if (text) {
-      // Fix URLs that Claude may have gotten wrong
-      text = text.replace(/Signium_Presentation_CLEAN_VERSION\.pdf/g, 'Signium_Presentation_pdf.pdf');
-      text = text.replace(/SigniumCEE_reference_list\.pdf/g, 'Signium_CEE_reference_list.pdf');
-      text = text.replace(/henry-signium\.netlify\.app/g, 'paul-signium.netlify.app');
-      // Fix any wrong URLs Claude may have generated
-      text = text.replace(/Signium_Presentation[^\s"')\]<]*/g, 'Signium_Presentation_pdf.pdf');
-      text = text.replace(/SigniumCEE_reference[^\s"')\]<]*/g, 'Signium_CEE_reference_list.pdf');
-      text = text.replace(/henry-signium\.netlify\.app/g, 'paul-signium.netlify.app');
-      // Append selected doc links directly (not via Claude)
+    const rawText = data.text;
+    if (rawText) {
+      let text = rawText;
+      text = text.split('Signium_Presentation_CLEAN_VERSION.pdf').join('Signium_Presentation_pdf.pdf');
+      text = text.split('SigniumCEE_reference_list.pdf').join('Signium_CEE_reference_list.pdf');
+      text = text.split('henry-signium.netlify.app').join('paul-signium.netlify.app');
       const selectedKeys = ['presentation','whitepaper','references'].filter(k => document.getElementById('doc-check-'+k)?.checked);
       if (selectedKeys.length > 0) {
         const linkLines = selectedKeys.map(k => docNames[k] + ': ' + docUrls[k]).join('\n');
@@ -817,4 +812,9 @@ async function saveContact() {
   if (!error) { showToast('Gespeichert ✓'); closeModal('modal-contact'); loadContacts(); }
 }
 
-async function deleteCompany(id) { if (!confirm('Unternehmen löschen?')) return; await db.from('companies').delete().eq('id', id); showToast('Gelös
+async function deleteCompany(id) { if (!confirm('Unternehmen löschen?')) return; await db.from('companies').delete().eq('id', id); showToast('Gelöscht'); loadCompanies(); }
+async function deleteContact(id) { if (!confirm('Kontakt löschen?')) return; await db.from('contacts').delete().eq('id', id); showToast('Gelöscht'); loadContacts(); }
+loadAll();
+</script>
+</body>
+</html>
