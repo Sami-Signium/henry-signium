@@ -76,25 +76,23 @@ const handler = schedule("0 7 * * *", async () => {
     const companies = await sbGet("companies?select=id,name");
     if (!companies.length) return { statusCode: 200 };
 
-    // === AUSTRIA RSS FEEDS ===
+    // === AUSTRIA: Google News RSS ===
     const austriaFeeds = [
-      ['https://www.derstandard.at/rss/wirtschaft', 'Der Standard Wirtschaft'],
-      ['https://www.diepresse.com/rss/wirtschaft', 'Die Presse Wirtschaft'],
-      ['https://kurier.at/wirtschaft/rss', 'Kurier Wirtschaft'],
-      ['https://www.trend.at/rss/wirtschaft', 'Trend'],
-      ['https://www.industriemagazin.at/rss', 'Industriemagazin'],
-      ['https://www.medianet.at/rss', 'Medianet'],
-      ['https://www.ots.at/rss/wirtschaft', 'APA-OTS Wirtschaft'],
+      ['https://news.google.com/rss/search?q=Vorstand+Österreich+Wechsel&hl=de&gl=AT&ceid=AT:de', 'GNews AT Vorstand'],
+      ['https://news.google.com/rss/search?q=Geschäftsführer+Wien+bestellt&hl=de&gl=AT&ceid=AT:de', 'GNews AT GF'],
+      ['https://news.google.com/rss/search?q=Übernahme+Fusion+Österreich+Wien&hl=de&gl=AT&ceid=AT:de', 'GNews AT M&A'],
+      ['https://news.google.com/rss/search?q=CEO+CFO+Aufsichtsrat+Österreich&hl=de&gl=AT&ceid=AT:de', 'GNews AT CEO'],
+      ['https://news.google.com/rss/search?q=OMV+OR+Verbund+OR+Borealis+OR+Raiffeisen+OR+Erste+Vorstand&hl=de&gl=AT&ceid=AT:de', 'GNews AT Unternehmen'],
     ];
 
-    // === CEE RSS FEEDS (English) ===
+    // === CEE: Google News RSS + open feeds ===
     const ceeFeeds = [
+      ['https://news.google.com/rss/search?q=CEO+appointed+Poland+OR+Romania+OR+Hungary+OR+Czech&hl=en&gl=US&ceid=US:en', 'GNews CEE CEO'],
+      ['https://news.google.com/rss/search?q=merger+acquisition+Warsaw+OR+Bucharest+OR+Budapest+OR+Prague&hl=en&gl=US&ceid=US:en', 'GNews CEE M&A'],
       ['https://emerging-europe.com/feed/', 'Emerging Europe'],
       ['https://bbj.hu/rss', 'Budapest Business Journal'],
       ['https://www.intellinews.com/rss/', 'bne IntelliNews'],
       ['https://business-review.eu/feed', 'Business Review Romania'],
-      ['https://www.rp.pl/rss/1019', 'Rzeczpospolita'],
-      ['https://www.hn.cz/rss/ekonomika', 'Hospodářské noviny'],
     ];
 
     // Fetch all RSS feeds in parallel
