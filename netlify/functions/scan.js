@@ -60,23 +60,23 @@ export default async function handler(req, context) {
   try {
     const NEWS_API_KEY = '4bc455fcb3de4648a707d4b3cd96a091';
 
-    // === AUSTRIA RSS ===
+    // === AUSTRIA: Google News RSS ===
     const austriaFeeds = [
-      ['https://www.derstandard.at/rss/wirtschaft', 'Der Standard'],
-      ['https://www.diepresse.com/rss/wirtschaft', 'Die Presse'],
-      ['https://kurier.at/wirtschaft/rss', 'Kurier'],
-      ['https://www.trend.at/rss/wirtschaft', 'Trend'],
-      ['https://www.industriemagazin.at/rss', 'Industriemagazin'],
-      ['https://www.ots.at/rss/wirtschaft', 'APA-OTS'],
+      ['https://news.google.com/rss/search?q=Vorstand+Österreich+Wechsel&hl=de&gl=AT&ceid=AT:de', 'GNews AT Vorstand'],
+      ['https://news.google.com/rss/search?q=Geschäftsführer+Wien+bestellt&hl=de&gl=AT&ceid=AT:de', 'GNews AT GF'],
+      ['https://news.google.com/rss/search?q=Übernahme+Fusion+Österreich+Wien&hl=de&gl=AT&ceid=AT:de', 'GNews AT M&A'],
+      ['https://news.google.com/rss/search?q=CEO+CFO+Aufsichtsrat+Österreich&hl=de&gl=AT&ceid=AT:de', 'GNews AT CEO'],
+      ['https://news.google.com/rss/search?q=OMV+OR+Verbund+OR+Borealis+OR+Raiffeisen+OR+Erste+Vorstand&hl=de&gl=AT&ceid=AT:de', 'GNews AT Unternehmen'],
     ];
 
-    // === CEE RSS ===
+    // === CEE: Google News RSS + open feeds ===
     const ceeFeeds = [
+      ['https://news.google.com/rss/search?q=CEO+appointed+Poland+OR+Romania+OR+Hungary+OR+Czech&hl=en&gl=US&ceid=US:en', 'GNews CEE CEO'],
+      ['https://news.google.com/rss/search?q=merger+acquisition+Warsaw+OR+Bucharest+OR+Budapest+OR+Prague&hl=en&gl=US&ceid=US:en', 'GNews CEE M&A'],
       ['https://emerging-europe.com/feed/', 'Emerging Europe'],
       ['https://bbj.hu/rss', 'Budapest Business Journal'],
       ['https://www.intellinews.com/rss/', 'bne IntelliNews'],
       ['https://business-review.eu/feed', 'Business Review Romania'],
-      ['https://www.hn.cz/rss/ekonomika', 'Hospodářské noviny'],
     ];
 
     // Fetch all RSS in parallel
