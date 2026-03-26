@@ -25,20 +25,19 @@ const handler = schedule("0 7 * * *", async () => {
     const companies = await sbGet("companies?select=id,name");
     if (!companies.length) return { statusCode: 200 };
 
-    // === AUSTRIA: broad leadership + M&A keywords, Austrian sources ===
+    // === AUSTRIA: no sources filter — keyword + geo targeting ===
     const [atMgmtRes, atMaRes, atSpecRes] = await Promise.all([
 
       // Austria: Management changes
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '(Vorstand OR Geschäftsführer OR CEO OR CFO OR CHRO OR Aufsichtsrat) AND (Wien OR Österreich OR Austria)',
-        sources: 'der-standard,die-presse',
+        q: '(Vorstand OR Geschäftsführer OR CEO OR CFO OR CHRO OR Aufsichtsrat) AND (Wien OR Österreich)',
         language: 'de',
         sortBy: 'publishedAt',
         pageSize: 25,
         apiKey: NEWS_API_KEY
       })),
 
-      // Austria: M&A + Funding from Austrian business media
+      // Austria: M&A + Funding
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
         q: '(Übernahme OR Fusion OR Merger OR Akquisition OR Finanzierungsrunde OR Restrukturierung) AND (Wien OR Österreich)',
         language: 'de',
@@ -47,9 +46,9 @@ const handler = schedule("0 7 * * *", async () => {
         apiKey: NEWS_API_KEY
       })),
 
-      // Austria: Named major Austrian companies (direct monitoring)
+      // Austria: Named major Austrian companies
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '(OMV OR Borealis OR Borouge OR Verbund OR "Erste Group" OR Raiffeisen OR Andritz OR Kapsch OR Wienerberger OR Mondi OR "Flughafen Wien" OR Spar OR Rewe OR "Vienna Insurance" OR Uniqa OR "Österreichische Post" OR Telekom OR "A1 Telekom") AND (Vorstand OR CEO OR Übernahme OR Fusion OR Aufsichtsrat)',
+        q: '(OMV OR Borealis OR Borouge OR Verbund OR "Erste Group" OR Raiffeisen OR Andritz OR Wienerberger OR Mondi OR Uniqa OR "Österreichische Post" OR "A1 Telekom" OR Kapsch OR "Vienna Insurance") AND (Vorstand OR CEO OR Übernahme OR Fusion OR Aufsichtsrat)',
         language: 'de',
         sortBy: 'publishedAt',
         pageSize: 20,
@@ -57,41 +56,39 @@ const handler = schedule("0 7 * * *", async () => {
       }))
     ]);
 
-    // === CEE: English + local language coverage ===
-    const [ceeEngRes, ceePlRes, ceeCzHuRes] = await Promise.all([
+    // === CEE: English coverage — no sources filter ===
+    const [ceeEng1Res, ceeEng2Res, ceeMaRes] = await Promise.all([
 
-      // CEE English: Emerging Europe, BBJ, intellinews, Business Review
+      // CEE English: executive changes
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '(CEO OR CFO OR "executive appointment" OR merger OR acquisition OR funding) AND (Poland OR Romania OR Hungary OR "Czech Republic" OR Slovakia OR Warsaw OR Bucharest OR Budapest OR Prague OR Bratislava)',
-        sources: 'the-economist',
-        language: 'en',
-        sortBy: 'publishedAt',
-        pageSize: 20,
-        apiKey: NEWS_API_KEY
-      })),
-
-      // CEE English broad (no source filter)
-      fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '("executive appointment" OR "new CEO" OR "new CFO" OR "board appointment" OR merger OR acquisition) AND (Warsaw OR Bucharest OR Budapest OR Prague OR Bratislava OR "Central Europe" OR "Eastern Europe")',
+        q: '("new CEO" OR "new CFO" OR "executive appointment" OR "board appointment" OR "appointed as") AND (Warsaw OR Bucharest OR Budapest OR Prague OR Bratislava OR Poland OR Romania OR Hungary)',
         language: 'en',
         sortBy: 'publishedAt',
         pageSize: 25,
         apiKey: NEWS_API_KEY
       })),
 
-      // CEE local language (Polish/Czech/Slovak/Hungarian/Romanian keywords)
+      // CEE English: M&A + funding
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '(prezes OR dyrektor OR fuzja OR przejecie) OR (generalni OR predstavenstvo OR fúzia) OR (vezérigazgató OR igazgató OR felvásárlás) OR (director OR numire OR fuziune OR achizitie)',
+        q: '(merger OR acquisition OR "funding round" OR "raises" OR restructuring) AND (Warsaw OR Bucharest OR Budapest OR Prague OR Bratislava OR "Central Europe" OR "Eastern Europe")',
+        language: 'en',
+        sortBy: 'publishedAt',
+        pageSize: 25,
+        apiKey: NEWS_API_KEY
+      })),
+
+      // CEE: local language keywords
+      fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
+        q: '(prezes zarządu OR nowy dyrektor OR fuzja OR przejęcie) OR (generální ředitel OR fúze OR akvizice) OR (vezérigazgató OR felvásárlás) OR (director general OR numire OR fuziune OR achiziție)',
         sortBy: 'publishedAt',
         pageSize: 20,
         apiKey: NEWS_API_KEY
       }))
     ]);
 
-    // === GERMANY: reduced to essentials only ===
+    // === GERMANY: minimal — no sources filter ===
     const deRes = await fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-      q: '"Vorstandswechsel" OR "neuer Vorstandsvorsitzender" OR "neuer CEO" OR "Übernahme abgeschlossen" OR "Fusion abgeschlossen"',
-      sources: 'handelsblatt,manager-magazin',
+      q: '("Vorstandswechsel" OR "neuer Vorstandsvorsitzender" OR "Übernahme abgeschlossen" OR "Fusion abgeschlossen") AND (DAX OR MDAX OR Deutschland)',
       language: 'de',
       sortBy: 'publishedAt',
       pageSize: 15,
@@ -100,7 +97,7 @@ const handler = schedule("0 7 * * *", async () => {
 
     const allResponses = await Promise.all([
       atMgmtRes.json(), atMaRes.json(), atSpecRes.json(),
-      ceeEngRes.json(), ceePlRes.json(), ceeCzHuRes.json(),
+      ceeEng1Res.json(), ceeEng2Res.json(), ceeMaRes.json(),
       deRes.json()
     ]);
 
