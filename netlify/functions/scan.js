@@ -7,7 +7,7 @@ async function fetchRSS(url, label) {
     });
     const text = await r.text();
     const items = [];
-    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const cutoff = Date.now() - 2 * 24 * 60 * 60 * 1000;
     const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi;
     let match;
     while ((match = itemRegex.exec(text)) !== null) {
@@ -16,9 +16,21 @@ async function fetchRSS(url, label) {
       const desc = (/<description[^>]*><!\[CDATA\[([\s\S]*?)\]\]><\/description>/i.exec(item) || /<description[^>]*>([\s\S]*?)<\/description>/i.exec(item) || [])[1] || '';
       const link = (/<link[^>]*>([\s\S]*?)<\/link>/i.exec(item) || [])[1] || '';
       const pubDate = (/<pubDate[^>]*>([\s\S]*?)<\/pubDate>/i.exec(item) || [])[1] || '';
+      // Parse date — supports RFC822, ISO, and Austrian DD.MM.YYYY format
+      let articleDate = NaN;
       if (pubDate) {
-        const articleDate = new Date(pubDate).getTime();
-        if (!isNaN(articleDate) && articleDate < cutoff) continue;
+        articleDate = new Date(pubDate).getTime();
+        if (isNaN(articleDate)) {
+          // Try Austrian format: DD.MM.YYYY or DD.MM.YYYY, HH:MM:SS
+          const m = pubDate.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+          if (m) articleDate = new Date(`${m[3]}-${m[2]}-${m[1]}`).getTime();
+        }
+      }
+      if (!isNaN(articleDate) && articleDate < cutoff) continue;
+      // If no parseable date at all, skip as safety measure
+      if (isNaN(articleDate) && !pubDate) {
+        const combined = title + ' ' + desc;
+        if (/\b(200[0-9]|201[0-9]|202[0-3])\b/.test(combined)) continue;
       }
       if (title.trim()) {
         items.push({
@@ -66,13 +78,15 @@ export default async function handler(req, context) {
   try {
     const NEWS_API_KEY = '4bc455fcb3de4648a707d4b3cd96a091';
 
-    // === AUSTRIA: Google News RSS ===
+    // === AUSTRIA: Google News RSS + APA-OTS ===
     const austriaFeeds = [
       ['https://news.google.com/rss/search?q=Vorstand+Österreich+Wechsel&hl=de&gl=AT&ceid=AT:de', 'GNews AT Vorstand'],
       ['https://news.google.com/rss/search?q=Geschäftsführer+Wien+bestellt&hl=de&gl=AT&ceid=AT:de', 'GNews AT GF'],
       ['https://news.google.com/rss/search?q=Übernahme+Fusion+Österreich+Wien&hl=de&gl=AT&ceid=AT:de', 'GNews AT M&A'],
       ['https://news.google.com/rss/search?q=CEO+CFO+Aufsichtsrat+Österreich&hl=de&gl=AT&ceid=AT:de', 'GNews AT CEO'],
       ['https://news.google.com/rss/search?q=OMV+OR+Verbund+OR+Borealis+OR+Raiffeisen+OR+Erste+Vorstand&hl=de&gl=AT&ceid=AT:de', 'GNews AT Unternehmen'],
+      ['https://www.ots.at/rss/wirtschaft', 'APA-OTS Wirtschaft'],
+      ['https://www.ots.at/rss/personalien', 'APA-OTS Personalien'],
     ];
 
     // === CEE: Google News RSS + open feeds ===
