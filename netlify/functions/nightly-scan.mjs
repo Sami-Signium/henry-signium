@@ -20,88 +20,114 @@ async function sbPost(table, body) {
   return r.json();
 }
 
+// Parse RSS feed and return articles
+async function fetchRSS(url, label) {
+  try {
+    const r = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PAULBot/1.0)' },
+      signal: AbortSignal.timeout(8000)
+    });
+    const text = await r.text();
+    const items = [];
+    const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi;
+    let match;
+    while ((match = itemRegex.exec(text)) !== null) {
+      const item = match[1];
+      const title = (/<title[^>]*><!\[CDATA\[([\s\S]*?)\]\]><\/title>/i.exec(item) || /<title[^>]*>([\s\S]*?)<\/title>/i.exec(item) || [])[1] || '';
+      const desc = (/<description[^>]*><!\[CDATA\[([\s\S]*?)\]\]><\/description>/i.exec(item) || /<description[^>]*>([\s\S]*?)<\/description>/i.exec(item) || [])[1] || '';
+      const link = (/<link[^>]*>([\s\S]*?)<\/link>/i.exec(item) || [])[1] || '';
+      if (title.trim()) {
+        items.push({
+          title: title.replace(/<[^>]+>/g, '').trim(),
+          description: desc.replace(/<[^>]+>/g, '').substring(0, 200).trim(),
+          url: link.trim(),
+          source: label
+        });
+      }
+    }
+    console.log(`RSS ${label}: ${items.length} items`);
+    return items;
+  } catch(e) {
+    console.log(`RSS ${label} failed: ${e.message}`);
+    return [];
+  }
+}
+
+// Keywords that indicate relevant trigger events
+const TRIGGER_KEYWORDS = [
+  'vorstand', 'geschäftsführer', 'ceo', 'cfo', 'chro', 'aufsichtsrat',
+  'übernahme', 'fusion', 'merger', 'akquisition', 'acquisition',
+  'finanzierungsrunde', 'funding', 'restrukturierung', 'stellenabbau',
+  'appointed', 'appointment', 'new ceo', 'new cfo', 'executive',
+  'prezes', 'dyrektor', 'fuzja', 'przejęcie',
+  'generální ředitel', 'fúze', 'akvizice',
+  'vezérigazgató', 'felvásárlás',
+  'director general', 'numire', 'fuziune',
+  'wechsel', 'bestellung', 'ernennung', 'rücktritt', 'abgang'
+];
+
+function isRelevant(title, desc) {
+  const text = (title + ' ' + desc).toLowerCase();
+  return TRIGGER_KEYWORDS.some(kw => text.includes(kw));
+}
+
 const handler = schedule("0 7 * * *", async () => {
   try {
     const companies = await sbGet("companies?select=id,name");
     if (!companies.length) return { statusCode: 200 };
 
-    // === AUSTRIA: no sources filter — keyword + geo targeting ===
-    const [atMgmtRes, atMaRes, atSpecRes] = await Promise.all([
+    // === AUSTRIA RSS FEEDS ===
+    const austriaFeeds = [
+      ['https://www.derstandard.at/rss/wirtschaft', 'Der Standard Wirtschaft'],
+      ['https://www.diepresse.com/rss/wirtschaft', 'Die Presse Wirtschaft'],
+      ['https://kurier.at/wirtschaft/rss', 'Kurier Wirtschaft'],
+      ['https://www.trend.at/rss/wirtschaft', 'Trend'],
+      ['https://www.industriemagazin.at/rss', 'Industriemagazin'],
+      ['https://www.medianet.at/rss', 'Medianet'],
+      ['https://www.ots.at/rss/wirtschaft', 'APA-OTS Wirtschaft'],
+    ];
 
-      // Austria: Management changes
-      fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '(Vorstand OR Geschäftsführer OR CEO OR CFO OR CHRO OR Aufsichtsrat) AND (Wien OR Österreich)',
-        language: 'de',
-        sortBy: 'publishedAt',
-        pageSize: 25,
-        apiKey: NEWS_API_KEY
-      })),
+    // === CEE RSS FEEDS (English) ===
+    const ceeFeeds = [
+      ['https://emerging-europe.com/feed/', 'Emerging Europe'],
+      ['https://bbj.hu/rss', 'Budapest Business Journal'],
+      ['https://www.intellinews.com/rss/', 'bne IntelliNews'],
+      ['https://business-review.eu/feed', 'Business Review Romania'],
+      ['https://www.rp.pl/rss/1019', 'Rzeczpospolita'],
+      ['https://www.hn.cz/rss/ekonomika', 'Hospodářské noviny'],
+    ];
 
-      // Austria: M&A + Funding
-      fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '(Übernahme OR Fusion OR Merger OR Akquisition OR Finanzierungsrunde OR Restrukturierung) AND (Wien OR Österreich)',
-        language: 'de',
-        sortBy: 'publishedAt',
-        pageSize: 25,
-        apiKey: NEWS_API_KEY
-      })),
-
-      // Austria: Named major Austrian companies
-      fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '(OMV OR Borealis OR Borouge OR Verbund OR "Erste Group" OR Raiffeisen OR Andritz OR Wienerberger OR Mondi OR Uniqa OR "Österreichische Post" OR "A1 Telekom" OR Kapsch OR "Vienna Insurance") AND (Vorstand OR CEO OR Übernahme OR Fusion OR Aufsichtsrat)',
-        language: 'de',
-        sortBy: 'publishedAt',
-        pageSize: 20,
-        apiKey: NEWS_API_KEY
-      }))
+    // Fetch all RSS feeds in parallel
+    const allFeedResults = await Promise.all([
+      ...austriaFeeds.map(([url, label]) => fetchRSS(url, label)),
+      ...ceeFeeds.map(([url, label]) => fetchRSS(url, label))
     ]);
 
-    // === CEE: English coverage — no sources filter ===
-    const [ceeEng1Res, ceeEng2Res, ceeMaRes] = await Promise.all([
+    const rssArticles = allFeedResults.flat().filter(a => isRelevant(a.title, a.description));
+    console.log(`RSS relevant articles after filter: ${rssArticles.length}`);
 
-      // CEE English: executive changes
-      fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '("new CEO" OR "new CFO" OR "executive appointment" OR "board appointment" OR "appointed as") AND (Warsaw OR Bucharest OR Budapest OR Prague OR Bratislava OR Poland OR Romania OR Hungary)',
-        language: 'en',
+    // === GERMANY: NewsAPI (minimal) ===
+    let newsApiArticles = [];
+    try {
+      const deRes = await fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
+        q: '("Vorstandswechsel" OR "neuer Vorstandsvorsitzender" OR "Übernahme abgeschlossen" OR "Fusion abgeschlossen") AND (DAX OR MDAX)',
+        language: 'de',
         sortBy: 'publishedAt',
-        pageSize: 25,
+        pageSize: 15,
         apiKey: NEWS_API_KEY
-      })),
+      }));
+      const deData = await deRes.json();
+      newsApiArticles = (deData.articles || []).map(a => ({
+        title: a.title,
+        description: a.description || '',
+        url: a.url,
+        source: 'NewsAPI DE'
+      }));
+    } catch(e) {
+      console.log('NewsAPI DE failed:', e.message);
+    }
 
-      // CEE English: M&A + funding
-      fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '(merger OR acquisition OR "funding round" OR "raises" OR restructuring) AND (Warsaw OR Bucharest OR Budapest OR Prague OR Bratislava OR "Central Europe" OR "Eastern Europe")',
-        language: 'en',
-        sortBy: 'publishedAt',
-        pageSize: 25,
-        apiKey: NEWS_API_KEY
-      })),
-
-      // CEE: local language keywords
-      fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '(prezes zarządu OR nowy dyrektor OR fuzja OR przejęcie) OR (generální ředitel OR fúze OR akvizice) OR (vezérigazgató OR felvásárlás) OR (director general OR numire OR fuziune OR achiziție)',
-        sortBy: 'publishedAt',
-        pageSize: 20,
-        apiKey: NEWS_API_KEY
-      }))
-    ]);
-
-    // === GERMANY: minimal — no sources filter ===
-    const deRes = await fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-      q: '("Vorstandswechsel" OR "neuer Vorstandsvorsitzender" OR "Übernahme abgeschlossen" OR "Fusion abgeschlossen") AND (DAX OR MDAX OR Deutschland)',
-      language: 'de',
-      sortBy: 'publishedAt',
-      pageSize: 15,
-      apiKey: NEWS_API_KEY
-    }));
-
-    const allResponses = await Promise.all([
-      atMgmtRes.json(), atMaRes.json(), atSpecRes.json(),
-      ceeEng1Res.json(), ceeEng2Res.json(), ceeMaRes.json(),
-      deRes.json()
-    ]);
-
-    const allArticles = allResponses.flatMap(d => d.articles || []);
+    const allArticles = [...rssArticles, ...newsApiArticles];
 
     // Deduplicate by title
     const seen = new Set();
@@ -112,14 +138,16 @@ const handler = schedule("0 7 * * *", async () => {
     });
 
     if (!unique.length) {
-      console.log("PAUL nightly scan: no articles found");
+      console.log("PAUL nightly scan: no relevant articles found");
       return { statusCode: 200 };
     }
+
+    console.log(`Total unique relevant articles: ${unique.length}`);
 
     // Build article list with index and URL for Claude
     const summaries = unique
       .slice(0, 60)
-      .map((a, i) => `[${i}] ${a.title}${a.description ? ' | ' + a.description : ''} | URL: ${a.url}`)
+      .map((a, i) => `[${i}] [${a.source}] ${a.title}${a.description ? ' | ' + a.description : ''} | URL: ${a.url}`)
       .join('\n');
 
     const articleMap = {};
@@ -146,7 +174,7 @@ const handler = schedule("0 7 * * *", async () => {
 - Restrukturierung, Stellenabbau
 - DACH-Expansion
 
-Fokus auf Unternehmen aus Österreich und CEE (Polen, Rumänien, Ungarn, Tschechien, Slowakei). Deutschland ist weniger wichtig.
+Priorität: Österreich und CEE (Polen, Rumänien, Ungarn, Tschechien, Slowakei). Deutschland nur wenn sehr relevant.
 
 WICHTIG für trigger_type - verwende EXAKT einen dieser Werte:
 "CEO-Wechsel", "CFO-Wechsel", "CHRO-Wechsel", "Geschäftsführer-Wechsel", "Neuer Vorstand", "Aufsichtsrat-Bestellung", "Aufsichtsrat-Rücktritt", "M&A / Fusion", "Funding", "Restrukturierung", "DACH-Expansion", "Sonstige"
