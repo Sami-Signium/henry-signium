@@ -7,6 +7,7 @@ async function fetchRSS(url, label) {
     });
     const text = await r.text();
     const items = [];
+    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi;
     let match;
     while ((match = itemRegex.exec(text)) !== null) {
@@ -14,6 +15,11 @@ async function fetchRSS(url, label) {
       const title = (/<title[^>]*><!\[CDATA\[([\s\S]*?)\]\]><\/title>/i.exec(item) || /<title[^>]*>([\s\S]*?)<\/title>/i.exec(item) || [])[1] || '';
       const desc = (/<description[^>]*><!\[CDATA\[([\s\S]*?)\]\]><\/description>/i.exec(item) || /<description[^>]*>([\s\S]*?)<\/description>/i.exec(item) || [])[1] || '';
       const link = (/<link[^>]*>([\s\S]*?)<\/link>/i.exec(item) || [])[1] || '';
+      const pubDate = (/<pubDate[^>]*>([\s\S]*?)<\/pubDate>/i.exec(item) || [])[1] || '';
+      if (pubDate) {
+        const articleDate = new Date(pubDate).getTime();
+        if (!isNaN(articleDate) && articleDate < cutoff) continue;
+      }
       if (title.trim()) {
         items.push({
           title: title.replace(/<[^>]+>/g, '').trim(),
