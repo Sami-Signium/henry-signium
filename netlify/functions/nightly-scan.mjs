@@ -93,19 +93,19 @@ const handler = schedule("0 7 * * *", async () => {
 
     // === AUSTRIA: Google News RSS + APA-OTS ===
     const austriaFeeds = [
-      ['https://news.google.com/rss/search?q=Vorstand+Österreich+Wechsel&hl=de&gl=AT&ceid=AT:de', 'GNews AT Vorstand'],
-      ['https://news.google.com/rss/search?q=Geschäftsführer+Wien+bestellt&hl=de&gl=AT&ceid=AT:de', 'GNews AT GF'],
-      ['https://news.google.com/rss/search?q=Übernahme+Fusion+Österreich+Wien&hl=de&gl=AT&ceid=AT:de', 'GNews AT M&A'],
-      ['https://news.google.com/rss/search?q=CEO+CFO+Aufsichtsrat+Österreich&hl=de&gl=AT&ceid=AT:de', 'GNews AT CEO'],
-      ['https://news.google.com/rss/search?q=OMV+OR+Verbund+OR+Borealis+OR+Raiffeisen+OR+Erste+Vorstand&hl=de&gl=AT&ceid=AT:de', 'GNews AT Unternehmen'],
+      ['https://news.google.com/rss/search?q=Vorstand+Österreich+Wechsel+when:7d&hl=de&gl=AT&ceid=AT:de', 'GNews AT Vorstand'],
+      ['https://news.google.com/rss/search?q=Geschäftsführer+Wien+bestellt+when:7d&hl=de&gl=AT&ceid=AT:de', 'GNews AT GF'],
+      ['https://news.google.com/rss/search?q=Übernahme+Fusion+Österreich+Wien+when:7d&hl=de&gl=AT&ceid=AT:de', 'GNews AT M&A'],
+      ['https://news.google.com/rss/search?q=CEO+CFO+Aufsichtsrat+Österreich+when:7d&hl=de&gl=AT&ceid=AT:de', 'GNews AT CEO'],
+      ['https://news.google.com/rss/search?q=OMV+OR+Verbund+OR+Borealis+OR+Raiffeisen+OR+Erste+Vorstand+when:7d&hl=de&gl=AT&ceid=AT:de', 'GNews AT Unternehmen'],
       ['https://www.ots.at/rss/wirtschaft', 'APA-OTS Wirtschaft'],
       ['https://www.ots.at/rss/personalien', 'APA-OTS Personalien'],
     ];
 
     // === CEE: Google News RSS + open feeds ===
     const ceeFeeds = [
-      ['https://news.google.com/rss/search?q=CEO+appointed+Poland+OR+Romania+OR+Hungary+OR+Czech&hl=en&gl=US&ceid=US:en', 'GNews CEE CEO'],
-      ['https://news.google.com/rss/search?q=merger+acquisition+Warsaw+OR+Bucharest+OR+Budapest+OR+Prague&hl=en&gl=US&ceid=US:en', 'GNews CEE M&A'],
+      ['https://news.google.com/rss/search?q=CEO+appointed+Poland+OR+Romania+OR+Hungary+OR+Czech+when:7d&hl=en&gl=US&ceid=US:en', 'GNews CEE CEO'],
+      ['https://news.google.com/rss/search?q=merger+acquisition+Warsaw+OR+Bucharest+OR+Budapest+OR+Prague+when:7d&hl=en&gl=US&ceid=US:en', 'GNews CEE M&A'],
       ['https://emerging-europe.com/feed/', 'Emerging Europe'],
       ['https://bbj.hu/rss', 'Budapest Business Journal'],
       ['https://www.intellinews.com/rss/', 'bne IntelliNews'],
