@@ -209,6 +209,7 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
         <div style="display:flex;gap:8px">
           <button class="btn btn-sm btn-primary" onclick="showPanel('scan')">⚡ Scan starten</button>
           <button class="btn btn-sm" onclick="openModal('modal-trigger')">+ Manuell</button>
+          <button class="btn btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="deleteAllTriggers()">🗑 Alle löschen</button>
         </div>
       </div>
       <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
@@ -298,6 +299,7 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
           <div class="pitch-actions" id="pitch-actions" style="display:none">
             <button class="btn btn-sm" onclick="copyPitch()">Kopieren</button>
             <button class="btn btn-sm btn-primary" onclick="savePitch()">Als Entwurf</button>
+            <button class="btn btn-sm" onclick="printBrief()">🖨️ Als Brief drucken</button>
             <button class="btn btn-sm btn-orange" onclick="approvePitch()">✓ Freigeben</button>
           </div>
         </div>
@@ -348,7 +350,7 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
       <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:24px;max-width:580px;box-shadow:var(--shadow)">
         <div class="brand-line"></div>
         <div class="section-title" style="margin-bottom:18px">PAUL Konfiguration</div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Absender</span><span style="font-size:11px;color:var(--text-muted)"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8efdefe3e7a0e6efe3e7eacefde7e9e0e7fbe3a0ede1e3">[email&#160;protected]</a></span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Absender</span><span style="font-size:11px;color:var(--text-muted)">sami.hamid@signium.com</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Datenbank</span><span class="badge" id="db-status">● Verbinden...</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)"><span style="font-size:12px;font-weight:500">Scan Engine</span><span style="font-size:11px;color:var(--text-muted)">NewsAPI · tägl. 08:00</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0"><span style="font-size:12px;font-weight:500">Unterlagen</span><span style="font-size:11px;color:var(--text-muted)">3 Dokumente verfügbar</span></div>
@@ -366,7 +368,7 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
     <div class="form-group"><label class="form-label">Trigger-Typ</label>
       <select class="form-control" id="t-type">
         <option>CEO-Wechsel</option><option>CFO-Wechsel</option><option>CHRO-Wechsel</option><option>Geschäftsführer-Wechsel</option>
-        <option>Neuer Vorstand</option><option>Aufsichtsrat-Bestellung</option><option>Funding</option><option>M&A / Fusion</option>
+        <option>Neuer Vorstand</option><option>Aufsichtsrat-Bestellung</option><option>Aufsichtsrat-Rücktritt</option><option>Funding</option><option>M&A / Fusion</option>
         <option>DACH-Expansion</option><option>Restrukturierung</option><option>Sonstige</option>
       </select>
     </div>
@@ -402,7 +404,7 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
 
 <div class="toast" id="toast"></div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 const SU = 'https://ftdxhswcnghlmcagrsox.supabase.co';
 const SK = 'sb_publishable_c8YygosML2xrImmWCpI1rw_6j_pvCRA';
 const { createClient } = supabase;
@@ -416,11 +418,7 @@ const docUrls = {
   whitepaper: 'https://paul-signium.netlify.app/Signium_Whitepaper_100Tage_v3.pdf',
   references: 'https://paul-signium.netlify.app/SigniumCEE_reference_list.pdf'
 };
-const docNames = {
-  presentation: 'Signium Präsentation',
-  whitepaper: 'Whitepaper 100 Tage',
-  references: 'CEE Referenzliste'
-};
+const docNames = { presentation: 'Signium Präsentation', whitepaper: 'Whitepaper 100 Tage', references: 'CEE Referenzliste' };
 
 function toggleDoc(key) {
   const card = document.getElementById('doccard-' + key);
@@ -457,8 +455,7 @@ function updateDocInfo() {
 function getSelectedDocLinks() {
   return ['presentation','whitepaper','references']
     .filter(k => document.getElementById('doccard-'+k)?.classList.contains('selected'))
-    .map(k => docNames[k] + ': ' + docUrls[k])
-    .join('\n');
+    .map(k => docNames[k] + ': ' + docUrls[k]).join('\n');
 }
 
 const typeMap = {
@@ -541,6 +538,7 @@ function renderDashboard() {
         <button class="btn btn-sm btn-ghost" style="margin-left:8px;color:var(--danger);padding:2px 6px" onclick="event.stopPropagation();deleteTrigger('${t.id}')" title="Löschen">✕</button>
       </div>
       <div class="trigger-desc">${t.description||''}</div>
+      ${t.source_url ? `<div style="margin-top:8px"><a href="${t.source_url}" target="_blank" class="btn btn-sm" onclick="event.stopPropagation()">→ Artikel</a></div>` : ''}
     </div>`;
   }).join('') + '</div>';
 }
@@ -588,6 +586,13 @@ function filterTriggers(cat) {
     if (el) { el.style.background = t === cat ? 'var(--navy)' : ''; el.style.color = t === cat ? 'white' : ''; el.style.borderColor = t === cat ? 'var(--navy)' : ''; }
   });
   renderTriggers();
+}
+
+async function deleteAllTriggers() {
+  if (!confirm('Alle Trigger löschen? Kann nicht rückgängig gemacht werden.')) return;
+  const { error } = await db.from('triggers').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+  if (!error) { showToast('Alle Trigger gelöscht ✓'); allTriggers = []; renderTriggers(); updateStats(); renderDashboard(); }
+  else showToast('Fehler beim Löschen');
 }
 
 async function deleteTrigger(id) {
@@ -669,6 +674,10 @@ async function startScan() {
     if (!items.length) { setScanMsg('Scan abgeschlossen — keine Ereignisse gefunden.', 'ok'); btn.disabled = false; btn.textContent = '⚡ Jetzt scannen'; return; }
     const cr = await fetch(SU + '/rest/v1/companies?select=id,name', { headers: { apikey: SK, Authorization: 'Bearer ' + SK } });
     const companies = await cr.json();
+    const cutoff = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+    const tr = await fetch(SU + '/rest/v1/triggers?select=company_id,trigger_type&created_at=gte.' + cutoff, { headers: { apikey: SK, Authorization: 'Bearer ' + SK } });
+    const recentTriggers = await tr.json();
+    const existingKeys = new Set((recentTriggers || []).map(t => t.company_id + '__' + t.trigger_type));
     const found = [];
     for (const it of items) {
       if (!it.company) continue;
@@ -678,15 +687,18 @@ async function startScan() {
         const nd = await nr.json(); if (nd && nd[0]) { comp = nd[0]; companies.push(comp); }
       }
       if (comp) {
+        const key = comp.id + '__' + (it.trigger_type || 'Sonstige');
+        if (existingKeys.has(key)) continue;
+        existingKeys.add(key);
         await fetch(SU + '/rest/v1/triggers', { method: 'POST', headers: { apikey: SK, Authorization: 'Bearer ' + SK, 'Content-Type': 'application/json', Prefer: 'return=minimal' }, body: JSON.stringify({ company_id: comp.id, trigger_type: it.trigger_type || 'Sonstige', description: it.description || '', source_url: it.source_url || null, relevance_score: 80 }) });
         found.push({ company: it.company, trigger_type: it.trigger_type, description: it.description || '', source_url: it.source_url || null });
       }
     }
     if (found.length) {
-      setScanMsg('✓ ' + found.length + ' Trigger gespeichert.', 'ok');
-      document.getElementById('scan-results').innerHTML = '<div class="trigger-list">' + found.map(f => `<div class="trigger-card high"><div class="trigger-header"><span class="badge ${typeMap[f.trigger_type]||'badge-gray'}">${f.trigger_type}</span><span class="trigger-company">${f.company}</span></div><div class="trigger-desc">${f.description}</div></div>`).join('') + '</div>';
+      setScanMsg('✓ ' + found.length + ' neue Trigger gespeichert.', 'ok');
+      document.getElementById('scan-results').innerHTML = '<div class="trigger-list">' + found.map(f => `<div class="trigger-card high"><div class="trigger-header"><span class="badge ${typeMap[f.trigger_type]||'badge-gray'}">${f.trigger_type}</span><span class="trigger-company">${f.company}</span></div><div class="trigger-desc">${f.description}</div>${f.source_url ? `<div style="margin-top:8px"><a href="${f.source_url}" target="_blank" class="btn btn-sm">→ Artikel</a></div>` : ''}</div>`).join('') + '</div>';
       loadTriggers(); updateStats(); renderDashboard();
-    } else { setScanMsg('Scan abgeschlossen — keine Matches.', 'ok'); }
+    } else { setScanMsg('Scan abgeschlossen — keine neuen Trigger (Duplikate gefiltert).', 'ok'); }
   } catch (e) { setScanMsg('Fehler: ' + e.message, 'err'); }
   btn.disabled = false; btn.textContent = '⚡ Jetzt scannen';
 }
@@ -699,12 +711,10 @@ async function generatePitch() {
   const lang = document.getElementById('pitch-lang').value;
   const labels = { ceo:'CEO-Nachfolge', gf:'Geschäftsführer-Wechsel', cfo:'CFO-Wechsel', vorstand:'Neuer Vorstand', ar:'Aufsichtsrat-Bestellung', funding:'Funding-Runde', merger:'M&A / Fusion', expansion:'DACH-Expansion', reorg:'Restrukturierung' };
   const selectedDocLinks = getSelectedDocLinks();
-
   const pitchBody = document.getElementById('pitch-body');
   const pitchActions = document.getElementById('pitch-actions');
   pitchBody.innerHTML = '<div class="loading"><div class="spinner"></div> PAUL generiert Pitch...</div>';
   pitchActions.style.display = 'none';
-
   const prompt = `Du bist Dr. Sami Hamid, Managing Partner bei Signium Austria (globales Executive Search, 40+ Länder).
 
 Schreibe einen professionellen Outreach-Pitch:
@@ -724,14 +734,13 @@ Der Pitch soll:
 ${selectedDocLinks ? '\nFüge am Ende einen Abschnitt "Weiterführende Unterlagen:" ein mit:\n' + selectedDocLinks : ''}
 
 Nur die E-Mail, keine Erklärungen.`;
-
   try {
     const response = await fetch('/api/pitch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt }) });
     const data = await response.json();
-    const text = data.text;
+    let text = data.text;
     if (text) {
       currentPitchText = text;
-      const linkedText = text.replace(/(https?:\/\/[^\s\n]+)/g, '<a href="$1" target="_blank" style="color:var(--lightblue)">$1</a>');
+      const linkedText = text.replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank" style="color:var(--lightblue)">$1</a>');
       pitchBody.innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.85">${linkedText}</div>`;
       pitchActions.style.display = 'flex';
       document.getElementById('pitch-meta').textContent = `${labels[trigger]} · ${company} · ${new Date().toLocaleDateString('de-AT')}`;
@@ -739,15 +748,11 @@ Nur die E-Mail, keine Erklärungen.`;
   } catch (e) { pitchBody.innerHTML = `<div style="color:var(--danger);padding:20px;font-size:12px">Fehler: ${e.message}</div>`; }
 }
 
-function copyPitch() { navigator.clipboard.writeText(currentPitchText).then(() => showToast('Kopiert ✓')); }
-
-async function savePitch() {
-  if (!currentPitchText) return;
-  const company = document.getElementById('pitch-company').value;
-  const comp = allCompanies.find(c => c.name.toLowerCase() === company.toLowerCase());
-  const { error } = await db.from('outreach').insert({ company_id: comp?.id || null, channel: 'Email', body: currentPitchText, generated_by: 'PAUL', status: 'Entwurf' });
-  if (!error) { showToast('Entwurf gespeichert ✓'); loadOutreach(); }
+function printBrief() {
+  if (!currentPitchText) { showToast('Bitte zuerst Pitch generieren'); return; }
+  window.open('/brief_template.html?text=' + encodeURIComponent(currentPitchText), '_blank');
 }
+function copyPitch() { navigator.clipboard.writeText(currentPitchText).then(() => showToast('Kopiert ✓')); }
 
 async function approvePitch() {
   if (!currentPitchText) return;
@@ -791,4 +796,10 @@ async function saveContact() {
   if (!error) { showToast('Gespeichert ✓'); closeModal('modal-contact'); loadContacts(); }
 }
 
-async function deleteCompany(id) { if (!confirm('Unternehmen löschen?')) return; await db.from('companies').delete().eq('id', id); showToast('Gelös
+async function deleteCompany(id) { if (!confirm('Unternehmen löschen?')) return; await db.from('companies').delete().eq('id', id); showToast('Gelöscht'); loadCompanies(); }
+async function deleteContact(id) { if (!confirm('Kontakt löschen?')) return; await db.from('contacts').delete().eq('id', id); showToast('Gelöscht'); loadContacts(); }
+
+loadAll();
+</script>
+</body>
+</html>
