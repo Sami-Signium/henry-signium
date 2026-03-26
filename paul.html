@@ -282,7 +282,7 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
             <div style="display:flex;flex-direction:column;gap:6px">
               <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer"><input type="checkbox" id="doc-check-presentation" onchange="updateDocSelection()"> 📊 Signium Präsentation</label>
               <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer"><input type="checkbox" id="doc-check-whitepaper" onchange="updateDocSelection()"> 📝 Whitepaper 100 Tage</label>
-              <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer"><input type="checkbox" id="doc-check-references" onchange="updateDocSelection()" > 📋 CEE Referenzliste</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer"><input type="checkbox" id="doc-check-references" onchange="updateDocSelection()"> 📋 CEE Referenzliste</label>
             </div>
           </div>
           <button class="btn btn-orange" style="width:100%;padding:11px;font-size:13px" onclick="generatePitch()">✦ Pitch generieren</button>
@@ -297,8 +297,8 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
           </div>
           <div class="pitch-actions" id="pitch-actions" style="display:none">
             <button class="btn btn-sm" onclick="copyPitch()">Kopieren</button>
-            <button class="btn btn-sm btn-primary" onclick="savePitch()">Als Entwurf</button><button class="btn btn-sm" onclick="printBrief()">🖨️ Als Brief drucken</button>
-```
+            <button class="btn btn-sm btn-primary" onclick="savePitch()">Als Entwurf</button>
+            <button class="btn btn-sm" onclick="printBrief()">🖨️ Als Brief drucken</button>
             <button class="btn btn-sm btn-orange" onclick="approvePitch()">✓ Freigeben</button>
           </div>
         </div>
@@ -367,7 +367,7 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
     <div class="form-group"><label class="form-label">Trigger-Typ</label>
       <select class="form-control" id="t-type">
         <option>CEO-Wechsel</option><option>CFO-Wechsel</option><option>CHRO-Wechsel</option><option>Geschäftsführer-Wechsel</option>
-        <option>Neuer Vorstand</option><option>Aufsichtsrat-Bestellung</option><option>Funding</option><option>M&A / Fusion</option>
+        <option>Neuer Vorstand</option><option>Aufsichtsrat-Bestellung</option><option>Aufsichtsrat-Rücktritt</option><option>Funding</option><option>M&A / Fusion</option>
         <option>DACH-Expansion</option><option>Restrukturierung</option><option>Sonstige</option>
       </select>
     </div>
@@ -417,11 +417,7 @@ const docUrls = {
   whitepaper: 'https://paul-signium.netlify.app/Signium_Whitepaper_100Tage_v3.pdf',
   references: 'https://paul-signium.netlify.app/SigniumCEE_reference_list.pdf'
 };
-const docNames = {
-  presentation: 'Signium Präsentation',
-  whitepaper: 'Whitepaper 100 Tage',
-  references: 'CEE Referenzliste'
-};
+const docNames = { presentation: 'Signium Präsentation', whitepaper: 'Whitepaper 100 Tage', references: 'CEE Referenzliste' };
 
 function toggleDoc(key) {
   const card = document.getElementById('doccard-' + key);
@@ -458,8 +454,7 @@ function updateDocInfo() {
 function getSelectedDocLinks() {
   return ['presentation','whitepaper','references']
     .filter(k => document.getElementById('doccard-'+k)?.classList.contains('selected'))
-    .map(k => docNames[k] + ': ' + docUrls[k])
-    .join('\n');
+    .map(k => docNames[k] + ': ' + docUrls[k]).join('\n');
 }
 
 const typeMap = {
@@ -542,6 +537,7 @@ function renderDashboard() {
         <button class="btn btn-sm btn-ghost" style="margin-left:8px;color:var(--danger);padding:2px 6px" onclick="event.stopPropagation();deleteTrigger('${t.id}')" title="Löschen">✕</button>
       </div>
       <div class="trigger-desc">${t.description||''}</div>
+      ${t.source_url ? `<div style="margin-top:8px"><a href="${t.source_url}" target="_blank" class="btn btn-sm" onclick="event.stopPropagation()">→ Artikel</a></div>` : ''}
     </div>`;
   }).join('') + '</div>';
 }
@@ -670,6 +666,10 @@ async function startScan() {
     if (!items.length) { setScanMsg('Scan abgeschlossen — keine Ereignisse gefunden.', 'ok'); btn.disabled = false; btn.textContent = '⚡ Jetzt scannen'; return; }
     const cr = await fetch(SU + '/rest/v1/companies?select=id,name', { headers: { apikey: SK, Authorization: 'Bearer ' + SK } });
     const companies = await cr.json();
+    const cutoff = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+    const tr = await fetch(SU + '/rest/v1/triggers?select=company_id,trigger_type&created_at=gte.' + cutoff, { headers: { apikey: SK, Authorization: 'Bearer ' + SK } });
+    const recentTriggers = await tr.json();
+    const existingKeys = new Set((recentTriggers || []).map(t => t.company_id + '__' + t.trigger_type));
     const found = [];
     for (const it of items) {
       if (!it.company) continue;
@@ -679,15 +679,18 @@ async function startScan() {
         const nd = await nr.json(); if (nd && nd[0]) { comp = nd[0]; companies.push(comp); }
       }
       if (comp) {
+        const key = comp.id + '__' + (it.trigger_type || 'Sonstige');
+        if (existingKeys.has(key)) continue;
+        existingKeys.add(key);
         await fetch(SU + '/rest/v1/triggers', { method: 'POST', headers: { apikey: SK, Authorization: 'Bearer ' + SK, 'Content-Type': 'application/json', Prefer: 'return=minimal' }, body: JSON.stringify({ company_id: comp.id, trigger_type: it.trigger_type || 'Sonstige', description: it.description || '', source_url: it.source_url || null, relevance_score: 80 }) });
         found.push({ company: it.company, trigger_type: it.trigger_type, description: it.description || '', source_url: it.source_url || null });
       }
     }
     if (found.length) {
-      setScanMsg('✓ ' + found.length + ' Trigger gespeichert.', 'ok');
-      document.getElementById('scan-results').innerHTML = '<div class="trigger-list">' + found.map(f => `<div class="trigger-card high"><div class="trigger-header"><span class="badge ${typeMap[f.trigger_type]||'badge-gray'}">${f.trigger_type}</span><span class="trigger-company">${f.company}</span></div><div class="trigger-desc">${f.description}</div></div>`).join('') + '</div>';
+      setScanMsg('✓ ' + found.length + ' neue Trigger gespeichert.', 'ok');
+      document.getElementById('scan-results').innerHTML = '<div class="trigger-list">' + found.map(f => `<div class="trigger-card high"><div class="trigger-header"><span class="badge ${typeMap[f.trigger_type]||'badge-gray'}">${f.trigger_type}</span><span class="trigger-company">${f.company}</span></div><div class="trigger-desc">${f.description}</div>${f.source_url ? `<div style="margin-top:8px"><a href="${f.source_url}" target="_blank" class="btn btn-sm">→ Artikel</a></div>` : ''}</div>`).join('') + '</div>';
       loadTriggers(); updateStats(); renderDashboard();
-    } else { setScanMsg('Scan abgeschlossen — keine Matches.', 'ok'); }
+    } else { setScanMsg('Scan abgeschlossen — keine neuen Trigger (Duplikate gefiltert).', 'ok'); }
   } catch (e) { setScanMsg('Fehler: ' + e.message, 'err'); }
   btn.disabled = false; btn.textContent = '⚡ Jetzt scannen';
 }
@@ -700,12 +703,10 @@ async function generatePitch() {
   const lang = document.getElementById('pitch-lang').value;
   const labels = { ceo:'CEO-Nachfolge', gf:'Geschäftsführer-Wechsel', cfo:'CFO-Wechsel', vorstand:'Neuer Vorstand', ar:'Aufsichtsrat-Bestellung', funding:'Funding-Runde', merger:'M&A / Fusion', expansion:'DACH-Expansion', reorg:'Restrukturierung' };
   const selectedDocLinks = getSelectedDocLinks();
-
   const pitchBody = document.getElementById('pitch-body');
   const pitchActions = document.getElementById('pitch-actions');
   pitchBody.innerHTML = '<div class="loading"><div class="spinner"></div> PAUL generiert Pitch...</div>';
   pitchActions.style.display = 'none';
-
   const prompt = `Du bist Dr. Sami Hamid, Managing Partner bei Signium Austria (globales Executive Search, 40+ Länder).
 
 Schreibe einen professionellen Outreach-Pitch:
@@ -725,14 +726,11 @@ Der Pitch soll:
 ${selectedDocLinks ? '\nFüge am Ende einen Abschnitt "Weiterführende Unterlagen:" ein mit:\n' + selectedDocLinks : ''}
 
 Nur die E-Mail, keine Erklärungen.`;
-
   try {
     const response = await fetch('/api/pitch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt }) });
     const data = await response.json();
     let text = data.text;
     if (text) {
-      text = text.split('Signium_Presentation_CLEAN_VERSION.pdf').join('Signium_Presentation_pdf.pdf');
-      text = text.split('henry-signium.netlify.app').join('paul-signium.netlify.app');
       currentPitchText = text;
       const linkedText = text.replace(/(https?:\/\/\S+)/g, '<a href="$1" target="_blank" style="color:var(--lightblue)">$1</a>');
       pitchBody.innerHTML = `<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.85">${linkedText}</div>`;
