@@ -25,46 +25,86 @@ const handler = schedule("0 7 * * *", async () => {
     const companies = await sbGet("companies?select=id,name");
     if (!companies.length) return { statusCode: 200 };
 
-    // Four parallel news searches: Germany + Austria (broad) + Austria (M&A specific) + CEE
-    const [deRes, atRes, atMaRes, ceeRes] = await Promise.all([
+    // === AUSTRIA: broad leadership + M&A keywords, Austrian sources ===
+    const [atMgmtRes, atMaRes, atSpecRes] = await Promise.all([
+
+      // Austria: Management changes
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '"Vorstandswechsel" OR "neuer CEO" OR "neuer Vorstand" OR "Vorstandsvorsitzender" OR "Geschäftsführerwechsel" OR "Fusion" OR "Übernahme" OR "Finanzierungsrunde" OR "Restrukturierung"',
+        q: '(Vorstand OR Geschäftsführer OR CEO OR CFO OR CHRO OR Aufsichtsrat) AND (Wien OR Österreich OR Austria)',
+        sources: 'der-standard,die-presse',
         language: 'de',
         sortBy: 'publishedAt',
-        pageSize: 30,
+        pageSize: 25,
         apiKey: NEWS_API_KEY
       })),
+
+      // Austria: M&A + Funding from Austrian business media
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '(Wien OR Österreich OR Austria OR Vienna) AND (Vorstand OR CEO OR Geschäftsführer OR Übernahme OR Fusion OR Merger OR Akquisition OR Finanzierung)',
+        q: '(Übernahme OR Fusion OR Merger OR Akquisition OR Finanzierungsrunde OR Restrukturierung) AND (Wien OR Österreich)',
         language: 'de',
         sortBy: 'publishedAt',
-        pageSize: 30,
+        pageSize: 25,
         apiKey: NEWS_API_KEY
       })),
+
+      // Austria: Named major Austrian companies (direct monitoring)
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '(Borouge OR Borealis OR OMV OR Verbund OR Erste Group OR Raiffeisen OR Andritz OR Kapsch OR Wienerberger OR Mondi OR Flughafen Wien) AND (CEO OR Vorstand OR Übernahme OR Fusion OR Merger)',
+        q: '(OMV OR Borealis OR Borouge OR Verbund OR "Erste Group" OR Raiffeisen OR Andritz OR Kapsch OR Wienerberger OR Mondi OR "Flughafen Wien" OR Spar OR Rewe OR "Vienna Insurance" OR Uniqa OR "Österreichische Post" OR Telekom OR "A1 Telekom") AND (Vorstand OR CEO OR Übernahme OR Fusion OR Aufsichtsrat)',
         language: 'de',
         sortBy: 'publishedAt',
         pageSize: 20,
         apiKey: NEWS_API_KEY
-      })),
+      }))
+    ]);
+
+    // === CEE: English + local language coverage ===
+    const [ceeEngRes, ceePlRes, ceeCzHuRes] = await Promise.all([
+
+      // CEE English: Emerging Europe, BBJ, intellinews, Business Review
       fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
-        q: '(CEO OR CFO OR executive OR merger OR acquisition OR funding) AND (Poland OR Romania OR Hungary OR Czech OR Slovakia OR Warsaw OR Bucharest OR Budapest OR Prague OR Bratislava)',
+        q: '(CEO OR CFO OR "executive appointment" OR merger OR acquisition OR funding) AND (Poland OR Romania OR Hungary OR "Czech Republic" OR Slovakia OR Warsaw OR Bucharest OR Budapest OR Prague OR Bratislava)',
+        sources: 'the-economist',
         language: 'en',
         sortBy: 'publishedAt',
-        pageSize: 30,
+        pageSize: 20,
+        apiKey: NEWS_API_KEY
+      })),
+
+      // CEE English broad (no source filter)
+      fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
+        q: '("executive appointment" OR "new CEO" OR "new CFO" OR "board appointment" OR merger OR acquisition) AND (Warsaw OR Bucharest OR Budapest OR Prague OR Bratislava OR "Central Europe" OR "Eastern Europe")',
+        language: 'en',
+        sortBy: 'publishedAt',
+        pageSize: 25,
+        apiKey: NEWS_API_KEY
+      })),
+
+      // CEE local language (Polish/Czech/Slovak/Hungarian/Romanian keywords)
+      fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
+        q: '(prezes OR dyrektor OR fuzja OR przejecie) OR (generalni OR predstavenstvo OR fúzia) OR (vezérigazgató OR igazgató OR felvásárlás) OR (director OR numire OR fuziune OR achizitie)',
+        sortBy: 'publishedAt',
+        pageSize: 20,
         apiKey: NEWS_API_KEY
       }))
     ]);
 
-    const [deData, atData, atMaData, ceeData] = await Promise.all([deRes.json(), atRes.json(), atMaRes.json(), ceeRes.json()]);
+    // === GERMANY: reduced to essentials only ===
+    const deRes = await fetch('https://newsapi.org/v2/everything?' + new URLSearchParams({
+      q: '"Vorstandswechsel" OR "neuer Vorstandsvorsitzender" OR "neuer CEO" OR "Übernahme abgeschlossen" OR "Fusion abgeschlossen"',
+      sources: 'handelsblatt,manager-magazin',
+      language: 'de',
+      sortBy: 'publishedAt',
+      pageSize: 15,
+      apiKey: NEWS_API_KEY
+    }));
 
-    const allArticles = [
-      ...(deData.articles || []),
-      ...(atData.articles || []),
-      ...(atMaData.articles || []),
-      ...(ceeData.articles || [])
-    ];
+    const allResponses = await Promise.all([
+      atMgmtRes.json(), atMaRes.json(), atSpecRes.json(),
+      ceeEngRes.json(), ceePlRes.json(), ceeCzHuRes.json(),
+      deRes.json()
+    ]);
+
+    const allArticles = allResponses.flatMap(d => d.articles || []);
 
     // Deduplicate by title
     const seen = new Set();
@@ -79,13 +119,12 @@ const handler = schedule("0 7 * * *", async () => {
       return { statusCode: 200 };
     }
 
-    // Build article list with URLs for Claude
+    // Build article list with index and URL for Claude
     const summaries = unique
       .slice(0, 60)
       .map((a, i) => `[${i}] ${a.title}${a.description ? ' | ' + a.description : ''} | URL: ${a.url}`)
       .join('\n');
 
-    // Build article URL lookup map
     const articleMap = {};
     unique.slice(0, 60).forEach((a, i) => { articleMap[i] = a.url; });
 
@@ -110,7 +149,7 @@ const handler = schedule("0 7 * * *", async () => {
 - Restrukturierung, Stellenabbau
 - DACH-Expansion
 
-Fokus auf Unternehmen aus DACH (Deutschland, Österreich, Schweiz) und CEE (Polen, Rumänien, Ungarn, Tschechien, Slowakei).
+Fokus auf Unternehmen aus Österreich und CEE (Polen, Rumänien, Ungarn, Tschechien, Slowakei). Deutschland ist weniger wichtig.
 
 WICHTIG für trigger_type - verwende EXAKT einen dieser Werte:
 "CEO-Wechsel", "CFO-Wechsel", "CHRO-Wechsel", "Geschäftsführer-Wechsel", "Neuer Vorstand", "Aufsichtsrat-Bestellung", "Aufsichtsrat-Rücktritt", "M&A / Fusion", "Funding", "Restrukturierung", "DACH-Expansion", "Sonstige"
@@ -130,7 +169,7 @@ ${summaries}`
     let items = [];
     try { if (s >= 0 && e > s) items = JSON.parse(raw.substring(s, e + 1)); } catch(err) {}
 
-    // Load existing triggers from last 7 days to check for duplicates
+    // Duplicate check: last 7 days
     const recentTriggers = await sbGet("triggers?select=company_id,trigger_type&created_at=gte." + new Date(Date.now() - 7*24*60*60*1000).toISOString());
     const existingKeys = new Set((recentTriggers || []).map(t => `${t.company_id}__${t.trigger_type}`));
 
@@ -138,10 +177,8 @@ ${summaries}`
     for (const item of items) {
       if (!item.company) continue;
 
-      // Get source URL from article index
       const sourceUrl = (item.article_index !== undefined && articleMap[item.article_index]) ? articleMap[item.article_index] : null;
 
-      // Find or create company
       let comp = companies.find(c =>
         c.name.toLowerCase().includes(item.company.toLowerCase()) ||
         item.company.toLowerCase().includes(c.name.toLowerCase())
@@ -149,14 +186,10 @@ ${summaries}`
 
       if (!comp) {
         const created = await sbPost("companies", { name: item.company, source: "Auto-Scan" });
-        if (created && created[0]) {
-          comp = created[0];
-          companies.push(comp);
-        }
+        if (created && created[0]) { comp = created[0]; companies.push(comp); }
       }
 
       if (comp) {
-        // Duplicate check: same company + same trigger type within last 7 days
         const key = `${comp.id}__${item.trigger_type}`;
         if (existingKeys.has(key)) {
           console.log(`Skipping duplicate: ${item.company} / ${item.trigger_type}`);
