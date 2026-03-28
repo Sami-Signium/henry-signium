@@ -62,10 +62,10 @@ if(raw){
   var sm=t.match(/^Betreff:\s*(.+)/mi);
   if(sm) document.getElementById("subj").textContent="Betreff: "+sm[1].trim();
   t=t.replace(/^Betreff:[^\n]+\n?/mi,"");
-  // Replace "Dokumentname: https://..." with just "Dokumentname" (no URL)
-  t=t.replace(/([^\n:]+):\s*https?:\/\/\S+/g,"$1");
-  // Remove any remaining standalone URLs
-  t=t.replace(/https?:\/\/\S+/g,"");
+  // Remove URLs - keep text before colon, remove ": https://..."
+  t=t.replace(/:\s*https?:\/\/[^\s\n]*/g,"");
+  // Remove any remaining bare URLs
+  t=t.replace(/https?:\/\/[^\s\n]*/g,"");
   t=t.replace(/\n/g,"<br>");
   document.getElementById("body").innerHTML=t.trim();
 }
