@@ -63,7 +63,8 @@ if(raw){
   var sm=t.match(/^Betreff:\s*(.+)/mi);
   if(sm) document.getElementById("subj").textContent="Betreff: "+sm[1].trim();
   t=t.replace(/^Betreff:[^\n]+\n?/mi,"");
-  t=t.replace(/(https?:\/\/\S+)/g,"<a href='$1' target='_blank'>$1</a>");
+  t=t.replace(/:\s*https?:\/\/[^\s\n]*/g,"");
+t=t.replace(/https?:\/\/[^\s\n]*/g,"");
   t=t.replace(/\n/g,"<br>");
   document.getElementById("body").innerHTML=t.trim();
 }
