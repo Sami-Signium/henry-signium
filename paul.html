@@ -290,6 +290,7 @@ tbody td { padding: 11px 16px; font-size: 12px; color: var(--text); vertical-ali
             <button class="btn btn-sm" onclick="copyPitch()">Kopieren</button>
             <button class="btn btn-sm btn-primary" onclick="savePitch()">Als Entwurf</button>
             <button class="btn btn-sm" onclick="printBrief()">Als Brief drucken</button>
+            <button class="btn btn-sm btn-primary" onclick="openInOutlook()">&#9993; Outlook</button>
             <button class="btn btn-sm btn-orange" onclick="approvePitch()">&#10003; Freigeben</button>
           </div>
         </div>
@@ -813,7 +814,27 @@ async function saveContact() {
   const { error } = await db.from('contacts').insert({ full_name: name, role: document.getElementById('ct-role').value, email: document.getElementById('ct-email').value, linkedin_url: document.getElementById('ct-linkedin').value, source: 'manual' });
   if (!error) { showToast('Gespeichert'); closeModal('modal-contact'); loadContacts(); }
 }
-
+function openInOutlook() {
+  if (!currentPitchText) { showToast('Bitte zuerst Pitch generieren'); return; }
+  const lines = currentPitchText.split('\n');
+  let subject = '', body = currentPitchText;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].toLowerCase().startsWith('betreff:') || lines[i].toLowerCase().startsWith('subject:')) {
+      subject = lines[i].replace(/^[^:]+:\s*/, '').trim();
+      body = lines.slice(i+1).join('\n').trim();
+      break;
+    }
+  }
+  const contactVal = document.getElementById('pitch-contact').value || '';
+  let toEmail = '';
+  const namePart = contactVal.split(/[-–]/)[0].trim();
+  if (namePart) {
+    const found = allContacts.find(c => c.full_name && c.full_name.toLowerCase().includes(namePart.toLowerCase()));
+    if (found && found.email) toEmail = found.email;
+  }
+  window.location.href = 'mailto:' + encodeURIComponent(toEmail) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+}
+Danach Commit changes. Sonnet 4.6
 async function deleteCompany(id) { if (!confirm('Unternehmen loeschen?')) return; await db.from('companies').delete().eq('id', id); showToast('Geloescht'); loadCompanies(); }
 async function deleteContact(id) { if (!confirm('Kontakt loeschen?')) return; await db.from('contacts').delete().eq('id', id); showToast('Geloescht'); loadContacts(); }
 
