@@ -35,6 +35,5 @@ exports.handler = async (event) => {
   }
 };
 
-Klick unten auf "Commit changes" → nochmal "Commit changes"
-
-Sag mir wenn erledigt.
+Klick "Commit changes"
+ Sonnet 4.6
