@@ -834,7 +834,6 @@ function openInOutlook() {
   }
   window.location.href = 'mailto:' + encodeURIComponent(toEmail) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
 }
-Danach Commit changes. Sonnet 4.6
 async function deleteCompany(id) { if (!confirm('Unternehmen loeschen?')) return; await db.from('companies').delete().eq('id', id); showToast('Geloescht'); loadCompanies(); }
 async function deleteContact(id) { if (!confirm('Kontakt loeschen?')) return; await db.from('contacts').delete().eq('id', id); showToast('Geloescht'); loadContacts(); }
 
