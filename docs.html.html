@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOCS · Signium Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #081D4D;
+    --navy-mid: #0d2a6e;
+    --navy-light: #1a3a7c;
+    --orange: #FF6A42;
+    --teal: #6BCBC2;
+    --gold: #C9A84C;
+    --gold-light: #dfc070;
+    --white: #F8F7F4;
+    --muted: rgba(248,247,244,0.45);
+    --border: rgba(248,247,244,0.1);
+    --card-bg: rgba(255,255,255,0.04);
+    --card-hover: rgba(255,255,255,0.07);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; background: var(--navy); color: var(--white); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 50% 60% at 90% 20%, rgba(201,168,76,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 5% 90%, rgba(107,203,194,0.05) 0%, transparent 55%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; background: var(--navy);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  #login-screen.hide { opacity: 0; transform: translateY(-20px); pointer-events: none; }
+
+  .login-box {
+    width: 380px; padding: 52px 44px;
+    border: 1px solid var(--border);
+    background: var(--card-bg); backdrop-filter: blur(12px);
+    position: relative; animation: fadeUp 0.8s ease both;
+  }
+  .login-box::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--teal));
+  }
+  .login-logo { font-family: 'Cormorant Garamond', serif; font-size: 11px; font-weight: 500; letter-spacing: 0.35em; text-transform: uppercase; color: var(--muted); margin-bottom: 36px; }
+  .login-title { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 300; line-height: 1.2; margin-bottom: 8px; }
+  .login-sub { font-size: 13px; color: var(--muted); margin-bottom: 40px; font-weight: 300; }
+  .login-field { margin-bottom: 16px; }
+  .login-field label { display: block; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .login-field input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--white); padding: 12px 16px; font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+  .login-field input:focus { border-color: rgba(201,168,76,0.5); }
+  .login-btn { width: 100%; margin-top: 28px; padding: 14px; background: var(--gold); color: var(--navy); border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
+  .login-btn:hover { background: var(--gold-light); }
+  .login-error { color: var(--orange); font-size: 12px; margin-top: 12px; display: none; }
+
+  /* ── APP ── */
+  #app { display: none; min-height: 100vh; position: relative; z-index: 1; }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 64px;
+    background: rgba(8,29,77,0.88); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 16px; text-decoration: none; color: inherit; }
+  .brand-wordmark { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; letter-spacing: 0.08em; }
+  .brand-module { font-size: 11px; font-weight: 500; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold-light); margin-left: 2px; }
+  .topbar-nav { display: flex; gap: 4px; }
+  .nav-link { font-size: 12px; color: var(--muted); text-decoration: none; padding: 6px 14px; border: 1px solid transparent; transition: all 0.2s; letter-spacing: 0.05em; }
+  .nav-link:hover { color: var(--white); border-color: var(--border); }
+  .nav-link.active { color: var(--gold-light); border-color: rgba(201,168,76,0.3); }
+  .topbar-back { font-size: 12px; color: var(--muted); text-decoration: none; display: flex; align-items: center; gap: 8px; transition: color 0.2s; }
+  .topbar-back:hover { color: var(--white); }
+
+  /* ── MAIN ── */
+  .main { padding: 48px 40px 80px; max-width: 1200px; margin: 0 auto; }
+
+  /* ── PAGE HEADER ── */
+  .page-header { margin-bottom: 48px; animation: fadeUp 0.6s ease 0.1s both; }
+  .page-eyebrow { font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--gold-light); margin-bottom: 12px; }
+  .page-title { font-family: 'Cormorant Garamond', serif; font-size: 44px; font-weight: 300; line-height: 1.1; margin-bottom: 12px; }
+  .page-title em { font-style: italic; color: var(--gold-light); }
+  .page-desc { font-size: 13px; color: var(--muted); max-width: 500px; line-height: 1.7; font-weight: 300; }
+
+  /* ── LAYOUT ── */
+  .docs-layout { display: grid; grid-template-columns: 280px 1fr; gap: 2px; animation: fadeUp 0.6s ease 0.2s both; }
+
+  /* ── SIDEBAR ── */
+  .sidebar { background: var(--card-bg); border: 1px solid var(--border); padding: 8px; }
+  .sidebar-label { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); padding: 16px 16px 10px; }
+
+  .doc-type-btn {
+    display: block; width: 100%; text-align: left;
+    padding: 14px 16px; border: none; background: transparent;
+    color: var(--white); cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: background 0.2s; position: relative; margin-bottom: 2px;
+  }
+  .doc-type-btn:hover { background: rgba(255,255,255,0.05); }
+  .doc-type-btn.active { background: rgba(201,168,76,0.1); }
+  .doc-type-btn.active::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 2px; background: var(--gold);
+  }
+  .doc-type-name { font-size: 13px; font-weight: 400; display: block; margin-bottom: 3px; }
+  .doc-type-desc { font-size: 11px; color: var(--muted); display: block; font-weight: 300; }
+
+  .sidebar-divider { height: 1px; background: var(--border); margin: 12px 8px; }
+
+  /* ── EDITOR PANEL ── */
+  .editor-panel { background: var(--card-bg); border: 1px solid var(--border); display: flex; flex-direction: column; }
+
+  .editor-header {
+    padding: 24px 32px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .editor-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; }
+  .editor-title span { color: var(--gold-light); }
+
+  /* Input mode toggle */
+  .input-toggle { display: flex; gap: 2px; }
+  .toggle-btn {
+    padding: 6px 14px; background: transparent; border: 1px solid var(--border);
+    color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 11px;
+    letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+  }
+  .toggle-btn.active { background: rgba(201,168,76,0.12); color: var(--gold-light); border-color: rgba(201,168,76,0.3); }
+
+  /* Form area */
+  .editor-body { padding: 32px; flex: 1; }
+
+  .form-section { margin-bottom: 28px; }
+  .form-section-title { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold-light); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(201,168,76,0.15); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .form-row.full { grid-template-columns: 1fr; }
+
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .field-input, .field-textarea, .field-select {
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    color: var(--white); padding: 11px 14px; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; outline: none; transition: border-color 0.2s; width: 100%;
+  }
+  .field-input:focus, .field-textarea:focus, .field-select:focus { border-color: rgba(201,168,76,0.4); }
+  .field-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+  .field-select { cursor: pointer; }
+  .field-select option { background: #0d2260; }
+
+  /* URL mode */
+  #url-mode { display: none; }
+  .url-hint { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.6; font-weight: 300; }
+
+  /* Generate button */
+  .editor-footer { padding: 24px 32px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
+  .generate-btn {
+    padding: 14px 36px; background: var(--gold); color: var(--navy);
+    border: none; font-family: 'DM Sans', sans-serif; font-size: 13px;
+    font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s, transform 0.1s;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .generate-btn:hover { background: var(--gold-light); }
+  .generate-btn:active { transform: scale(0.99); }
+  .generate-btn:disabled { background: rgba(201,168,76,0.3); color: rgba(8,29,77,0.5); cursor: not-allowed; }
+  .generate-hint { font-size: 12px; color: var(--muted); font-weight: 300; }
+
+  /* ── OUTPUT PANEL ── */
+  #output-section {
+    margin-top: 2px;
+    background: var(--card-bg); border: 1px solid var(--border);
+    display: none; animation: fadeUp 0.4s ease both;
+  }
+
+  .output-header {
+    padding: 20px 32px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .output-label { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold-light); }
+  .output-actions { display: flex; gap: 8px; }
+
+  .action-btn {
+    padding: 8px 18px; background: transparent; border: 1px solid var(--border);
+    color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 11px;
+    letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .action-btn:hover { border-color: rgba(201,168,76,0.4); color: var(--gold-light); }
+  .action-btn.primary { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.3); color: var(--gold-light); }
+
+  .output-body { padding: 40px 48px; }
+  #output-content {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px; line-height: 1.9; color: rgba(248,247,244,0.88);
+    white-space: pre-wrap; font-weight: 300;
+  }
+
+  /* Loading state */
+  .loading-bar {
+    height: 2px; background: var(--border); position: relative; overflow: hidden;
+    display: none;
+  }
+  .loading-bar::after {
+    content: ''; position: absolute; top: 0; left: -40%; width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    animation: loading 1.2s infinite;
+  }
+  @keyframes loading { to { left: 140%; } }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── TEMPLATE MANAGEMENT ── */
+  .sidebar-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 16px 10px;
+  }
+  .add-template-btn {
+    width: 20px; height: 20px; background: rgba(201,168,76,0.15);
+    border: 1px solid rgba(201,168,76,0.3); color: var(--gold-light);
+    font-size: 14px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s; flex-shrink: 0;
+  }
+  .add-template-btn:hover { background: rgba(201,168,76,0.25); }
+
+  .custom-template-btn {
+    display: block; width: 100%; text-align: left;
+    padding: 12px 16px 12px 28px; border: none; background: transparent;
+    color: var(--white); cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: background 0.2s; position: relative; margin-bottom: 1px;
+  }
+  .custom-template-btn:hover { background: rgba(255,255,255,0.04); }
+  .custom-template-btn.active { background: rgba(201,168,76,0.08); }
+  .custom-template-btn.active::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 2px; background: var(--gold);
+  }
+  .custom-template-btn .doc-type-name { font-size: 12px; }
+  .custom-template-btn .doc-type-desc { font-size: 11px; }
+
+  .template-delete-btn {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: rgba(248,247,244,0.2);
+    cursor: pointer; font-size: 14px; padding: 4px;
+    transition: color 0.2s; display: none;
+  }
+  .custom-template-btn:hover .template-delete-btn { display: block; }
+  .template-delete-btn:hover { color: var(--orange); }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(8,29,77,0.75); backdrop-filter: blur(4px);
+    z-index: 200; align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: #0d2260; border: 1px solid rgba(248,247,244,0.12);
+    padding: 40px 44px; max-width: 560px; width: 90%; position: relative;
+    animation: fadeUp 0.3s ease both;
+  }
+  .modal-box::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--teal));
+  }
+  .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 400; margin-bottom: 24px; }
+  .modal-field { margin-bottom: 16px; }
+  .modal-field label { display: block; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .modal-field input, .modal-field textarea {
+    width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    color: var(--white); padding: 10px 14px; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; outline: none; transition: border-color 0.2s;
+  }
+  .modal-field input:focus, .modal-field textarea:focus { border-color: rgba(201,168,76,0.4); }
+  .modal-field textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+  .modal-hint { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+  .modal-save-btn {
+    padding: 11px 28px; background: var(--gold); color: var(--navy);
+    border: none; font-family: 'DM Sans', sans-serif; font-size: 12px;
+    font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  }
+  .modal-save-btn:hover { background: var(--gold-light); }
+  .modal-cancel-btn {
+    padding: 11px 20px; background: transparent; border: 1px solid var(--border);
+    color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 12px;
+    letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+  }
+  .modal-cancel-btn:hover { border-color: rgba(248,247,244,0.25); color: var(--white); }
+
+  /* Custom template form */
+  #form-custom { display: none; }
+  .custom-prompt-display {
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    padding: 20px; font-size: 12px; color: var(--muted); line-height: 1.7;
+    font-family: 'DM Sans', sans-serif; white-space: pre-wrap; max-height: 200px;
+    overflow-y: auto;
+  }
+
+  /* ── UPLOAD MODE ── */
+  #upload-mode { display: none; }
+  .upload-zone {
+    border: 1px dashed rgba(201,168,76,0.3); padding: 40px 24px;
+    text-align: center; cursor: pointer; transition: all 0.2s;
+    background: rgba(201,168,76,0.03); margin-bottom: 20px;
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: rgba(201,168,76,0.6); background: rgba(201,168,76,0.07);
+  }
+  .upload-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .upload-icon { font-size: 28px; margin-bottom: 10px; opacity: 0.5; }
+  .upload-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .upload-hint { font-size: 11px; color: rgba(248,247,244,0.25); }
+  .upload-file-info {
+    display: none; padding: 14px 16px; background: rgba(201,168,76,0.08);
+    border: 1px solid rgba(201,168,76,0.2); margin-bottom: 16px;
+    font-size: 13px; color: var(--gold-light);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .upload-file-info.show { display: flex; }
+  .upload-file-remove {
+    margin-left: auto; background: none; border: none;
+    color: var(--muted); cursor: pointer; font-size: 16px;
+    transition: color 0.2s;
+  }
+  .upload-file-remove:hover { color: var(--orange); }
+  .upload-purpose-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: block; }
+  .upload-purpose-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .purpose-btn {
+    padding: 8px 16px; background: transparent; border: 1px solid var(--border);
+    color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 11px;
+    letter-spacing: 0.06em; cursor: pointer; transition: all 0.2s;
+  }
+  .purpose-btn:hover { border-color: rgba(201,168,76,0.4); color: var(--white); }
+  .purpose-btn.active { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.4); color: var(--gold-light); }
+  .upload-notes { margin-top: 8px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .docs-layout { grid-template-columns: 1fr; }
+    .main { padding: 32px 24px 60px; }
+    .topbar { padding: 0 20px; }
+    .topbar-nav { display: none; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Signium · Austria</div>
+    <h1 class="login-title">DOCS</h1>
+    <p class="login-sub">Document Generation · Internal Access</p>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="pw-input" placeholder="···········">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Zugang bestätigen</button>
+    <div class="login-error" id="login-error">Falsches Passwort.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <header class="topbar">
+    <a href="index.html" class="topbar-brand">
+      <div>
+        <span class="brand-wordmark">Signium</span>
+        <span class="brand-module">DOCS</span>
+      </div>
+    </a>
+    <nav class="topbar-nav">
+      <a href="index.html" class="nav-link">← Suite</a>
+      <a href="paul.html" class="nav-link">PAUL</a>
+      <a href="docs.html" class="nav-link active">DOCS</a>
+    </nav>
+  </header>
+
+  <main class="main">
+
+    <div class="page-header">
+      <p class="page-eyebrow">03 · Document Generation</p>
+      <h1 class="page-title">DOCS — <em>Dokumente</em><br>auf Knopfdruck.</h1>
+      <p class="page-desc">AI-gestützte Dokumentengenerierung im Signium-Format. Kandidatenberichte, Pitch-Briefs, Proposals und Stellenprofile — in Sekunden.</p>
+    </div>
+
+    <div class="docs-layout">
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-label">Standard-Templates</div>
+
+        <button class="doc-type-btn active" onclick="selectDocType('kandidat')" id="btn-kandidat">
+          <span class="doc-type-name">Kandidatenbericht</span>
+          <span class="doc-type-desc">Signium-Format</span>
+        </button>
+
+        <button class="doc-type-btn" onclick="selectDocType('pitch')" id="btn-pitch">
+          <span class="doc-type-name">Pitch-Brief</span>
+          <span class="doc-type-desc">Anschreiben für neue Mandate</span>
+        </button>
+
+        <button class="doc-type-btn" onclick="selectDocType('proposal')" id="btn-proposal">
+          <span class="doc-type-name">Angebotsschreiben</span>
+          <span class="doc-type-desc">Proposal / Honorarangebot</span>
+        </button>
+
+        <button class="doc-type-btn" onclick="selectDocType('stelle')" id="btn-stelle">
+          <span class="doc-type-name">Stellenprofil</span>
+          <span class="doc-type-desc">Job Description</span>
+        </button>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="sidebar-section-header">
+          <div class="sidebar-label" style="padding:0;">Eigene Templates</div>
+          <button class="add-template-btn" onclick="openTemplateModal()" title="Neues Template">+</button>
+        </div>
+
+        <div id="custom-templates-list">
+          <div id="no-templates-msg" style="padding: 10px 16px; font-size: 12px; color: rgba(248,247,244,0.2); font-weight:300;">Noch keine eigenen Templates</div>
+        </div>
+      </div>
+
+      <!-- Editor -->
+      <div class="editor-panel">
+        <div class="editor-header">
+          <div class="editor-title">
+            <span id="editor-title-type">Kandidatenbericht</span>
+          </div>
+          <div class="input-toggle">
+            <button class="toggle-btn active" onclick="setInputMode('freitext')" id="toggle-freitext">Freitext</button>
+            <button class="toggle-btn" onclick="setInputMode('url')" id="toggle-url">LinkedIn URL</button>
+            <button class="toggle-btn" onclick="setInputMode('upload')" id="toggle-upload">Datei hochladen</button>
+          </div>
+        </div>
+
+        <div class="loading-bar" id="loading-bar"></div>
+
+        <div class="editor-body">
+
+          <!-- FREITEXT MODE -->
+          <div id="freitext-mode">
+
+            <!-- KANDIDATENBERICHT -->
+            <div id="form-kandidat">
+              <div class="form-section">
+                <div class="form-section-title">Person</div>
+                <div class="form-row">
+                  <div class="field-group">
+                    <label class="field-label">Vor- und Nachname</label>
+                    <input class="field-input" id="k-name" placeholder="Dr. Anna Müller">
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">Aktuelle Position</label>
+                    <input class="field-input" id="k-position" placeholder="CFO, Beispiel AG">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="field-group">
+                    <label class="field-label">Branche</label>
+                    <input class="field-input" id="k-branche" placeholder="Financial Services / Fintech">
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">Standort</label>
+                    <input class="field-input" id="k-standort" placeholder="Wien, Österreich">
+                  </div>
+                </div>
+              </div>
+              <div class="form-section">
+                <div class="form-section-title">Profil</div>
+                <div class="form-row full">
+                  <div class="field-group">
+                    <label class="field-label">Karriereverlauf (stichpunktartig)</label>
+                    <textarea class="field-textarea" id="k-karriere" placeholder="2019–heute: CFO Beispiel AG&#10;2015–2019: VP Finance, XY GmbH&#10;2010–2015: Senior Controller, Z AG"></textarea>
+                  </div>
+                </div>
+                <div class="form-row full">
+                  <div class="field-group">
+                    <label class="field-label">Ausbildung</label>
+                    <input class="field-input" id="k-ausbildung" placeholder="WU Wien, Betriebswirtschaft; Harvard Business School, AMP">
+                  </div>
+                </div>
+                <div class="form-row full">
+                  <div class="field-group">
+                    <label class="field-label">Stärken / Besonderheiten</label>
+                    <textarea class="field-textarea" id="k-staerken" placeholder="Internationale M&A-Erfahrung, starkes CEE-Netzwerk, nachgewiesene Turnaround-Kompetenz..." style="min-height:80px;"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="form-section">
+                <div class="form-section-title">Mandat</div>
+                <div class="form-row">
+                  <div class="field-group">
+                    <label class="field-label">Zielposition</label>
+                    <input class="field-input" id="k-ziel" placeholder="CEO, CFO, COO...">
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">Klient / Unternehmen</label>
+                    <input class="field-input" id="k-klient" placeholder="Vertraulich / Musterfirma GmbH">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- PITCH BRIEF -->
+            <div id="form-pitch" style="display:none;">
+              <div class="form-section">
+                <div class="form-section-title">Empfänger</div>
+                <div class="form-row">
+                  <div class="field-group">
+                    <label class="field-label">Name</label>
+                    <input class="field-input" id="p-name" placeholder="Dr. Thomas Bauer">
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">Position / Unternehmen</label>
+                    <input class="field-input" id="p-position" placeholder="CEO, Musterfirma AG">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="field-group">
+                    <label class="field-label">Branche</label>
+                    <input class="field-input" id="p-branche" placeholder="Industrie / Manufacturing">
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">Anlass / Trigger</label>
+                    <input class="field-input" id="p-trigger" placeholder="Neuer CEO seit März 2026">
+                  </div>
+                </div>
+              </div>
+              <div class="form-section">
+                <div class="form-section-title">Pitch</div>
+                <div class="form-row full">
+                  <div class="field-group">
+                    <label class="field-label">Kernbotschaft / Was bieten wir an?</label>
+                    <textarea class="field-textarea" id="p-botschaft" placeholder="Executive Search für C-Level und C-1 Positionen im DACH/CEE-Raum. Signium Austria als lokaler Partner mit globaler Reichweite (40+ Länder)..."></textarea>
+                  </div>
+                </div>
+                <div class="form-row full">
+                  <div class="field-group">
+                    <label class="field-label">Ton / Besonderheiten</label>
+                    <select class="field-select" id="p-ton">
+                      <option value="direkt">Direkt und substanziell</option>
+                      <option value="warm">Warm und persönlich</option>
+                      <option value="formal">Formal und präzise</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- PROPOSAL -->
+            <div id="form-proposal" style="display:none;">
+              <div class="form-section">
+                <div class="form-section-title">Klient</div>
+                <div class="form-row">
+                  <div class="field-group">
+                    <label class="field-label">Unternehmen</label>
+                    <input class="field-input" id="pr-unternehmen" placeholder="Musterfirma GmbH">
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">Ansprechpartner</label>
+                    <input class="field-input" id="pr-ap" placeholder="Dr. Maria Schmidt, CHRO">
+                  </div>
+                </div>
+              </div>
+              <div class="form-section">
+                <div class="form-section-title">Mandat</div>
+                <div class="form-row">
+                  <div class="field-group">
+                    <label class="field-label">Position</label>
+                    <input class="field-input" id="pr-position" placeholder="Chief Financial Officer">
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">Honorar (Retainer-Modell)</label>
+                    <input class="field-input" id="pr-honorar" placeholder="z.B. 3 × EUR 15.000">
+                  </div>
+                </div>
+                <div class="form-row full">
+                  <div class="field-group">
+                    <label class="field-label">Besondere Anforderungen / Kontext</label>
+                    <textarea class="field-textarea" id="pr-kontext" placeholder="Nachfolge intern nicht möglich, internationale Ausrichtung gewünscht, CEE-Erfahrung bevorzugt..."></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- STELLE -->
+            <div id="form-stelle" style="display:none;">
+              <div class="form-section">
+                <div class="form-section-title">Position</div>
+                <div class="form-row">
+                  <div class="field-group">
+                    <label class="field-label">Titel</label>
+                    <input class="field-input" id="s-titel" placeholder="Chief Operating Officer">
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">Unternehmen</label>
+                    <input class="field-input" id="s-unternehmen" placeholder="Musterfirma AG (vertraulich möglich)">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="field-group">
+                    <label class="field-label">Standort</label>
+                    <input class="field-input" id="s-standort" placeholder="Wien, mit Reisetätigkeit CEE">
+                  </div>
+                  <div class="field-group">
+                    <label class="field-label">Berichtet an</label>
+                    <input class="field-input" id="s-berichtet" placeholder="CEO / Vorstand">
+                  </div>
+                </div>
+              </div>
+              <div class="form-section">
+                <div class="form-section-title">Anforderungen</div>
+                <div class="form-row full">
+                  <div class="field-group">
+                    <label class="field-label">Aufgaben & Verantwortung</label>
+                    <textarea class="field-textarea" id="s-aufgaben" placeholder="Operative Gesamtverantwortung, Supply Chain, internationale Expansion, P&L-Verantwortung für 5 Länder..."></textarea>
+                  </div>
+                </div>
+                <div class="form-row full">
+                  <div class="field-group">
+                    <label class="field-label">Anforderungsprofil</label>
+                    <textarea class="field-textarea" id="s-anforderungen" placeholder="15+ Jahre Führungserfahrung, nachgewiesene Skalierungskompetenz, fließend Englisch und Deutsch..."></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- URL MODE -->
+          <div id="url-mode">
+            <div class="form-section">
+              <div class="form-section-title">LinkedIn Profil</div>
+              <div class="form-row full">
+                <div class="field-group">
+                  <label class="field-label">LinkedIn URL</label>
+                  <input class="field-input" id="linkedin-url" placeholder="https://www.linkedin.com/in/vorname-nachname/">
+                  <p class="url-hint">Füge die vollständige LinkedIn-Profil-URL ein. DOCS extrahiert die relevanten Informationen und generiert das Dokument automatisch.<br><br><strong style="color:var(--gold-light);">Hinweis:</strong> LinkedIn-Profile sind nicht direkt abrufbar — DOCS nutzt die URL als Referenz und fordert dich auf, die wichtigsten Profilinfos kurz einzufügen.</p>
+                </div>
+              </div>
+              <div class="form-row full" style="margin-top:20px;">
+                <div class="field-group">
+                  <label class="field-label">Profil-Inhalt (aus LinkedIn kopiert)</label>
+                  <textarea class="field-textarea" id="linkedin-content" placeholder="Füge hier den kopierten Text des LinkedIn-Profils ein (Name, Headline, Experience, Education)..." style="min-height:160px;"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- UPLOAD MODE -->
+          <div id="upload-mode">
+            <div class="form-section">
+              <div class="form-section-title">Datei hochladen</div>
+
+              <div class="upload-zone" id="upload-zone">
+                <input type="file" id="file-input" accept=".pdf,.doc,.docx,.txt" onchange="handleFileSelect(event)">
+                <div class="upload-icon">📄</div>
+                <div class="upload-label">PDF, Word (.docx) oder Text-Datei hierher ziehen</div>
+                <div class="upload-hint">oder klicken zum Auswählen · Max. 10 MB</div>
+              </div>
+
+              <div class="upload-file-info" id="file-info">
+                <span id="file-name-display">—</span>
+                <button class="upload-file-remove" onclick="removeFile()">✕</button>
+              </div>
+
+              <span class="upload-purpose-label">Zweck der Datei</span>
+              <div class="upload-purpose-btns">
+                <button class="purpose-btn active" onclick="setPurpose('kandidat', this)">Kandidatenprofil → Bericht</button>
+                <button class="purpose-btn" onclick="setPurpose('pitch', this)">Pitch-Brief → Stil-Vorlage</button>
+                <button class="purpose-btn" onclick="setPurpose('notizen', this)">Notizen / Anweisungen</button>
+              </div>
+
+              <div class="upload-notes">
+                <div class="field-group">
+                  <label class="field-label">Zusätzliche Anweisung (optional)</label>
+                  <textarea class="field-textarea" id="upload-extra" placeholder="z.B. Fokus auf internationale Erfahrung, Ton formeller als üblich, auf Englisch generieren..." style="min-height:80px;"></textarea>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <div class="editor-footer">
+          <button class="generate-btn" onclick="generateDocument()" id="generate-btn">
+            <span id="btn-text">Dokument generieren</span>
+          </button>
+          <span class="generate-hint">Claude AI · Signium-Format · ~15 Sekunden</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- OUTPUT -->
+    <div id="output-section">
+      <div class="output-header">
+        <div class="output-label">Generiertes Dokument</div>
+        <div class="output-actions">
+          <button class="action-btn" onclick="copyToClipboard()">Kopieren</button>
+          <button class="action-btn primary" onclick="downloadTxt()">Download .txt</button>
+        </div>
+      </div>
+      <div class="output-body">
+        <div id="output-content"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- CUSTOM FORM (hidden, shown when custom template selected) -->
+<div id="form-custom" style="display:none;">
+  <div class="form-section">
+    <div class="form-section-title" id="custom-form-title">Eigenes Template</div>
+    <div class="form-row full">
+      <div class="field-group">
+        <label class="field-label">Kontext / Eingabe</label>
+        <textarea class="field-textarea" id="custom-input" placeholder="Gib hier die relevanten Informationen ein. Das Template-Prompt wird automatisch mit deinem Input kombiniert." style="min-height:180px;"></textarea>
+      </div>
+    </div>
+    <div class="form-row full" style="margin-top:8px;">
+      <div class="field-group">
+        <label class="field-label">Aktiver Prompt (aus Template)</label>
+        <div class="custom-prompt-display" id="custom-prompt-display">Wähle ein Template aus der Sidebar.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMPLATE MODAL -->
+<div class="modal-overlay" id="template-modal">
+  <div class="modal-box">
+    <h2 class="modal-title">Neues Template erstellen</h2>
+    <div class="modal-field">
+      <label>Template-Name</label>
+      <input type="text" id="tpl-name" placeholder="z.B. PAUL Pitch Mail, LPR Einladung...">
+    </div>
+    <div class="modal-field">
+      <label>Kurzbeschreibung</label>
+      <input type="text" id="tpl-desc" placeholder="Wofür ist dieses Template?">
+    </div>
+    <div class="modal-field">
+      <label>Prompt / Anweisung an Claude</label>
+      <textarea id="tpl-prompt" placeholder="Schreibe eine professionelle E-Mail an einen neu ernannten CEO...&#10;&#10;Du kannst {input} verwenden — das wird durch den Text ersetzt, den der Nutzer eingibt."></textarea>
+      <div class="modal-hint">Tipp: Verwende <strong style="color:var(--gold-light);">{input}</strong> als Platzhalter für die Nutzer-Eingabe. Beispiel: „Schreibe einen Pitch-Brief für folgenden Kontakt: {input}"</div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-save-btn" onclick="saveTemplate()">Template speichern</button>
+      <button class="modal-cancel-btn" onclick="closeTemplateModal()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PASSWORD = 'Signium2026';
+const SUPABASE_URL = 'https://ftdxhswcnghlmcagrsox.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_c8YygosML2xrImmWCpI1rw_6j_pvCRA';
+
+let currentDocType = 'kandidat';
+let currentInputMode = 'freitext';
+let generatedText = '';
+let customTemplates = [];
+let activeCustomTemplate = null;
+
+// ── LOGIN ──
+function doLogin() {
+  if (document.getElementById('pw-input').value === PASSWORD) {
+    document.getElementById('login-screen').classList.add('hide');
+    setTimeout(() => {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadCustomTemplates();
+    }, 650);
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('pw-input').value = '';
+  }
+}
+document.getElementById('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ── SUPABASE ──
+async function supabaseFetch(path, method = 'GET', body = null) {
+  const opts = {
+    method,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'return=representation' : ''
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(SUPABASE_URL + path, opts);
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  return method === 'DELETE' ? null : res.json();
+}
+
+async function ensureTemplatesTable() {
+  // Try to query — if table doesn't exist, create via RPC won't work from frontend.
+  // We handle the error gracefully.
+  try {
+    await supabaseFetch('/rest/v1/docs_templates?select=id&limit=1');
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+async function loadCustomTemplates() {
+  try {
+    const data = await supabaseFetch('/rest/v1/docs_templates?select=*&order=created_at.asc');
+    customTemplates = data || [];
+    renderCustomTemplates();
+  } catch(e) {
+    // Table might not exist yet — show setup hint
+    document.getElementById('no-templates-msg').innerHTML =
+      '<span style="color:var(--orange);font-size:11px;">Tabelle noch nicht eingerichtet.<br>Klick auf + um zu starten.</span>';
+  }
+}
+
+function renderCustomTemplates() {
+  const list = document.getElementById('custom-templates-list');
+  const noMsg = document.getElementById('no-templates-msg');
+
+  // Remove old custom buttons
+  list.querySelectorAll('.custom-template-btn').forEach(el => el.remove());
+
+  if (customTemplates.length === 0) {
+    noMsg.style.display = 'block';
+    return;
+  }
+  noMsg.style.display = 'none';
+
+  customTemplates.forEach(tpl => {
+    const btn = document.createElement('button');
+    btn.className = 'custom-template-btn';
+    btn.id = 'ctpl-' + tpl.id;
+    btn.innerHTML = `
+      <span class="doc-type-name">${escHtml(tpl.name)}</span>
+      <span class="doc-type-desc">${escHtml(tpl.description || '')}</span>
+      <button class="template-delete-btn" onclick="deleteTemplate(event, '${tpl.id}')">✕</button>
+    `;
+    btn.addEventListener('click', () => selectCustomTemplate(tpl));
+    list.appendChild(btn);
+  });
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── TEMPLATE MODAL ──
+function openTemplateModal() {
+  document.getElementById('tpl-name').value = '';
+  document.getElementById('tpl-desc').value = '';
+  document.getElementById('tpl-prompt').value = '';
+  document.getElementById('template-modal').classList.add('show');
+  setTimeout(() => document.getElementById('tpl-name').focus(), 100);
+}
+
+function closeTemplateModal() {
+  document.getElementById('template-modal').classList.remove('show');
+}
+
+document.getElementById('template-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeTemplateModal();
+});
+
+async function saveTemplate() {
+  const name = document.getElementById('tpl-name').value.trim();
+  const desc = document.getElementById('tpl-desc').value.trim();
+  const prompt = document.getElementById('tpl-prompt').value.trim();
+
+  if (!name || !prompt) {
+    alert('Bitte Name und Prompt ausfüllen.');
+    return;
+  }
+
+  try {
+    const saved = await supabaseFetch('/rest/v1/docs_templates', 'POST', {
+      name, description: desc, prompt_template: prompt
+    });
+    customTemplates.push(Array.isArray(saved) ? saved[0] : saved);
+    renderCustomTemplates();
+    closeTemplateModal();
+  } catch(e) {
+    // Table doesn't exist — show SQL instructions
+    showTableSetupInstructions();
+  }
+}
+
+function showTableSetupInstructions() {
+  alert('Die Tabelle "docs_templates" existiert noch nicht in Supabase.\n\nBitte einmalig im Supabase SQL Editor ausführen:\n\nCREATE TABLE docs_templates (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  name text NOT NULL,\n  description text,\n  prompt_template text NOT NULL,\n  created_at timestamptz DEFAULT now()\n);\n\nALTER TABLE docs_templates ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "allow_all" ON docs_templates FOR ALL USING (true) WITH CHECK (true);');
+}
+
+async function deleteTemplate(e, id) {
+  e.stopPropagation();
+  if (!confirm('Template löschen?')) return;
+  try {
+    await supabaseFetch('/rest/v1/docs_templates?id=eq.' + id, 'DELETE');
+    customTemplates = customTemplates.filter(t => t.id !== id);
+    if (activeCustomTemplate?.id === id) {
+      activeCustomTemplate = null;
+      selectDocType('kandidat');
+    }
+    renderCustomTemplates();
+  } catch(e) { console.error(e); }
+}
+
+function selectCustomTemplate(tpl) {
+  activeCustomTemplate = tpl;
+  currentDocType = 'custom';
+
+  // Deactivate standard buttons
+  document.querySelectorAll('.doc-type-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.custom-template-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('ctpl-' + tpl.id)?.classList.add('active');
+
+  document.getElementById('editor-title-type').textContent = tpl.name;
+
+  // Show custom form, hide others
+  ['kandidat','pitch','proposal','stelle'].forEach(t => {
+    document.getElementById('form-' + t).style.display = 'none';
+  });
+  document.getElementById('form-custom').style.display = 'block';
+  document.getElementById('custom-form-title').textContent = tpl.name;
+  document.getElementById('custom-prompt-display').textContent = tpl.prompt_template;
+  document.getElementById('custom-input').value = '';
+  document.getElementById('output-section').style.display = 'none';
+}
+
+// ── DOC TYPE ──
+const docTypes = {
+  kandidat: 'Kandidatenbericht',
+  pitch: 'Pitch-Brief',
+  proposal: 'Angebotsschreiben',
+  stelle: 'Stellenprofil'
+};
+
+function selectDocType(type) {
+  currentDocType = type;
+  activeCustomTemplate = null;
+  document.querySelectorAll('.doc-type-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.custom-template-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + type)?.classList.add('active');
+  document.getElementById('editor-title-type').textContent = docTypes[type];
+  ['kandidat','pitch','proposal','stelle'].forEach(t => {
+    document.getElementById('form-' + t).style.display = t === type ? 'block' : 'none';
+  });
+  document.getElementById('form-custom').style.display = 'none';
+  document.getElementById('output-section').style.display = 'none';
+}
+
+// ── INPUT MODE ──
+function setInputMode(mode) {
+  currentInputMode = mode;
+  document.getElementById('toggle-freitext').classList.toggle('active', mode === 'freitext');
+  document.getElementById('toggle-url').classList.toggle('active', mode === 'url');
+  document.getElementById('toggle-upload').classList.toggle('active', mode === 'upload');
+  document.getElementById('freitext-mode').style.display = mode === 'freitext' ? 'block' : 'none';
+  document.getElementById('url-mode').style.display = mode === 'url' ? 'block' : 'none';
+  document.getElementById('upload-mode').style.display = mode === 'upload' ? 'block' : 'none';
+}
+
+// ── FILE UPLOAD ──
+let uploadedFileContent = null;
+let uploadPurpose = 'kandidat';
+
+function setPurpose(purpose, btn) {
+  uploadPurpose = purpose;
+  document.querySelectorAll('.purpose-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  await processFile(file);
+}
+
+// Drag & drop
+document.addEventListener('DOMContentLoaded', () => {
+  const zone = document.getElementById('upload-zone');
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+  zone.addEventListener('drop', async e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) await processFile(file);
+  });
+});
+
+async function processFile(file) {
+  const maxSize = 10 * 1024 * 1024;
+  if (file.size > maxSize) { alert('Datei zu groß (max. 10 MB).'); return; }
+
+  const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/msword', 'text/plain'];
+  const ext = file.name.split('.').pop().toLowerCase();
+  const allowed = allowedTypes.includes(file.type) || ['pdf','docx','doc','txt'].includes(ext);
+  if (!allowed) { alert('Nur PDF, Word (.docx) und Text-Dateien erlaubt.'); return; }
+
+  document.getElementById('file-name-display').textContent = file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
+  document.getElementById('file-info').classList.add('show');
+
+  if (file.type === 'text/plain' || ext === 'txt') {
+    uploadedFileContent = { type: 'text', content: await file.text() };
+  } else if (file.type === 'application/pdf' || ext === 'pdf') {
+    // Read as base64 for Claude API
+    const base64 = await fileToBase64(file);
+    uploadedFileContent = { type: 'pdf', base64, name: file.name };
+  } else if (ext === 'docx' || ext === 'doc') {
+    // For docx: extract text using mammoth-like approach via reading as arraybuffer
+    // Since we can't use mammoth here, we'll read as base64 and send as document
+    const base64 = await fileToBase64(file);
+    uploadedFileContent = { type: 'docx', base64, name: file.name };
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+function removeFile() {
+  uploadedFileContent = null;
+  document.getElementById('file-info').classList.remove('show');
+  document.getElementById('file-input').value = '';
+}
+
+// ── BUILD PROMPT ──
+function buildPrompt() {
+  const baseInstructions = `Du bist ein Senior Executive Search Berater bei Signium Austria (Signium – Stein & Partner GmbH), Wien. Du schreibst professionelle Dokumente für Executive Search und Leadership Advisory im deutschsprachigen Raum (DACH) und CEE. Schreibe auf Deutsch. Kein Marketing-Sprech, kein generisches Blabla. Ton: substanziell, präzise, auf Augenhöhe mit Geschäftsführern und Vorständen. Keine Emojis.`;
+
+  if (currentDocType === 'custom' && activeCustomTemplate) {
+    const userInput = document.getElementById('custom-input').value;
+    const prompt = activeCustomTemplate.prompt_template.replace('{input}', userInput);
+    return { type: 'text', prompt: baseInstructions + '\n\n' + prompt };
+  }
+
+  if (currentInputMode === 'upload') {
+    const extra = document.getElementById('upload-extra').value;
+    let instruction = '';
+    if (uploadPurpose === 'kandidat') {
+      instruction = `Analysiere das hochgeladene Dokument und erstelle daraus einen professionellen Kandidatenbericht im Signium-Format.\n\nStruktur:\n1. EXECUTIVE SUMMARY (3-4 prägnante Sätze)\n2. BERUFLICHER WERDEGANG\n3. AUSBILDUNG & QUALIFIKATIONEN\n4. KOMPETENZPROFIL\n5. SIGNIUM-EINSCHÄTZUNG & EMPFEHLUNG`;
+    } else if (uploadPurpose === 'pitch') {
+      instruction = `Analysiere diesen Pitch-Brief und extrahiere Stil, Struktur und Tonalität. Beschreibe dann:\n1. Den Aufbau und die Struktur des Briefes\n2. Den Ton und Sprachstil\n3. Die Kernargumente\n4. Erstelle anschließend einen neuen Pitch-Brief im exakt gleichen Stil für einen neuen Kontakt (Platzhalter verwenden).`;
+    } else if (uploadPurpose === 'notizen') {
+      instruction = `Lies die folgenden Notizen/Anweisungen und führe sie aus. Erstelle das gewünschte Dokument im Signium-Stil.`;
+    }
+    if (extra) instruction += `\n\nZusätzliche Anweisung: ${extra}`;
+    return { type: 'upload', instruction: baseInstructions + '\n\n' + instruction };
+  }
+
+  if (currentInputMode === 'url') {
+    const url = document.getElementById('linkedin-url').value;
+    const content = document.getElementById('linkedin-content').value;
+    return { type: 'text', prompt: `${baseInstructions}\n\nGeneriere einen strukturierten Kandidatenbericht basierend auf folgendem LinkedIn-Profil:\n\nURL: ${url}\n\nProfil-Inhalt:\n${content}\n\nStruktur:\n1. EXECUTIVE SUMMARY\n2. BERUFLICHER WERDEGANG\n3. AUSBILDUNG\n4. KOMPETENZPROFIL\n5. SIGNIUM-EINSCHÄTZUNG` };
+  }
+
+  if (currentDocType === 'kandidat') {
+    return { type: 'text', prompt: `${baseInstructions}\n\nGeneriere einen professionellen Kandidatenbericht im Signium-Format für:\n\nName: ${v('k-name')}\nAktuelle Position: ${v('k-position')}\nBranche: ${v('k-branche')}\nStandort: ${v('k-standort')}\nKarriereverlauf: ${v('k-karriere')}\nAusbildung: ${v('k-ausbildung')}\nStärken/Besonderheiten: ${v('k-staerken')}\nZielposition: ${v('k-ziel')}\nKlient/Unternehmen: ${v('k-klient')}\n\nStruktur:\n1. EXECUTIVE SUMMARY\n2. BERUFLICHER WERDEGANG\n3. AUSBILDUNG & QUALIFIKATIONEN\n4. KOMPETENZPROFIL\n5. SIGNIUM-EINSCHÄTZUNG & EMPFEHLUNG` };
+  }
+
+  if (currentDocType === 'pitch') {
+    return { type: 'text', prompt: `${baseInstructions}\n\nSchreibe ein Pitch-Anschreiben (max. 1 Seite) an:\n\nEmpfänger: ${v('p-name')}, ${v('p-position')}\nBranche: ${v('p-branche')}\nAnlass/Trigger: ${v('p-trigger')}\nKernbotschaft: ${v('p-botschaft')}\nGewünschter Ton: ${v('p-ton')}\n\nKein Template-Sprache. Direkt auf den Punkt, substanziell, auf Augenhöhe. Maximum eine Seite.` };
+  }
+
+  if (currentDocType === 'proposal') {
+    return { type: 'text', prompt: `${baseInstructions}\n\nGeneriere ein professionelles Angebotsschreiben für:\n\nUnternehmen: ${v('pr-unternehmen')}\nAnsprechpartner: ${v('pr-ap')}\nPosition: ${v('pr-position')}\nHonorar-Modell: ${v('pr-honorar')}\nKontext: ${v('pr-kontext')}\n\nStruktur:\n1. Ausgangssituation\n2. Unser Ansatz\n3. Warum Signium Austria\n4. Honorar & Konditionen\n5. Nächste Schritte` };
+  }
+
+  if (currentDocType === 'stelle') {
+    return { type: 'text', prompt: `${baseInstructions}\n\nGeneriere ein professionelles Stellenprofil für:\n\nTitel: ${v('s-titel')}\nUnternehmen: ${v('s-unternehmen')}\nStandort: ${v('s-standort')}\nBerichtet an: ${v('s-berichtet')}\nAufgaben: ${v('s-aufgaben')}\nAnforderungen: ${v('s-anforderungen')}\n\nStruktur:\n1. DAS UNTERNEHMEN\n2. DIE POSITION\n3. IHRE AUFGABEN\n4. IHR PROFIL\n5. DAS ANGEBOT` };
+  }
+}
+
+function v(id) {
+  const el = document.getElementById(id);
+  return el ? el.value || '(nicht angegeben)' : '(nicht angegeben)';
+}
+
+// ── GENERATE ──
+async function generateDocument() {
+  const btn = document.getElementById('generate-btn');
+  const btnText = document.getElementById('btn-text');
+  const loadingBar = document.getElementById('loading-bar');
+  const outputSection = document.getElementById('output-section');
+  const outputContent = document.getElementById('output-content');
+
+  // Validate upload mode
+  if (currentInputMode === 'upload' && !uploadedFileContent) {
+    alert('Bitte zuerst eine Datei hochladen.');
+    return;
+  }
+
+  btn.disabled = true;
+  btnText.textContent = 'Generiere...';
+  loadingBar.style.display = 'block';
+  outputSection.style.display = 'none';
+
+  const promptData = buildPrompt();
+
+  try {
+    let messages;
+
+    if (currentInputMode === 'upload' && uploadedFileContent) {
+      const { type, base64, content, instruction } = uploadedFileContent;
+
+      const uploadInstruction = promptData.instruction;
+      if (type === 'text') {
+        messages = [{ role: 'user', content: uploadInstruction + '\n\n---\n\n' + uploadedFileContent.content }];
+      } else if (type === 'pdf') {
+        messages = [{
+          role: 'user',
+          content: [
+            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: uploadedFileContent.base64 } },
+            { type: 'text', text: uploadInstruction }
+          ]
+        }];
+      } else if (type === 'docx') {
+        messages = [{
+          role: 'user',
+          content: uploadInstruction + '\n\nHinweis: Die hochgeladene Word-Datei konnte nicht direkt gelesen werden. Bitte speichere sie als PDF und lade sie erneut hoch — oder kopiere den Text ins Freitext-Feld.'
+        }];
+      }
+    } else {
+      messages = [{ role: 'user', content: promptData.prompt }];
+    }
+
+    const response = await fetch('/.netlify/functions/docs-generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages })
+    });
+
+    const data = await response.json();
+
+    // Debug: log full response
+    console.log('API Response:', JSON.stringify(data));
+
+    if (data.error) {
+      generatedText = 'API Fehler: ' + data.error;
+    } else if (data.text) {
+      generatedText = data.text;
+    } else {
+      generatedText = 'Keine Antwort erhalten. Response: ' + JSON.stringify(data).slice(0, 300);
+    }
+    outputContent.textContent = generatedText;
+    outputSection.style.display = 'block';
+    outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    outputContent.textContent = 'Fehler bei der Generierung.\n\n' + err.message;
+    outputSection.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = 'Dokument generieren';
+    loadingBar.style.display = 'none';
+  }
+}
+
+// ── ACTIONS ──
+function copyToClipboard() {
+  navigator.clipboard.writeText(generatedText).then(() => {
+    const btn = event.target;
+    btn.textContent = 'Kopiert ✓';
+    setTimeout(() => btn.textContent = 'Kopieren', 2000);
+  });
+}
+
+function downloadTxt() {
+  const name = currentDocType === 'custom' ? activeCustomTemplate?.name : docTypes[currentDocType];
+  const blob = new Blob([generatedText], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Signium_${name}_${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
