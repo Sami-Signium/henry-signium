@@ -29,7 +29,6 @@ body { font-family:Arial,sans-serif; font-size:10.5pt; background:#bbb; }
 .recip { font-size:9.5pt; line-height:1.6; margin-bottom:10mm; white-space:pre-wrap; }
 .subj { font-size:10pt; margin-bottom:8mm; }
 .body { font-size:10pt; line-height:1.7; }
-.body a { color:#24629B; }
 [contenteditable]:focus { outline:1px dashed #24629B; }
 </style>
 </head>
@@ -58,18 +57,15 @@ document.getElementById("dt").textContent=d.toLocaleDateString("de-AT",{day:"num
 var raw=new URLSearchParams(window.location.search).get("text");
 if(raw){
   var t=decodeURIComponent(raw);
-  // Fix URLs
   t=t.replace(/henry-signium\.netlify\.app/g,"paul-signium.netlify.app");
-  // Remove markdown bold
   t=t.replace(/\*\*/g,"");
-  // Extract subject
   var sm=t.match(/^Betreff:\s*(.+)/mi);
   if(sm) document.getElementById("subj").textContent="Betreff: "+sm[1].trim();
-  // Remove Betreff line from body
   t=t.replace(/^Betreff:[^\n]+\n?/mi,"");
-  // Make links clickable
-  t=t.replace(/(https?:\/\/\S+)/g,"<a href=\'$1\' target=\'_blank\'>$1</a>");
-  // Line breaks
+  // Replace "Dokumentname: https://..." with just "Dokumentname" (no URL)
+  t=t.replace(/([^\n:]+):\s*https?:\/\/\S+/g,"$1");
+  // Remove any remaining standalone URLs
+  t=t.replace(/https?:\/\/\S+/g,"");
   t=t.replace(/\n/g,"<br>");
   document.getElementById("body").innerHTML=t.trim();
 }
