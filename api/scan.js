@@ -1,65 +1,3 @@
-async function fetchRSS(url, label) {
-  try {
-    const r = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PAULBot/1.0)' },
-      signal: AbortSignal.timeout(8000)
-    });
-    const text = await r.text();
-    const items = [];
-    const cutoff = Date.now() - 2 * 24 * 60 * 60 * 1000;
-    const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi;
-    let match;
-    while ((match = itemRegex.exec(text)) !== null) {
-      const item = match[1];
-      const title = (/<title[^>]*><!\[CDATA\[([\s\S]*?)\]\]><\/title>/i.exec(item) || /<title[^>]*>([\s\S]*?)<\/title>/i.exec(item) || [])[1] || '';
-      const desc = (/<description[^>]*><!\[CDATA\[([\s\S]*?)\]\]><\/description>/i.exec(item) || /<description[^>]*>([\s\S]*?)<\/description>/i.exec(item) || [])[1] || '';
-      const link = (/<link[^>]*>([\s\S]*?)<\/link>/i.exec(item) || [])[1] || '';
-      const pubDate = (/<pubDate[^>]*>([\s\S]*?)<\/pubDate>/i.exec(item) || [])[1] || '';
-      let articleDate = NaN;
-      if (pubDate) {
-        articleDate = new Date(pubDate).getTime();
-        if (isNaN(articleDate)) {
-          const m = pubDate.match(/(\d{2})\.(\d{2})\.(\d{4})/);
-          if (m) articleDate = new Date(`${m[3]}-${m[2]}-${m[1]}`).getTime();
-        }
-      }
-      if (!isNaN(articleDate) && articleDate < cutoff) continue;
-      if (isNaN(articleDate) && !pubDate) {
-        const combined = title + ' ' + desc;
-        if (/\b(200[0-9]|201[0-9]|202[0-3])\b/.test(combined)) continue;
-      }
-      if (title.trim()) {
-        items.push({
-          title: title.replace(/<[^>]+>/g, '').trim(),
-          description: desc.replace(/<[^>]+>/g, '').substring(0, 200).trim(),
-          url: link.trim(),
-          source: label
-        });
-      }
-    }
-    return items;
-  } catch(e) {
-    console.log(`RSS ${label} failed: ${e.message}`);
-    return [];
-  }
-}
-
-const TRIGGER_KEYWORDS = [
-  'vorstand','geschäftsführer','ceo','cfo','chro','aufsichtsrat',
-  'übernahme','fusion','merger','akquisition','acquisition',
-  'finanzierungsrunde','funding','restrukturierung','stellenabbau',
-  'appointed','appointment','new ceo','new cfo','executive',
-  'wechsel','bestellung','ernennung','rücktritt','abgang',
-  'prezes','dyrektor','fuzja','przejęcie',
-  'vezérigazgató','felvásárlás',
-  'director general','numire','fuziune'
-];
-
-function isRelevant(title, desc) {
-  const text = (title + ' ' + desc).toLowerCase();
-  return TRIGGER_KEYWORDS.some(kw => text.includes(kw));
-}
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -68,102 +6,69 @@ export default async function handler(req, res) {
 
   try {
     const NEWS_API_KEY = process.env.NEWSAPI_KEY;
+    const fromDate = new Date();
+    fromDate.setDate(fromDate.getDate() - 7);
+    const from = fromDate.toISOString().split('T')[0];
 
-    const austriaFeeds = [
-      ['https://news.google.com/rss/search?q=Vorstand+Österreich+Wechsel+when:7d&hl=de&gl=AT&ceid=AT:de', 'GNews AT Vorstand'],
-      ['https://news.google.com/rss/search?q=Geschäftsführer+Wien+bestellt+when:7d&hl=de&gl=AT&ceid=AT:de', 'GNews AT GF'],
-      ['https://news.google.com/rss/search?q=Übernahme+Fusion+Österreich+Wien+when:7d&hl=de&gl=AT&ceid=AT:de', 'GNews AT M&A'],
-      ['https://news.google.com/rss/search?q=CEO+CFO+Aufsichtsrat+Österreich+when:7d&hl=de&gl=AT&ceid=AT:de', 'GNews AT CEO'],
-      ['https://news.google.com/rss/search?q=OMV+OR+Verbund+OR+Borealis+OR+Raiffeisen+OR+Erste+Vorstand+when:7d&hl=de&gl=AT&ceid=AT:de', 'GNews AT Unternehmen'],
-      ['https://www.ots.at/rss/wirtschaft', 'APA-OTS Wirtschaft'],
-      ['https://www.ots.at/rss/personalien', 'APA-OTS Personalien'],
+    const queries = [
+      // Austria - German
+      { q: '(Vorstand OR Geschäftsführer OR Aufsichtsrat OR CEO OR CFO) AND (Wien OR Österreich OR Austria)', language: 'de', label: 'AT' },
+      // Germany - German
+      { q: '(Vorstandswechsel OR "neuer Vorstandsvorsitzender" OR "neuer Geschäftsführer" OR Aufsichtsrat) AND (DAX OR MDAX OR Deutschland)', language: 'de', label: 'DE' },
+      // CEE - English
+      { q: '(CEO OR CFO OR "managing director" OR merger OR acquisition OR appointed) AND (Poland OR Romania OR Hungary OR "Czech Republic" OR Slovakia OR Vienna)', language: 'en', label: 'CEE' },
     ];
 
-    const ceeFeeds = [
-      ['https://news.google.com/rss/search?q=CEO+appointed+Poland+OR+Romania+OR+Hungary+OR+Czech+when:7d&hl=en&gl=US&ceid=US:en', 'GNews CEE CEO'],
-      ['https://news.google.com/rss/search?q=merger+acquisition+Warsaw+OR+Bucharest+OR+Budapest+OR+Prague+when:7d&hl=en&gl=US&ceid=US:en', 'GNews CEE M&A'],
-      ['https://emerging-europe.com/feed/', 'Emerging Europe'],
-      ['https://bbj.hu/rss', 'Budapest Business Journal'],
-      ['https://www.intellinews.com/rss/', 'bne IntelliNews'],
-      ['https://business-review.eu/feed', 'Business Review Romania'],
-    ];
+    const allArticles = [];
+    for (const q of queries) {
+      try {
+        const params = new URLSearchParams({
+          q: q.q, language: q.language, sortBy: 'publishedAt',
+          pageSize: 20, from, apiKey: NEWS_API_KEY
+        });
+        const r = await fetch('https://newsapi.org/v2/everything?' + params);
+        const d = await r.json();
+        (d.articles || []).forEach(a => allArticles.push({
+          title: a.title, description: a.description || '',
+          url: a.url, source: q.label
+        }));
+      } catch(e) {}
+    }
 
-    const rssResults = await Promise.all([
-      ...austriaFeeds.map(([url, label]) => fetchRSS(url, label)),
-      ...ceeFeeds.map(([url, label]) => fetchRSS(url, label))
-    ]);
-
-    const rssArticles = rssResults.flat().filter(a => isRelevant(a.title, a.description));
-
-    let deArticles = [];
-    try {
-      const params = new URLSearchParams({
-        q: '("Vorstandswechsel" OR "neuer Vorstandsvorsitzender" OR "Übernahme abgeschlossen" OR "Fusion abgeschlossen") AND (DAX OR MDAX)',
-        language: 'de',
-        sortBy: 'publishedAt',
-        pageSize: 15,
-        apiKey: NEWS_API_KEY
-      });
-      const deRes = await fetch('https://newsapi.org/v2/everything?' + params);
-      const deData = await deRes.json();
-      deArticles = (deData.articles || []).map(a => ({
-        title: a.title,
-        description: a.description || '',
-        url: a.url,
-        source: 'NewsAPI DE'
-      }));
-    } catch(e) {}
-
-    const allArticles = [...rssArticles, ...deArticles];
     const seen = new Set();
     const unique = allArticles.filter(a => {
       if (!a.title || seen.has(a.title)) return false;
-      seen.add(a.title);
-      return true;
+      seen.add(a.title); return true;
     });
 
-    if (!unique.length) {
-      return res.status(200).json({ text: '[]' });
-    }
+    if (!unique.length) return res.status(200).json({ text: '[]' });
 
-    const summaries = unique.slice(0, 60).map((a, i) =>
+    const summaries = unique.slice(0, 50).map((a, i) =>
       `[${i}] [${a.source}] ${a.title}${a.description ? ' | ' + a.description : ''} | URL: ${a.url}`
     ).join('\n');
 
     const articleMap = {};
-    unique.slice(0, 60).forEach((a, i) => { articleMap[i] = a.url; });
+    unique.slice(0, 50).forEach((a, i) => { articleMap[i] = a.url; });
 
     const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
+      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 2000,
-        messages: [{
-          role: 'user',
-          content: `Extrahiere Business-Ereignisse aus diesen Nachrichten. Relevante Ereignisse:
-- Vorstandswechsel, CEO-Wechsel, CFO-Wechsel, CHRO-Wechsel, Geschäftsführer-Wechsel
-- Aufsichtsrat-Bestellung oder Aufsichtsrat-Rücktritt
-- M&A / Fusion (Fusionen, Übernahmen, Merger, Akquisitionen)
-- Funding / Finanzierungsrunde
-- Restrukturierung
-- DACH-Expansion
+        messages: [{ role: 'user', content: `Extrahiere Business-Ereignisse aus diesen Nachrichten für Executive Search.
 
-Priorität: Österreich und CEE (Polen, Rumänien, Ungarn, Tschechien, Slowakei).
+Relevante Ereignisse: Vorstandswechsel, CEO/CFO/CHRO-Wechsel, Geschäftsführer-Wechsel, Aufsichtsrat-Bestellung/-Rücktritt, M&A/Fusion/Übernahme, Funding, Restrukturierung, Expansion.
 
-WICHTIG für trigger_type - verwende EXAKT einen dieser Werte:
-"CEO-Wechsel", "CFO-Wechsel", "CHRO-Wechsel", "Geschäftsführer-Wechsel", "Neuer Vorstand", "Aufsichtsrat-Bestellung", "Aufsichtsrat-Rücktritt", "M&A / Fusion", "Funding", "Restrukturierung", "DACH-Expansion", "Sonstige"
+Priorität: Österreich, Deutschland, CEE (Polen, Rumänien, Ungarn, Tschechien, Slowakei).
 
-Antworte NUR mit JSON-Array (kein anderer Text):
-[{"article_index": 0, "company":"Firmenname","trigger_type":"CEO-Wechsel","description":"Konkrete Beschreibung"}]
+trigger_type EXAKT: "CEO-Wechsel", "CFO-Wechsel", "CHRO-Wechsel", "Geschäftsführer-Wechsel", "Neuer Vorstand", "Aufsichtsrat-Bestellung", "Aufsichtsrat-Rücktritt", "M&A / Fusion", "Funding", "Restrukturierung", "DACH-Expansion", "Sonstige"
+
+NUR JSON-Array zurückgeben:
+[{"article_index": 0, "company":"Name","trigger_type":"CEO-Wechsel","description":"Beschreibung"}]
 
 Nachrichten:
-${summaries}`
-        }]
+${summaries}` }]
       })
     });
 
