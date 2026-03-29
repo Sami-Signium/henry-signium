@@ -1,6 +1,6 @@
-const Anthropic = require('@anthropic-ai/sdk');
+import Anthropic from '@anthropic-ai/sdk';
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -16,13 +16,13 @@ module.exports = async function handler(req, res) {
     const from = fromDate.toISOString().split('T')[0];
 
     const queries = [
-      encodeURIComponent('Führungswechsel OR Geschäftsführer OR CEO OR Vorstand') + '&language=de&sortBy=publishedAt&from=' + from,
-      encodeURIComponent('Österreich Unternehmen Übernahme OR Fusion OR Expansion') + '&language=de&sortBy=publishedAt&from=' + from,
-      encodeURIComponent('CEE management change OR leadership OR acquisition') + '&language=en&sortBy=publishedAt&from=' + from
+      'Führungswechsel OR CEO OR Vorstand OR Geschäftsführer&language=de&sortBy=publishedAt&from=' + from,
+      'Österreich Unternehmen Fusion OR Expansion OR Übernahme&language=de&sortBy=publishedAt&from=' + from,
+      'CEE management change OR leadership OR acquisition&language=en&sortBy=publishedAt&from=' + from
     ];
 
     const results = await Promise.all(queries.map(q =>
-      fetch('https://newsapi.org/v2/everything?q=' + q + '&pageSize=10&apiKey=' + NEWSAPI_KEY)
+      fetch('https://newsapi.org/v2/everything?q=' + encodeURIComponent(q) + '&pageSize=10&apiKey=' + NEWSAPI_KEY)
         .then(r => r.json())
         .then(d => d.articles || [])
         .catch(() => [])
@@ -49,4 +49,4 @@ module.exports = async function handler(req, res) {
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
-};
+}
