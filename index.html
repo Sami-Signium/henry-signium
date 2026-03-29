@@ -1052,6 +1052,41 @@ function removeFile(slot) {
   else { uploadedNotes = null; document.getElementById('file-info-notes').classList.remove('show'); document.getElementById('file-input-notes').value = ''; }
 }
 
+async function extractPdfText(file) {
+  if (!window.pdfjsLib) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let fullText = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    fullText += content.items.map(item => item.str).join(' ') + '\n';
+  }
+  return fullText;
+}
+
+async function extractDocxText(file) {
+  if (!window.mammoth) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
+  }
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await window.mammoth.extractRawText({ arrayBuffer });
+  return result.value;
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
 // ── BUILD PROMPT ──
 function buildPrompt() {
   const baseInstructions = `Du bist ein Senior Executive Search Berater bei Signium Austria (Signium – Stein & Partner GmbH), Wien. Du schreibst professionelle Dokumente für Executive Search und Leadership Advisory im deutschsprachigen Raum (DACH) und CEE. Schreibe auf Deutsch. Kein Marketing-Sprech, kein generisches Blabla. Ton: substanziell, präzise, auf Augenhöhe mit Geschäftsführern und Vorständen. Keine Emojis.`;
@@ -1078,7 +1113,96 @@ function buildPrompt() {
     const klientLine = klient ? '\nKlient: ' + klient : '';
     const langInstr = sprache === 'englisch' ? 'Write the report in English.' : 'Schreibe den Bericht auf Deutsch.';
 
-    const signiumFormat = 'Du bist Dr. Sami Hamid, Managing Partner bei Signium Austria. Erstelle einen professionellen Vertraulichen Kandidatenbericht im Signium-Format.\n\n' + langInstr + '\n\nTon: Substanziell, praezise, Berater-Perspektive.\n\nWICHTIG: Lass jeden Abschnitt komplett weg zu dem du keine Informationen hast. Kein Platzhalter, keine leeren Felder - einfach weglassen.\n\nFormat:\n\nVERTRAULICHER BERICHT\n[NAME]\n[POSITION]' + klientLine + '\n[Monat Jahr]\n\nPERSONLICHE DATEN\n[Name, Geburtsdatum wenn vorhanden, Wohnort, Nationalitat, Familienstand wenn vorhanden, Sprachen]\n\nAUSBILDUNG\n[Chronologisch - Institution, Abschluss, Jahr]\n\nVERGUTUNG & VERFUGBARKEIT\n[Nur wenn Informationen vorhanden: Fixgehalt, Bonus, Kundigungsfrist, Umzugsbereitschaft]\n\nBERUFLICHER WERDEGANG\n[Fur jede Position: Zeitraum, Unternehmen, Jobtitel, kurze Firmenbeschreibung, Hauptverantwortlichkeiten als Bullets, Key Achievements als Bullets]\n\nANMERKUNGEN ZUM WERDEGANG\n\nZUSAMMENFASSUNG\n[3-4 Paragraphen aus Berater-Perspektive]\n\nBERUFLICH-FACHLICHE EIGNUNG' + positionLine + '\n[Konkrete Bewertung Starken und Eignung]\n\nMOTIVATION\n[Nur wenn in Notizen vorhanden]\n\nPERSONLICHKEIT\n[Nur wenn in Notizen vorhanden]\n\nEMPFEHLUNG\n[Nur wenn genugende Infos vorhanden]\n\n---\n\nCV-INHALT:\n' + uploadedCV + notesSection
+    const datum = new Date().toLocaleDateString('de-AT', {month: 'long', year: 'numeric'});
+    const signiumFormat = langInstr + `
+
+Du bist Dr. Sami Hamid, Managing Partner Signium Austria. Erstelle einen professionellen VERTRAULICHEN KANDIDATENBERICHT im exakten Signium-Format.
+
+WICHTIG: Kein Markdown. Keine ## Symbole. Abschnittstitel in GROSSBUCHSTABEN. Lass Abschnitte ohne Information komplett weg.
+
+Erstelle den Bericht in EXAKT dieser Struktur:
+
+[NAME DES KANDIDATEN]
+VERTRAULICHER KANDIDATENBERICHT
+[POSITION / ROLLE]${position ? '\n' + position : ''}${klient ? '\n' + klient : ''}
+${datum}
+
+Dieser Vertrauliche Bericht enthält zum Teil Informationen, die uns unter Zusicherung strengster Vertraulichkeit mitgeteilt wurden. Entsprechend unseren berufsethischen Prinzipien müssen wir Sie dazu verpflichten, nur einer begrenzten Auswahl von Personen, die sich direkt mit der Auswertung befassen, Einsicht in diese Berichte zu gewähren. Der Inhalt muss auch jeglichen Drittpersonen gegenüber geheim gehalten werden. Es dürfen keinerlei Referenzen ohne Zustimmung des Kandidaten oder unsererseits eingeholt werden.
+
+---
+
+PERSÖNLICHE ANGABEN
+
+Name: [vollständiger Name]
+Geburtsdatum: [wenn vorhanden]
+Wohnort: [wenn vorhanden]
+Nationalität: [wenn vorhanden]
+Familienstand: [wenn vorhanden]
+Sprachen: [Muttersprache / Fließend / Grundkenntnisse]
+
+---
+
+AUSBILDUNG UND QUALIFIKATIONEN
+
+[Chronologisch: Institution, Abschluss, Jahr]
+
+---
+
+VERGÜTUNG UND VERFÜGBARKEIT
+
+[Nur wenn Informationen vorhanden aus Notizen:]
+Aktuelles Paket (nach Angaben des Kandidaten)
+Fixgehalt: [Betrag]
+Bonus: [Betrag oder Beschreibung]
+
+Erwartetes Paket: [wenn vorhanden]
+Kündigungsfrist: [wenn vorhanden]
+Umsiedlung: [wenn vorhanden]
+Verfügbarkeit für Reisen: [wenn vorhanden]
+
+---
+
+KARRIERE ZUSAMMENFASSUNG
+
+[Chronologisch, neueste zuerst - Format: Zeitraum | Unternehmen, Ort | Jobtitel]
+
+---
+
+KANDIDATENBEWERTUNG
+
+FACHLICHES RESÜMEE
+[3-4 substanzielle Paragraphen aus Berater-Perspektive: Wer ist diese Person, was macht sie besonders, welche Karriere-Logik, konkrete Leistungen und Zahlen]
+
+BEWERTUNG
+[Persönlichkeit, Führungsstil, Kommunikation - aus Notizen oder aus Karrieremuster abgeleitet]
+
+BEWERBERMOTIVATION
+[Warum ist der Kandidat offen für einen Wechsel - nur wenn in Notizen vorhanden]
+
+---
+
+BERUFSERFAHRUNG
+
+[Für jede relevante Position:]
+[Zeitraum] | [UNTERNEHMEN, Ort]
+[Jobtitel]
+[Kurze Firmenbeschreibung - 1 Satz in Kursiv]
+Hauptverantwortlichkeiten:
+- [konkrete Verantwortlichkeit]
+- [konkrete Verantwortlichkeit]
+Key Achievements:
+- [messbarer Erfolg mit Zahlen wenn möglich]
+- [messbarer Erfolg]
+
+---
+
+Vorbereitet von: Dr. Sami Hamid | Managing Partner | Signium Austria
+t +43 664 4568862 | sami.hamid@signium.com
+
+---
+
+CV-INHALT:
+${uploadedCV}${notesContent ? '\n\nGESPRÄCHSNOTIZEN:\n' + notesContent : ''}`;
 
     return { type: 'text', prompt: signiumFormat };
   }
@@ -1141,7 +1265,7 @@ async function generateDocument() {
       messages = [{ role: 'user', content: promptData.prompt }];
     }
 
-    const response = await fetch('/.netlify/functions/docs-generate', {
+    const response = await fetch('/api/docs-generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages })
