@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LPR Dashboard — Signium</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Gill Sans','Gill Sans MT',Calibri,sans-serif;background:#EEF1F8;min-height:100vh;}
+.page{max-width:900px;margin:0 auto;padding:1.5rem;}
+
+/* HEADER */
+.hdr{background:#081D4D;border-radius:16px;padding:1.5rem 2rem;margin-bottom:1rem;position:relative;overflow:hidden;}
+.hdr-d1{position:absolute;top:0;right:0;width:45%;height:100%;background:#FF6A42;clip-path:polygon(35% 0,100% 0,100% 100%,5% 100%);opacity:.13;}
+.hdr-d2{position:absolute;top:0;right:0;width:27%;height:100%;background:#6BCBC2;clip-path:polygon(55% 0,100% 0,100% 100%,25% 100%);opacity:.11;}
+.hdr-z{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;}
+.hdr-brand{display:flex;align-items:center;gap:8px;margin-bottom:.6rem;}
+.hdr-mark{width:28px;height:28px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.hdr-mark svg{width:16px;height:16px;}
+.hdr-word{font-size:12px;font-weight:700;color:white;letter-spacing:2px;opacity:.8;}
+.hdr-title{font-family:'Petrona',Georgia,serif;color:white;font-size:20px;font-weight:300;line-height:1.2;}
+.hdr-sub{color:rgba(255,255,255,.45);font-size:11px;margin-top:4px;letter-spacing:.3px;}
+.hdr-client{font-family:'Petrona',Georgia,serif;color:#6BCBC2;font-size:20px;font-weight:600;}
+.hdr-date{color:rgba(255,255,255,.4);font-size:11px;margin-top:3px;}
+.hdr-parts{display:flex;gap:8px;margin-top:10px;justify-content:flex-end;}
+.hdr-p{background:rgba(255,255,255,.08);border-radius:8px;padding:6px 14px;text-align:center;}
+.hdr-pn{font-family:'Petrona',Georgia,serif;font-size:18px;font-weight:300;color:white;}
+.hdr-pl{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.5px;margin-top:1px;}
+
+/* LAYOUT */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.card{background:white;border-radius:14px;border:1.5px solid #E2E6F0;padding:1.25rem;}
+.card-dark{background:#081D4D;border-radius:14px;padding:1.25rem;}
+.card-lbl{font-size:10px;font-weight:700;color:#8892A4;letter-spacing:.8px;text-transform:uppercase;margin-bottom:.6rem;}
+.card-lbl-w{font-size:10px;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.8px;text-transform:uppercase;margin-bottom:.6rem;}
+.sec-lbl{font-size:10px;font-weight:700;color:#8892A4;letter-spacing:.8px;text-transform:uppercase;margin-bottom:.75rem;}
+
+/* GAUGE */
+.gauge-val{font-family:'Petrona',Georgia,serif;font-size:48px;font-weight:300;line-height:1;letter-spacing:-2px;text-align:center;margin-top:.25rem;}
+.gauge-lbl{font-size:11px;font-weight:700;letter-spacing:.5px;text-align:center;margin-top:.3rem;}
+.gauge-desc{font-size:11px;color:rgba(255,255,255,.45);text-align:center;margin-top:.5rem;line-height:1.5;}
+
+/* WIRKUNGSGRAD */
+.wg-val{font-family:'Petrona',Georgia,serif;font-size:46px;font-weight:300;line-height:1;letter-spacing:-1px;}
+.wg-lbl{font-size:11px;font-weight:700;letter-spacing:.3px;margin-top:.3rem;}
+.wg-txt{font-size:12px;color:#6B7A99;line-height:1.55;margin-top:.6rem;}
+.wg-levels{display:flex;flex-direction:column;gap:6px;margin-top:.75rem;}
+.wg-lvl{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;}
+.wg-lvl-name{font-size:12px;font-weight:700;}
+.wg-lvl-score{font-family:'Petrona',Georgia,serif;font-size:18px;font-weight:600;}
+
+/* AMPELN */
+.ampeln{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1rem;}
+.ampel{background:white;border-radius:14px;border:1.5px solid #E2E6F0;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.ampel-lights{display:flex;flex-direction:column;gap:5px;margin-bottom:4px;}
+.light{width:22px;height:22px;border-radius:50%;}
+.light.rot{background:#C0392B;box-shadow:0 0 8px rgba(192,57,43,0.5);}
+.light.gelb{background:#D4AC0D;box-shadow:0 0 8px rgba(212,172,13,0.5);}
+.light.gruen{background:#1a7a4a;box-shadow:0 0 8px rgba(26,122,74,0.4);}
+.light.off{background:#EAEDF5;}
+.ampel-name{font-size:10px;font-weight:700;color:#6B7A99;text-align:center;line-height:1.3;}
+.ampel-delta{font-family:'Petrona',Georgia,serif;font-size:16px;font-weight:600;}
+.ampel-status{font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;}
+.ampel-comment{font-size:11px;color:#6B7A99;text-align:center;line-height:1.4;padding-top:6px;border-top:1px solid #F0F3FA;width:100%;}
+
+/* RADAR */
+.radar-card{background:white;border-radius:14px;border:1.5px solid #E2E6F0;padding:1.5rem;margin-bottom:1rem;}
+.radar-ttl{font-family:'Petrona',Georgia,serif;font-size:15px;font-weight:600;color:#081D4D;margin-bottom:.2rem;}
+.radar-sub{font-size:12px;color:#8892A4;margin-bottom:1rem;font-style:italic;}
+.radar-legend{display:flex;gap:20px;margin-bottom:1rem;flex-wrap:wrap;}
+.rl{display:flex;align-items:center;gap:8px;font-size:12px;color:#444;font-weight:600;}
+.rldot{width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 0 2px currentColor;}
+.scale-row{display:flex;justify-content:space-between;padding:8px 14px;background:#F5F7FB;border-radius:8px;margin-top:.75rem;flex-wrap:wrap;gap:4px;}
+.sc{font-size:11px;color:#8892A4;}
+.sc strong{color:#081D4D;}
+
+/* DIV TABLE */
+.div-tbl{background:white;border-radius:14px;border:1.5px solid #E2E6F0;overflow:hidden;margin-bottom:1rem;}
+.div-hdr{background:#081D4D;padding:12px 18px;display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 90px;gap:8px;}
+.div-th{font-size:10px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.5px;text-align:center;}
+.div-th:first-child{text-align:left;color:rgba(255,255,255,.85);}
+.div-row{padding:11px 18px;display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr 90px;gap:8px;align-items:center;border-bottom:1px solid #F5F7FB;}
+.div-row:last-child{border-bottom:none;}
+.div-dname{font-family:'Petrona',Georgia,serif;font-size:13px;font-weight:600;color:#081D4D;}
+.div-cell{text-align:center;}
+.div-val{font-family:'Petrona',Georgia,serif;font-size:16px;font-weight:600;}
+.div-badge{display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:8px;}
+
+/* HANDLUNGSFELDER */
+.hf{border-radius:12px;padding:14px 16px;margin-bottom:8px;border-left:4px solid;display:flex;gap:12px;}
+.hf-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;margin-top:1px;}
+.hf-title{font-family:'Petrona',Georgia,serif;font-size:14px;font-weight:600;margin-bottom:4px;}
+.hf-text{font-size:12px;line-height:1.6;}
+.hf-block{display:flex;flex-direction:column;gap:6px;}
+.hf-line{font-size:12px;line-height:1.55;}
+.hf-line-last{padding-top:4px;border-top:1px solid rgba(0,0,0,0.06);margin-top:2px;}
+.hf-key{font-weight:700;color:#081D4D;margin-right:4px;}
+
+/* NO DATA */
+.nodata{background:white;border-radius:14px;border:1.5px solid #E2E6F0;padding:3rem;text-align:center;}
+.nodata h2{font-family:'Petrona',Georgia,serif;font-size:20px;font-weight:300;color:#081D4D;margin-bottom:.75rem;}
+.nodata p{font-size:13px;color:#8892A4;line-height:1.65;}
+
+.footer{display:flex;justify-content:space-between;align-items:center;padding-top:1rem;border-top:1px solid #E2E6F0;margin-top:.5rem;}
+.footer-brand{display:flex;align-items:center;gap:8px;}
+.footer-mark{width:22px;height:22px;background:#081D4D;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.footer-mark svg{width:13px;height:13px;}
+.footer-word{font-size:11px;font-weight:700;color:#081D4D;letter-spacing:1.5px;}
+.footer-note{font-size:11px;color:#8892A4;}
+@media screen and (max-width:700px){
+  body{padding:8px;}
+  .main{gap:8px;}
+  .row2,.ampeln{flex-direction:column;}
+  .card,.card-dark{min-width:unset;width:100%;box-sizing:border-box;}
+  .ampel{min-width:unset;flex:1 1 40%;}
+  .ampeln{flex-wrap:wrap;}
+  .radar-card canvas{max-width:100% !important;width:100% !important;height:auto !important;display:block;}
+  .div-tbl{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .hdr-z{flex-direction:column;gap:8px;}
+  .hdr-parts{justify-content:flex-start;}
+  *{box-sizing:border-box;}
+}
+</style>
+</head>
+<body>
+<div class="page" id="page">
+  <div class="hdr">
+    <div class="hdr-d1"></div><div class="hdr-d2"></div>
+    <div class="hdr-z">
+      <div>
+        <div class="hdr-brand">
+          <div class="hdr-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4C8.5 4 6 6.5 6 9.5C6 11.5 7 13.2 8.5 14.2L10 15C11 15.6 11.5 16.3 11.5 17.2C11.5 18.2 10.8 19 9.5 19C8.3 19 7.5 18.3 7 17.2L5 18.3C5.8 20 7.5 21 9.5 21C12.3 21 14 19.3 14 17.2C14 15.3 13 13.8 11.5 12.8L10 12C9 11.4 8.5 10.6 8.5 9.5C8.5 8 9.5 7 11 7C12.2 7 13.2 7.7 13.8 8.8L15.8 7.7C14.8 5.5 13.5 4 12 4Z" fill="#081D4D" opacity=".9"></path></svg></div>
+          <span class="hdr-word">SIGNIUM</span>
+        </div>
+        <div class="hdr-title">Leadership Performance Radar</div>
+        <div class="hdr-sub">STRATEGIC LEADERSHIP AUDIT · RESULTS REPORT</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="hdr-client">DEMO</div>
+        <div class="hdr-date">April 2026 · Projekt DEMO</div>
+        <div class="hdr-parts">
+          <div class="hdr-p"><div class="hdr-pn">6</div><div class="hdr-pl">C-LEVEL</div></div>
+          <div class="hdr-p"><div class="hdr-pn">12</div><div class="hdr-pl">C-1</div></div>
+          <div class="hdr-p"><div class="hdr-pn">34</div><div class="hdr-pl">C-2</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="card-dark">
+      <div class="card-lbl-w">Overall Leadership System Score</div>
+      <canvas id="mainGauge" width="240" height="130"></canvas>
+      <div class="gauge-val" style="color:#D4AC0D;">3.27</div>
+      <div class="gauge-lbl" style="color:#D4AC0D;">HANDLUNGSBEDARF</div>
+      <div class="gauge-desc">Aggregated score across all levels and dimensions</div>
+    </div>
+    <div class="card">
+      <div class="card-lbl">Leadership-Wirkungsgrad</div>
+      <div class="wg-val" style="color:#D4AC0D;">66%</div>
+      <div class="wg-lbl" style="color:#D4AC0D;">HANDLUNGSBEDARF — FÜHRUNG VERLIERT KRAFT</div>
+      <div class="wg-txt">There is a critical gap between the leadership self-image at C-Level and the experienced reality at C-2. C-1 stands in between — and fails to fully pass on all impulses.</div>
+      <div class="wg-levels">
+        <div class="wg-lvl" style="background:#F5F7FB;">
+          <div class="wg-lvl-name" style="color:#081D4D;">C-Level — How we lead</div>
+          <div class="wg-lvl-score" style="color:#1a7a4a;">Ø 4</div>
+        </div>
+        <div class="wg-lvl" style="background:#F5F7FB;">
+          <div class="wg-lvl-name" style="color:#081D4D;">C-1 — How leadership is experienced</div>
+          <div class="wg-lvl-score" style="color:#D4AC0D;">Ø 3.18</div>
+        </div>
+        <div class="wg-lvl" style="background:#FEFAE0;">
+          <div class="wg-lvl-name" style="color:#D4AC0D;">C-2 — How leadership lands</div>
+          <div class="wg-lvl-score" style="color:#D4AC0D;">Ø 2.64</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-lbl">5 Leadership Dimensions</div>
+  <div class="ampeln">
+    <div class="ampel">
+        <div class="ampel-lights"><div class="light rot"></div><div class="light off"></div><div class="light off"></div></div>
+        <div class="ampel-name">KOHÄRENZ</div>
+        <div class="ampel-delta" style="color:#C0392B;">Δ 2.1</div>
+        <div class="ampel-status" style="background:#FEECEB;color:#C0392B;">KRITISCH</div>
+        <div class="ampel-comment">Leadership understanding is fundamentally different across levels</div>
+      </div><div class="ampel">
+        <div class="ampel-lights"><div class="light off"></div><div class="light off"></div><div class="light gruen"></div></div>
+        <div class="ampel-name">AGILITÄT</div>
+        <div class="ampel-delta" style="color:#1a7a4a;">Δ 0.4</div>
+        <div class="ampel-status" style="background:#EAF7EF;color:#1a7a4a;">SOLIDE</div>
+        <div class="ampel-comment">Consistent alignment — a strength of the system</div>
+      </div><div class="ampel">
+        <div class="ampel-lights"><div class="light off"></div><div class="light gelb"></div><div class="light off"></div></div>
+        <div class="ampel-name">TALENT-
+WIRKUNG</div>
+        <div class="ampel-delta" style="color:#D4AC0D;">Δ 1.1</div>
+        <div class="ampel-status" style="background:#FEFAE0;color:#D4AC0D;">HANDLUNGSBEDARF</div>
+        <div class="ampel-comment">Development happens — but does not land as a system</div>
+      </div><div class="ampel">
+        <div class="ampel-lights"><div class="light rot"></div><div class="light off"></div><div class="light off"></div></div>
+        <div class="ampel-name">ENTSCHEIDUNGS-
+KRAFT</div>
+        <div class="ampel-delta" style="color:#C0392B;">Δ 1.9</div>
+        <div class="ampel-status" style="background:#FEECEB;color:#C0392B;">KRITISCH</div>
+        <div class="ampel-comment">Decisions are made — but seep away in the system</div>
+      </div><div class="ampel">
+        <div class="ampel-lights"><div class="light off"></div><div class="light gelb"></div><div class="light off"></div></div>
+        <div class="ampel-name">VERANT-
+WORTUNGS-
+KULTUR</div>
+        <div class="ampel-delta" style="color:#D4AC0D;">Δ 1.3</div>
+        <div class="ampel-status" style="background:#FEFAE0;color:#D4AC0D;">HANDLUNGSBEDARF</div>
+        <div class="ampel-comment">Accountability culture visible — but not yet consistent</div>
+      </div>
+  </div>
+
+  <div class="radar-card">
+    <div class="radar-ttl">How does leadership see itself — and where does it land?</div>
+    <div class="radar-sub">Level comparison across all 5 leadership dimensions</div>
+    <div class="radar-legend">
+      <div class="rl"><div class="rldot" style="background:#081D4D;color:#081D4D;"></div>C-Level</div>
+      <div class="rl"><div class="rldot" style="background:#FF6A42;color:#FF6A42;"></div>C-1</div>
+      <div class="rl"><div class="rldot" style="background:#6BCBC2;color:#6BCBC2;"></div>C-2</div>
+    </div>
+    <canvas id="radar" width="800" height="460"></canvas>
+    <div class="scale-row">
+      <div class="sc"><strong>1</strong> = does not apply</div>
+      <div class="sc"><strong>2</strong> = barely</div>
+      <div class="sc"><strong>3</strong> = partially</div>
+      <div class="sc"><strong>4</strong> = largely</div>
+      <div class="sc"><strong>5</strong> = fully</div>
+    </div>
+  </div>
+
+  <div class="div-tbl">
+    <div class="div-hdr">
+      <div class="div-th">DIMENSION</div>
+      <div class="div-th">C-Level</div>
+      <div class="div-th">C-1</div>
+      <div class="div-th">C-2</div>
+      <div class="div-th">DIVERGENCE</div>
+    </div>
+    <div class="div-row">
+        <div class="div-dname">Coherence</div>
+        <div class="div-cell"><div class="div-val" style="color:#081D4D;">4.2</div></div>
+        <div class="div-cell"><div class="div-val" style="color:#FF6A42;">3.1</div></div>
+        <div class="div-cell"><div class="div-val" style="color:#6BCBC2;">2.1</div></div>
+        <div class="div-cell"><div class="div-badge" style="background:#FEECEB;color:#C0392B;">Δ 2.1</div></div>
+      </div><div class="div-row">
+        <div class="div-dname">Agility</div>
+        <div class="div-cell"><div class="div-val" style="color:#081D4D;">3.6</div></div>
+        <div class="div-cell"><div class="div-val" style="color:#FF6A42;">3.4</div></div>
+        <div class="div-cell"><div class="div-val" style="color:#6BCBC2;">3.2</div></div>
+        <div class="div-cell"><div class="div-badge" style="background:#EAF7EF;color:#1a7a4a;">Δ 0.4</div></div>
+      </div><div class="div-row">
+        <div class="div-dname">Talent Impact</div>
+        <div class="div-cell"><div class="div-val" style="color:#081D4D;">4</div></div>
+        <div class="div-cell"><div class="div-val" style="color:#FF6A42;">3.2</div></div>
+        <div class="div-cell"><div class="div-val" style="color:#6BCBC2;">2.9</div></div>
+        <div class="div-cell"><div class="div-badge" style="background:#FEFAE0;color:#D4AC0D;">Δ 1.1</div></div>
+      </div><div class="div-row">
+        <div class="div-dname">Decision Power</div>
+        <div class="div-cell"><div class="div-val" style="color:#081D4D;">4.3</div></div>
+        <div class="div-cell"><div class="div-val" style="color:#FF6A42;">3.1</div></div>
+        <div class="div-cell"><div class="div-val" style="color:#6BCBC2;">2.4</div></div>
+        <div class="div-cell"><div class="div-badge" style="background:#FEECEB;color:#C0392B;">Δ 1.9</div></div>
+      </div><div class="div-row">
+        <div class="div-dname">Accountability Culture</div>
+        <div class="div-cell"><div class="div-val" style="color:#081D4D;">3.9</div></div>
+        <div class="div-cell"><div class="div-val" style="color:#FF6A42;">3.1</div></div>
+        <div class="div-cell"><div class="div-val" style="color:#6BCBC2;">2.6</div></div>
+        <div class="div-cell"><div class="div-badge" style="background:#FEFAE0;color:#D4AC0D;">Δ 1.3</div></div>
+      </div>
+  </div>
+
+  <div class="sec-lbl">Systemische Interpretation &amp; Handlungsfelder</div>
+  <div class="hf" style="background:#FEECEB;border-color:#C0392B;"><div class="hf-num" style="background:#C0392B;color:white;">1</div><div style="flex:1;"><div class="hf-title" style="color:#C0392B;">Kohärenz — Führungsverständnis läuft ins Leere</div><div class="hf-block" style="margin-top:8px;"><div class="hf-line"><span class="hf-key">Befund:</span> <span style="color:#C0392B;">Das C-Level sieht ein einheitliches Führungsbild — die unteren Ebenen erleben das Gegenteil.</span></div><div class="hf-line"><span class="hf-key">Systemische Ursache:</span> <span style="color:#C0392B;">Strukturelle Kommunikationsbrüche: Führungsprinzipien sind formuliert, aber nicht in den Alltag übersetzt. Die strategische Kommunikation erreicht die Linie nicht wirksam.</span></div><div class="hf-line"><span class="hf-key">Risiko:</span> <span style="color:#C0392B;">Kulturelle Fragmentierung, Bereichsegoismen, fehlende Ausrichtung auf gemeinsame Ziele.</span></div><div class="hf-line hf-line-last"><span class="hf-key">Empfehlung:</span> <span style="color:#C0392B;">Leadership-Alignment-Workshop, danach strukturierte Kaskadierung mit messbaren Meilensteinen. C-1 als kritische Verbindungsebene gezielt einbinden.</span></div></div></div></div><div class="hf" style="background:#EAF7EF;border-color:#1a7a4a;"><div class="hf-num" style="background:#1a7a4a;color:white;">2</div><div style="flex:1;"><div class="hf-title" style="color:#1a7a4a;">Agilität — Stärke des Systems gezielt einsetzen</div><div class="hf-block" style="margin-top:8px;"><div class="hf-line"><span class="hf-key">Befund:</span> <span style="color:#1a7a4a;">Agilität wird konsistent über alle Ebenen erlebt — Stärke des Systems.</span></div><div class="hf-line"><span class="hf-key">Risiko:</span> <span style="color:#1a7a4a;">Trägheit bei externen Veränderungen — Reaktionszeiten zu lang für dynamische Märkte.</span></div><div class="hf-line hf-line-last"><span class="hf-key">Empfehlung:</span> <span style="color:#1a7a4a;">Diese Stärke als Hebel für Veränderungsinitiativen nutzen.</span></div></div></div></div><div class="hf" style="background:#FEFAE0;border-color:#D4AC0D;"><div class="hf-num" style="background:#D4AC0D;color:white;">3</div><div style="flex:1;"><div class="hf-title" style="color:#D4AC0D;">Talentwirkung — Sichtbarkeit von Förderung erhöhen</div><div class="hf-block" style="margin-top:8px;"><div class="hf-line"><span class="hf-key">Befund:</span> <span style="color:#D4AC0D;">Talentförderung wird auf den Ebenen unterschiedlich wahrgenommen — oben stärker als unten.</span></div><div class="hf-line"><span class="hf-key">Systemische Ursache:</span> <span style="color:#D4AC0D;">Fördermaßnahmen erreichen nicht alle Ebenen gleichmäßig. Karrierepfade nicht transparent genug.</span></div><div class="hf-line"><span class="hf-key">Risiko:</span> <span style="color:#D4AC0D;">Potenziale gehen verloren. Senioritätsorientierung verhindert frühe Förderung. Fluktuationsrisiko steigt.</span></div><div class="hf-line hf-line-last"><span class="hf-key">Empfehlung:</span> <span style="color:#D4AC0D;">Kommunikation von Entwicklungsmöglichkeiten verbessern. Beziehungsgestaltung als Führungskompetenz stärken.</span></div></div></div></div><div class="hf" style="background:#FEECEB;border-color:#C0392B;"><div class="hf-num" style="background:#C0392B;color:white;">4</div><div style="flex:1;"><div class="hf-title" style="color:#C0392B;">Entscheidungskraft — Entscheidungen versickern im System</div><div class="hf-block" style="margin-top:8px;"><div class="hf-line"><span class="hf-key">Befund:</span> <span style="color:#C0392B;">Das C-Level glaubt, klar und wirksam zu entscheiden. C-2 erlebt Unklarheit, Blockaden und fehlende Umsetzung.</span></div><div class="hf-line"><span class="hf-key">Systemische Ursache:</span> <span style="color:#C0392B;">Entscheidungen werden getroffen — aber nicht kaskadiert. Zuständigkeiten sind oben klar, unten nicht. C-1 fungiert als Flaschenhals statt als Enabler.</span></div><div class="hf-line"><span class="hf-key">Risiko:</span> <span style="color:#C0392B;">Systemische Lähmung. Gerüchte und Demotivation entstehen wo Entscheidungen intransparent bleiben.</span></div><div class="hf-line hf-line-last"><span class="hf-key">Empfehlung:</span> <span style="color:#C0392B;">Entscheidungsdesign von oben nach unten überprüfen. C-1 explizit in Umsetzungsverantwortung nehmen. Kommunikation strukturieren: wer entscheidet was, bis wann, mit welcher Begründung.</span></div></div></div></div><div class="hf" style="background:#FEFAE0;border-color:#D4AC0D;"><div class="hf-num" style="background:#D4AC0D;color:white;">5</div><div style="flex:1;"><div class="hf-title" style="color:#D4AC0D;">Verantwortungskultur — Ownership weiter verankern</div><div class="hf-block" style="margin-top:8px;"><div class="hf-line"><span class="hf-key">Befund:</span> <span style="color:#D4AC0D;">Verantwortungskultur wird auf den Ebenen unterschiedlich erlebt.</span></div><div class="hf-line"><span class="hf-key">Systemische Ursache:</span> <span style="color:#D4AC0D;">Ownership und Fehlerkultur sind nicht durchgängig als Führungsprinzip verankert.</span></div><div class="hf-line"><span class="hf-key">Risiko:</span> <span style="color:#D4AC0D;">Totales Vertrauensdefizit. Silodenken und politische Filter blockieren jede Veränderung.</span></div><div class="hf-line hf-line-last"><span class="hf-key">Empfehlung:</span> <span style="color:#D4AC0D;">Feedback-Kultur systematisieren. Regelmäßige Reflexion über Verantwortungsübernahme einführen.</span></div></div></div></div>
+
+  <div id="bereich-section"></div>
+
+  <div class="footer" style="margin-top:1rem;">
+    <div class="footer-brand">
+      <div class="footer-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4C8.5 4 6 6.5 6 9.5C6 11.5 7 13.2 8.5 14.2L10 15C11 15.6 11.5 16.3 11.5 17.2C11.5 18.2 10.8 19 9.5 19C8.3 19 7.5 18.3 7 17.2L5 18.3C5.8 20 7.5 21 9.5 21C12.3 21 14 19.3 14 17.2C14 15.3 13 13.8 11.5 12.8L10 12C9 11.4 8.5 10.6 8.5 9.5C8.5 8 9.5 7 11 7C12.2 7 13.2 7.7 13.8 8.8L15.8 7.7C14.8 5.5 13.5 4 12 4Z" fill="white" opacity=".9"></path></svg></div>
+      <span class="footer-word">SIGNIUM</span>
+    </div>
+    <div class="footer-note">Leadership Performance Radar · Confidential · © Signium Austria 2026</div>
+  </div></div>
+
+<script src="./dashboard_files/supabase-js@2"></script>
+<script>
+const DIMS=['Coherence','Agility','Talent Impact','Decision Power','Accountability Culture'];
+const params=new URLSearchParams(window.location.search);
+const PROJEKT=params.get('projekt')||'DEMO';
+const URL_NAME=params.get('name')||'';
+const URL_DATE=params.get('date')||'';
+const URL_BERATER=params.get('berater')||'';
+
+// Global state — shared between render() and renderBereiche()
+let agg={}, counts={c0:0,c1:0,c2:0}, bereiche={};
+
+function getColor(delta){
+  if(delta>=1.5)return{c:'#C0392B',bg:'#FEECEB',light:'rot',status:'CRITICAL'};
+  if(delta>=0.8)return{c:'#D4AC0D',bg:'#FEFAE0',light:'gelb',status:'ACTION NEEDED'};
+  return{c:'#1a7a4a',bg:'#EAF7EF',light:'gruen',status:'SOLID'};
+}
+
+function getScoreColor(v){
+  if(v>=3.5)return'#1a7a4a';
+  if(v>=2.8)return'#D4AC0D';
+  return'#C0392B';
+}
+
+const AMPEL_COMMENTS={
+  'Coherence':{rot:'Leadership understanding is fundamentally different across levels',gelb:'Leadership understanding exists — but not consistently throughout',gruen:'Consistent leadership understanding across all levels'},
+  'Agility':{rot:'Agility is proclaimed at the top — does not reach the bottom',gelb:'Agility works in parts — structural brakes present',gruen:'Consistent alignment — a strength of the system'},
+  'Talent Impact':{rot:'Talent development does not exist as experienced reality',gelb:'Development happens — but does not land as a system',gruen:'Talent development is consistently experienced at all levels'},
+  'Decision Power':{rot:'Decisions are made — but seep away in the system',gelb:'Decision processes work — but with delays',gruen:'Clear decision architecture — experienced at all levels'},
+  'Accountability Culture':{rot:'Ownership stays at the top — cover-your-back thinking dominates below',gelb:'Accountability culture visible — but not yet consistent',gruen:'Genuine ownership is visibly lived at all levels'},
+};
+
+const INTERPRETATIONS={
+  'Coherence':{
+    score:{
+      hoch:{befund:'The leadership understanding is shared and consistently experienced.',risiko:'Complacency — blind spots arise when success is taken for granted.',empfehlung:'Consolidate the position. Actively reference and evolve leadership principles.'},
+      mittel:{befund:'A leadership understanding exists but is not consistently experienced as a shared system.',risiko:'Differences between areas and levels create friction and uncertainty.',empfehlung:'Embed leadership principles in everyday practice. Establish consistency across areas.'},
+      niedrig:{befund:'Leadership is not experienced as a coherent system. Each level interprets leadership at its own discretion.',risiko:'Cultural fragmentation, silo thinking, lack of alignment on common goals.',empfehlung:'Urgent action needed: Leadership Alignment Workshop at C-Level. Redefine and bindingly embed leadership principles.'}
+    },
+    divergenz:{
+      kritisch:{befund:'C-Level sees a unified leadership image — the lower levels experience the opposite.',ursache:'Structural communication breaks: leadership principles are formulated but not translated into everyday life. Strategic communication does not effectively reach the line.',empfehlung:'Leadership Alignment Workshop, followed by structured cascading with measurable milestones. C-1 as critical connecting level to be specifically engaged.'},
+      moderat:{befund:'Differences in leadership perception between levels are noticeable.',ursache:'Leadership principles are interpreted differently or not consistently lived.',empfehlung:'Structure leadership dialogue between levels. Clarify and formalise expectations.'},
+      gering:{befund:'Consistent leadership understanding across all levels — strong alignment.',ursache:null,empfehlung:'Use this strength as a foundation for further development and actively communicate it.'}
+    }
+  },
+  'Agility':{
+    score:{
+      hoch:{befund:'The organisation responds quickly and autonomously to changes.',risiko:'Risk of overstretching — structures can unravel with too much dynamism without an anchor.',empfehlung:'Secure agility as a strategic advantage. Further strengthen decentralised decision structures.'},
+      mittel:{befund:'Agility exists in parts but is constrained by structural brakes.',risiko:'Inertia in response to external changes — reaction times too long for dynamic markets.',empfehlung:'Identify and remove structural brakes. Expand decision-making autonomy at C-2 level.'},
+      niedrig:{befund:'The organisation cannot respond to changes in a timely manner. Leadership impulses for change are missing or not reaching through.',risiko:'High strategic risk. A culture of fear prevents innovation and learning from mistakes.',empfehlung:'Immediate analysis of structural brakes. Identify micromanagement and resolve decision backlogs.'}
+    },
+    divergenz:{
+      kritisch:{befund:'C-Level believes the organisation is agile and responsive. C-2 experiences the opposite.',ursache:'Leadership impulses for change seep away in the middle level. Decentralised decision spaces exist formally — but are not lived.',empfehlung:'Define concrete decision-making authority for C-2. Strengthen C-1 as an enabler, not a control authority.'},
+      moderat:{befund:'Agility is experienced differently across levels — stronger at the top than below.',ursache:'Structures do not consistently support agile action. Top-down thinking acts as a brake.',empfehlung:'Enable concrete agile practices at C-2 level. Establish a learning culture and fault tolerance.'},
+      gering:{befund:'Agility is consistently experienced across all levels — a strength of the system.',ursache:null,empfehlung:'Use this strength as a lever for change initiatives.'}
+    }
+  },
+  'Talent Impact':{
+    score:{
+      hoch:{befund:'Talents are systematically identified, developed, and prepared for key positions.',risiko:'Complacency in succession planning — risk in case of unexpected departures.',empfehlung:'Further systematise succession planning. Actively promote internal mobility.'},
+      mittel:{befund:'Talent development happens but is unplanned and not embedded as a strategic process.',risiko:'Potential is lost. Seniority bias prevents early development. Retention risk increases.',empfehlung:'Introduce a structured talent programme. Make career paths transparent. Define succession process for key positions.'},
+      niedrig:{befund:'Talents are neither systematically identified nor specifically developed. Succession is not a strategic topic.',risiko:'High retention risk. Continuity breaks at key positions.',empfehlung:'Immediate strategic priority: embed talent identification, development paths and succession planning as a leadership task.'}
+    },
+    divergenz:{
+      kritisch:{befund:'C-Level believes it is actively developing talents. C-2 experiences no systematic development.',ursache:'Talent development exists as a concept — not as lived reality. Focus on operational results crowds out people development.',empfehlung:'Introduce visible talent programmes with concrete milestones. Communicate career paths. Explicitly hold leaders accountable for talent development.'},
+      moderat:{befund:'Talent development is perceived differently across levels — stronger at the top than below.',ursache:'Development measures do not reach all levels equally. Career paths are not sufficiently transparent.',empfehlung:'Improve communication of development opportunities. Strengthen relationship-building as a leadership competency.'},
+      gering:{befund:'Talent development is consistently experienced at all levels.',ursache:null,empfehlung:'Systematise succession planning as the next level of maturity.'}
+    }
+  },
+  'Decision Power':{
+    score:{
+      hoch:{befund:'Decisions are made clearly, quickly, and are consistently implemented.',risiko:'Risk of overconfidence — too little involvement can create blind spots.',empfehlung:'Document decision architecture. Continue to secure transparency in communicating decisions.'},
+      mittel:{befund:'Decisions are made but too slowly or not consistently implemented.',risiko:'Decoupling of planning and execution. Informal power shifts arise where clarity is lacking.',empfehlung:'Clarify decision-making authority. Define escalation paths. Bindingly assign implementation responsibility.'},
+      niedrig:{befund:'Decisions seep away in the system. Responsibilities are unclear, implementation unreliable.',risiko:'Systemic paralysis. Rumours and demotivation arise where decisions remain opaque.',empfehlung:'Immediate redesign of decision architecture. Introduce RACI structures. Define clear scope at each level.'}
+    },
+    divergenz:{
+      kritisch:{befund:'C-Level believes it makes clear and effective decisions. C-2 experiences ambiguity, blockages and failed implementation.',ursache:'Decisions are made — but not cascaded. Responsibilities are clear at the top, not below. C-1 acts as a bottleneck rather than an enabler.',empfehlung:'Review decision design top-down. Explicitly place C-1 in implementation responsibility. Structure communication: who decides what, by when, with what rationale.'},
+      moderat:{befund:'Decision processes are experienced differently across levels.',ursache:'Decision logic between C-Level and C-1 is not fully clear. Delays in passing information on.',empfehlung:'Increase decision transparency. Introduce regular communication of decisions and their rationale.'},
+      gering:{befund:'Clear decision architecture — consistently experienced at all levels.',ursache:null,empfehlung:'Document best practice and use as a standard for new areas or transformations.'}
+    }
+  },
+  'Accountability Culture':{
+    score:{
+      hoch:{befund:'Leaders take responsibility — even beyond their own area. Error culture is constructive.',risiko:'Risk of overload if ownership is not secured through clear structures.',empfehlung:'Communicate accountability culture as a competitive advantage. Further strengthen ethical behaviour as a leadership competency.'},
+      mittel:{befund:'Responsibility is formally assumed — but genuine ownership and error culture are not consistently present.',risiko:'Cover-your-back thinking dominates in critical situations. Defensive culture prevents learning from failure.',empfehlung:'Embed psychological safety as a leadership goal. Handle mistakes constructively. Strengthen the role model function of leaders.'},
+      niedrig:{befund:'Cover-your-back culture dominates. Mistakes are not addressed. Ownership does not exist as lived reality.',risiko:'Total trust deficit. Silo thinking and political filters block any change.',empfehlung:'Immediate cultural intervention required. Leadership coaching. Define psychological safety as a measurable leadership goal.'}
+    },
+    divergenz:{
+      kritisch:{befund:'C-Level sees a healthy error culture and genuine ownership. C-2 experiences cover-your-back thinking and blame.',ursache:'Responsibility is not delegated but managed. What counts as ownership at the top arrives as control below. Fear zones arise where mistakes are sanctioned rather than analysed.',empfehlung:'C-Level must actively take on the role model function — visibly and consistently. Leadership coaching at C-1 level. Treat target misses as learning opportunities going forward.'},
+      moderat:{befund:'Accountability culture is experienced differently across levels.',ursache:'Ownership and error culture are not consistently embedded as a leadership principle.',empfehlung:'Systematise feedback culture. Introduce regular reflection on accountability.'},
+      gering:{befund:'Genuine ownership is visibly lived at all levels.',ursache:null,empfehlung:'Use this culture as a strategic advantage — especially in transformation and growth phases.'}
+    }
+  }
+};
+
+function interpret(dim,scoreC2,delta){
+  const data=INTERPRETATIONS[dim];
+  if(!data)return null;
+  const scoreCat=scoreC2>=3.6?'hoch':scoreC2>=2.8?'mittel':'niedrig';
+  const deltaCat=delta>=1.5?'kritisch':delta>=0.8?'moderat':'gering';
+  return{scoreCat,deltaCat,s:data.score[scoreCat],d:data.divergenz[deltaCat]};
+}
+
+
+
+
+const SUPABASE_URL='https://yipevhfddofchlupqmzi.supabase.co';
+const SUPABASE_KEY='sb_publishable_33D93AcK5v2rgCKjGGiULw_4ThzR6E7';
+const sb=supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function fetchFromSupabase(projekt){
+  try{
+    const {data,error}=await sb.from('lpr_responses').select('*').eq('projekt',projekt);
+    if(error){console.error('Supabase fetch error:',error.message);return null;}
+    return data;
+  }catch(e){
+    console.error('Supabase fetch error:',e);
+    return null;
+  }
+}
+
+function loadData(){
+  // Reset globals
+  Object.keys(agg).forEach(k=>delete agg[k]);
+  counts.c0=0;counts.c1=0;counts.c2=0;
+  Object.keys(bereiche).forEach(k=>delete bereiche[k]);
+
+  // Survey saves keys as lpr_PROJEKT_EBENE_BEREICH — scan all matching keys
+  ['c0','c1','c2'].forEach(ebene=>{
+    const prefix=`lpr_${PROJEKT}_${ebene}_`;
+    const allEntries=[];
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k&&k.startsWith(prefix)){
+        try{
+          const arr=JSON.parse(localStorage.getItem(k)||'[]');
+          arr.forEach(entry=>{
+            allEntries.push(entry);
+            const bid=entry.bereich||'gesamt';
+            const bname=entry.bereichname||bid;
+            if(bid!=='gesamt'){
+              if(!bereiche[bid])bereiche[bid]={name:bname,counts:{c0:0,c1:0,c2:0},scores:{}};
+              bereiche[bid].counts[ebene]=(bereiche[bid].counts[ebene]||0)+1;
+              DIMS.forEach(dim=>{
+                if(entry.scores&&entry.scores[dim]!=null){
+                  if(!bereiche[bid].scores[dim])bereiche[bid].scores[dim]={sum:0,n:0};
+                  bereiche[bid].scores[dim].sum+=entry.scores[dim];
+                  bereiche[bid].scores[dim].n++;
+                }
+              });
+            }
+          });
+        }catch(e){}
+      }
+    }
+    counts[ebene]=allEntries.length;
+    if(!allEntries.length)return;
+    const dimSums={};const dimCounts={};
+    allEntries.forEach(entry=>{
+      Object.keys(entry.scores).forEach(dim=>{
+        if(!dimSums[dim]){dimSums[dim]=0;dimCounts[dim]=0;}
+        if(entry.scores[dim]!==null){dimSums[dim]+=entry.scores[dim];dimCounts[dim]++;}
+      });
+    });
+    agg[ebene]={};
+    DIMS.forEach(dim=>{
+      agg[ebene][dim]=dimCounts[dim]?parseFloat((dimSums[dim]/dimCounts[dim]).toFixed(2)):null;
+    });
+  });
+
+  // No demo data — real data only
+}
+
+function calcOverall(agg){
+  const levels=Object.keys(agg).filter(k=>agg[k]);
+  if(!levels.length)return null;
+  let total=0,n=0;
+  levels.forEach(lv=>{
+    DIMS.forEach(d=>{if(agg[lv][d]!==null){total+=agg[lv][d];n++;}});
+  });
+  return n?parseFloat((total/n).toFixed(2)):null;
+}
+
+function render(){
+  // Data already in globals (agg, counts, bereiche) — do NOT call loadData() here
+  const overall=calcOverall(agg);
+  const overallColor=getScoreColor(overall||0);
+
+  // Wirkungsgrad
+  let wgPct=0,wgLabel='—',wgColor='#8892A4';
+  const c0avg=agg.c0?parseFloat((DIMS.reduce((s,d)=>s+(agg.c0[d]||0),0)/DIMS.length).toFixed(2)):null;
+  const c1avg=agg.c1?parseFloat((DIMS.reduce((s,d)=>s+(agg.c1[d]||0),0)/DIMS.length).toFixed(2)):null;
+  const c2avg=agg.c2?parseFloat((DIMS.reduce((s,d)=>s+(agg.c2[d]||0),0)/DIMS.length).toFixed(2)):null;
+  if(c0avg&&c2avg){
+    wgPct=Math.round((c2avg/c0avg)*100);
+    const diff=c0avg-c2avg;
+    if(diff>=1.5){wgLabel='CRITICAL — LEADERSHIP FAILS TO LAND';wgColor='#C0392B';}
+    else if(diff>=0.8){wgLabel='ACTION NEEDED — LEADERSHIP LOSING IMPACT';wgColor='#D4AC0D';}
+    else{wgLabel='SOLID — LEADERSHIP IS LANDING';wgColor='#1a7a4a';}
+  }
+
+  // Projects info — URL params take priority (work across devices)
+  const projects=JSON.parse(localStorage.getItem('lpr_projects')||'[]');
+  const proj=projects.find(p=>p.code===PROJEKT);
+  const projName=URL_NAME||(proj?proj.name:PROJEKT);
+  const projDate=URL_DATE||(proj?proj.date:new Date().toLocaleDateString('en-GB',{year:'numeric',month:'long'}));
+
+  // Deltas
+  const deltas={};
+  DIMS.forEach(d=>{
+    const v0=agg.c0&&agg.c0[d]!=null?agg.c0[d]:null;
+    const v2=agg.c2&&agg.c2[d]!=null?agg.c2[d]:null;
+    deltas[d]=v0!==null&&v2!==null?parseFloat((v0-v2).toFixed(1)):null;
+  });
+
+  const avgDelta=deltas[DIMS[0]]!==null?parseFloat((DIMS.reduce((s,d)=>s+(deltas[d]||0),0)/DIMS.length).toFixed(1)):null;
+
+  // Gauge color
+  const gColor=overall?getScoreColor(overall):'#D4AC0D';
+  const gLabel=overall>=3.5?'SOLID':overall>=2.8?'ACTION NEEDED':'CRITICAL';
+
+  const html=`
+  <div class="hdr">
+    <div class="hdr-d1"></div><div class="hdr-d2"></div>
+    <div class="hdr-z">
+      <div>
+        <div class="hdr-brand">
+          <div class="hdr-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4C8.5 4 6 6.5 6 9.5C6 11.5 7 13.2 8.5 14.2L10 15C11 15.6 11.5 16.3 11.5 17.2C11.5 18.2 10.8 19 9.5 19C8.3 19 7.5 18.3 7 17.2L5 18.3C5.8 20 7.5 21 9.5 21C12.3 21 14 19.3 14 17.2C14 15.3 13 13.8 11.5 12.8L10 12C9 11.4 8.5 10.6 8.5 9.5C8.5 8 9.5 7 11 7C12.2 7 13.2 7.7 13.8 8.8L15.8 7.7C14.8 5.5 13.5 4 12 4Z" fill="#081D4D" opacity=".9"/></svg></div>
+          <span class="hdr-word">SIGNIUM</span>
+        </div>
+        <div class="hdr-title">Leadership Performance Radar</div>
+        <div class="hdr-sub">STRATEGIC LEADERSHIP AUDIT · RESULTS REPORT</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="hdr-client">${projName}</div>
+        <div class="hdr-date">${projDate} · Projekt ${PROJEKT}</div>
+        <div class="hdr-parts">
+          <div class="hdr-p"><div class="hdr-pn">${counts.c0}</div><div class="hdr-pl">C-LEVEL</div></div>
+          <div class="hdr-p"><div class="hdr-pn">${counts.c1}</div><div class="hdr-pl">C-1</div></div>
+          <div class="hdr-p"><div class="hdr-pn">${counts.c2}</div><div class="hdr-pl">C-2</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="card-dark">
+      <div class="card-lbl-w">Overall Leadership System Score</div>
+      <canvas id="mainGauge" width="240" height="130"></canvas>
+      <div class="gauge-val" style="color:${gColor};">${overall||'—'}</div>
+      <div class="gauge-lbl" style="color:${gColor};">${gLabel}</div>
+      <div class="gauge-desc">Aggregated score across all levels and dimensions</div>
+    </div>
+    <div class="card">
+      <div class="card-lbl">Leadership-Wirkungsgrad</div>
+      <div class="wg-val" style="color:${wgColor};">${wgPct}%</div>
+      <div class="wg-lbl" style="color:${wgColor};">${wgLabel}</div>
+      <div class="wg-txt">There is a critical gap between the leadership self-image at C-Level and the experienced reality at C-2. C-1 stands in between — and fails to fully pass on all impulses.</div>
+      <div class="wg-levels">
+        <div class="wg-lvl" style="background:#F5F7FB;">
+          <div class="wg-lvl-name" style="color:#081D4D;">C-Level — How we lead</div>
+          <div class="wg-lvl-score" style="color:${getScoreColor(c0avg||0)};">${c0avg!==null?'Ø '+c0avg:'—'}</div>
+        </div>
+        <div class="wg-lvl" style="background:#F5F7FB;">
+          <div class="wg-lvl-name" style="color:#081D4D;">C-1 — How leadership is experienced</div>
+          <div class="wg-lvl-score" style="color:${getScoreColor(c1avg||0)};">${c1avg!==null?'Ø '+c1avg:'—'}</div>
+        </div>
+        <div class="wg-lvl" style="background:${wgColor==='#C0392B'?'#FEECEB':wgColor==='#D4AC0D'?'#FEFAE0':'#EAF7EF'};">
+          <div class="wg-lvl-name" style="color:${wgColor};">C-2 — How leadership lands</div>
+          <div class="wg-lvl-score" style="color:${wgColor};">${c2avg!==null?'Ø '+c2avg:'—'}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-lbl">5 Leadership Dimensions</div>
+  <div class="ampeln">
+    ${DIMS.map(d=>{
+      const delta=deltas[d];
+      const col=delta!==null?getColor(delta):{c:'#8892A4',bg:'#F5F7FB',light:'off',status:'NO DATA'};
+      const comment=AMPEL_COMMENTS[d]?AMPEL_COMMENTS[d][col.light]||'':'';
+      const lights=['rot','gelb','gruen'].map(l=>`<div class="light ${col.light===l?l:'off'}"></div>`).join('');
+      return `<div class="ampel">
+        <div class="ampel-lights">${lights}</div>
+        <div class="ampel-name">${d.toUpperCase().replace('Ä','Ä').replace('ACCOUNTABILITY CULTURE','ACCOUNT-\nABILITY\nCULTURE').replace('DECISION POWER','DECISION\nPOWER').replace('TALENT IMPACT','TALENT\nIMPACT')}</div>
+        <div class="ampel-delta" style="color:${col.c};">${delta!==null?'Δ '+delta:'—'}</div>
+        <div class="ampel-status" style="background:${col.bg};color:${col.c};">${col.status}</div>
+        <div class="ampel-comment">${comment}</div>
+      </div>`;
+    }).join('')}
+  </div>
+
+  <div class="radar-card">
+    <div class="radar-ttl">How does leadership see itself — and where does it land?</div>
+    <div class="radar-sub">Level comparison across all 5 leadership dimensions</div>
+    <div class="radar-legend">
+      <div class="rl"><div class="rldot" style="background:#081D4D;color:#081D4D;"></div>C-Level</div>
+      <div class="rl"><div class="rldot" style="background:#FF6A42;color:#FF6A42;"></div>C-1</div>
+      <div class="rl"><div class="rldot" style="background:#6BCBC2;color:#6BCBC2;"></div>C-2</div>
+    </div>
+    <canvas id="radar" width="800" height="460"></canvas>
+    <div class="scale-row">
+      <div class="sc"><strong>1</strong> = does not apply</div>
+      <div class="sc"><strong>2</strong> = barely</div>
+      <div class="sc"><strong>3</strong> = partially</div>
+      <div class="sc"><strong>4</strong> = largely</div>
+      <div class="sc"><strong>5</strong> = fully</div>
+    </div>
+  </div>
+
+  <div class="div-tbl">
+    <div class="div-hdr">
+      <div class="div-th">DIMENSION</div>
+      <div class="div-th">C-Level</div>
+      <div class="div-th">C-1</div>
+      <div class="div-th">C-2</div>
+      <div class="div-th">DIVERGENCE</div>
+    </div>
+    ${DIMS.map(d=>{
+      const v0=agg.c0?agg.c0[d]:null;
+      const v1=agg.c1?agg.c1[d]:null;
+      const v2=agg.c2?agg.c2[d]:null;
+      const delta=deltas[d];
+      const col=delta!==null?getColor(delta):{c:'#8892A4',bg:'#F5F7FB'};
+      return `<div class="div-row">
+        <div class="div-dname">${d}</div>
+        <div class="div-cell"><div class="div-val" style="color:#081D4D;">${v0!==null?v0:'—'}</div></div>
+        <div class="div-cell"><div class="div-val" style="color:#FF6A42;">${v1!==null?v1:'—'}</div></div>
+        <div class="div-cell"><div class="div-val" style="color:#6BCBC2;">${v2!==null?v2:'—'}</div></div>
+        <div class="div-cell"><div class="div-badge" style="background:${col.bg};color:${col.c};">${delta!==null?'Δ '+delta:'—'}</div></div>
+      </div>`;
+    }).join('')}
+  </div>
+
+  <div class="sec-lbl">Systemische Interpretation & Handlungsfelder</div>
+  ${DIMS.map((dim,i)=>{
+    const delta=deltas[dim];
+    const v2=agg.c2?agg.c2[dim]:null;
+    if(delta===null||v2===null)return'';
+    const col=getColor(delta);
+    const interp=interpret(dim,v2,delta);
+    if(!interp)return'';
+    const {s,d,deltaCat}=interp;
+
+    const TITLES={
+      'Coherence':{kritisch:'Coherence — Leadership vision fails to land',moderat:'Coherence — Inconsistencies between levels visible',gering:'Coherence — Leverage consistency as a strength'},
+      'Agility':{kritisch:'Agility — Leadership impulses are not reaching through',moderat:'Agility — Remove structural brakes',gering:'Agility — Deploy system strength deliberately'},
+      'Talent Impact':{kritisch:'Talent Impact — Development does not reach the base',moderat:'Talent Impact — Increase visibility of development',gering:'Talent Impact — Develop systematically'},
+      'Decision Power':{kritisch:'Decision Power — Decisions seep away in the system',moderat:'Decision Power — Accelerate and clarify processes',gering:'Decision Power — Secure best practice'},
+      'Accountability Culture':{kritisch:'Accountability Culture — Ownership stays at the top',moderat:'Accountability Culture — Further embed ownership',gering:'Accountability Culture — Leverage role model strategically'},
+    };
+    const title=(TITLES[dim]&&TITLES[dim][deltaCat])||dim;
+
+    return '<div class="hf" style="background:'+col.bg+';border-color:'+col.c+';">'
+      +'<div class="hf-num" style="background:'+col.c+';color:white;">'+(i+1)+'</div>'
+      +'<div style="flex:1;">'
+      +'<div class="hf-title" style="color:'+col.c+';">'+title+'</div>'
+      +'<div class="hf-block" style="margin-top:8px;">'
+      +'<div class="hf-line"><span class="hf-key">Befund:</span> <span style="color:'+col.c+';">'+d.befund+'</span></div>'
+      +(d.ursache?'<div class="hf-line"><span class="hf-key">Systemische Ursache:</span> <span style="color:'+col.c+';">'+d.ursache+'</span></div>':'')
+      +'<div class="hf-line"><span class="hf-key">Risiko:</span> <span style="color:'+col.c+';">'+s.risiko+'</span></div>'
+      +'<div class="hf-line hf-line-last"><span class="hf-key">Empfehlung:</span> <span style="color:'+col.c+';">'+d.empfehlung+'</span></div>'
+      +'</div>'
+      +'</div>'
+      +'</div>';
+  }).join('')}
+
+  <div id="bereich-section"></div>
+
+  <div class="footer" style="margin-top:1rem;">
+    <div class="footer-brand">
+      <div class="footer-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4C8.5 4 6 6.5 6 9.5C6 11.5 7 13.2 8.5 14.2L10 15C11 15.6 11.5 16.3 11.5 17.2C11.5 18.2 10.8 19 9.5 19C8.3 19 7.5 18.3 7 17.2L5 18.3C5.8 20 7.5 21 9.5 21C12.3 21 14 19.3 14 17.2C14 15.3 13 13.8 11.5 12.8L10 12C9 11.4 8.5 10.6 8.5 9.5C8.5 8 9.5 7 11 7C12.2 7 13.2 7.7 13.8 8.8L15.8 7.7C14.8 5.5 13.5 4 12 4Z" fill="white" opacity=".9"/></svg></div>
+      <span class="footer-word">SIGNIUM</span>
+    </div>
+    <div class="footer-note">Leadership Performance Radar · Confidential · © Signium Austria 2026</div>
+  </div>`;
+
+  document.getElementById('page').innerHTML=html;
+
+  setTimeout(()=>{
+    // GAUGE
+    const gc=document.getElementById('mainGauge');
+    if(gc){
+      const gcW=Math.min(240,gc.parentElement?gc.parentElement.clientWidth-32:240);
+      const gcH=Math.round(130*(gcW/240));
+      gc.width=gcW;gc.height=gcH;
+      const ctx=gc.getContext('2d');
+      const w=gcW,h=gcH,cx=w/2,cy=h*0.88,r=h*0.72;
+      const sa=Math.PI,ea=2*Math.PI;
+      [[0,0.33,'#C0392B'],[0.33,0.66,'#D4AC0D'],[0.66,1,'#1a7a4a']].forEach(([f,t,c])=>{
+        ctx.beginPath();ctx.arc(cx,cy,r,sa+f*(ea-sa),sa+t*(ea-sa));
+        ctx.strokeStyle=c;ctx.lineWidth=11;ctx.lineCap='butt';ctx.stroke();
+      });
+      const pct=overall?(overall-1)/4:0.5;
+      const na=sa+pct*(ea-sa);
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+(r-6)*Math.cos(na),cy+(r-6)*Math.sin(na));
+      ctx.strokeStyle='white';ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();
+      ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.3)';ctx.font='bold 10px Gill Sans,Calibri,sans-serif';ctx.textAlign='center';
+      ctx.fillText('CRITICAL',cx-r*0.62,cy+22);ctx.fillText('SOLID',cx+r*0.62,cy+22);
+    }
+
+    // RADAR
+    const rc=document.getElementById('radar');
+    if(!rc)return;
+    // Responsive: fit canvas to container width
+    const containerW=rc.parentElement?rc.parentElement.clientWidth:800;
+    if(containerW<800){const ratio=containerW/800;rc.width=containerW;rc.height=Math.round(460*ratio);}
+    const ctx=rc.getContext('2d');
+    const W=rc.width,H=rc.height,CX=W/2,CY=H/2+10,RMAX=Math.round(168*(W/800));
+    const N=5;
+    function ang(i){return(Math.PI*2/N)*i-Math.PI/2;}
+    function pt(v,i){const r=((v-1)/4)*RMAX;return{x:CX+r*Math.cos(ang(i)),y:CY+r*Math.sin(ang(i))};}
+
+    for(let l=1;l<=5;l++){
+      const r=(l/5)*RMAX;
+      ctx.beginPath();ctx.arc(CX,CY,r,0,Math.PI*2);
+      ctx.strokeStyle=l===5?'rgba(8,29,77,0.15)':'rgba(8,29,77,0.06)';ctx.lineWidth=l===5?1.5:1;ctx.stroke();
+      ctx.fillStyle='white';ctx.beginPath();ctx.arc(CX,CY-r,12,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#555';ctx.font='bold 11px Gill Sans,Calibri,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(l,CX,CY-r);
+    }
+    DIMS.forEach((_,i)=>{
+      const e={x:CX+RMAX*Math.cos(ang(i)),y:CY+RMAX*Math.sin(ang(i))};
+      ctx.beginPath();ctx.moveTo(CX,CY);ctx.lineTo(e.x,e.y);
+      ctx.strokeStyle='rgba(8,29,77,0.06)';ctx.lineWidth=1;ctx.stroke();
+    });
+    const LBLS=['Coherence','Agility','Talent\nImpact','Decision\nPower','Accountability\nCulture'];
+    const lblFont=Math.max(9,Math.round(12*(W/800)));
+    LBLS.forEach((lbl,i)=>{
+      const a=ang(i),r=RMAX+Math.round(34*(W/800)),x=CX+r*Math.cos(a),y=CY+r*Math.sin(a);
+      ctx.fillStyle='#081D4D';ctx.font=`700 ${lblFont}px Petrona,Georgia,serif`;
+      ctx.textAlign=Math.abs(Math.cos(a))<0.25?'center':Math.cos(a)>0?'left':'right';
+      ctx.textBaseline='middle';
+      const lines=lbl.split('\n');
+      lines.forEach((ln,li)=>ctx.fillText(ln,x,y+(li-(lines.length-1)/2)*(lblFont+4)));
+    });
+
+    function blob(data,col,dash){
+      if(!data)return;
+      const vals=DIMS.map(d=>data[d]||1);
+      const pts=vals.map((v,i)=>pt(v,i));
+      ctx.beginPath();
+      for(let i=0;i<N;i++){
+        const p0=pts[(i-1+N)%N],p1=pts[i],p2=pts[(i+1)%N],p3=pts[(i+2)%N];
+        if(i===0)ctx.moveTo(p1.x,p1.y);
+        const cp1x=p1.x+(p2.x-p0.x)/6,cp1y=p1.y+(p2.y-p0.y)/6;
+        const cp2x=p2.x-(p3.x-p1.x)/6,cp2y=p2.y-(p3.y-p1.y)/6;
+        ctx.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,p2.x,p2.y);
+      }
+      ctx.closePath();
+      if(dash)ctx.setLineDash([7,4]);else ctx.setLineDash([]);
+      ctx.fillStyle=col.f;ctx.fill();ctx.strokeStyle=col.s;ctx.lineWidth=2.5;ctx.stroke();ctx.setLineDash([]);
+      pts.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,7,0,Math.PI*2);ctx.fillStyle=col.s;ctx.fill();ctx.strokeStyle='white';ctx.lineWidth=2.5;ctx.stroke();});
+    }
+    blob(agg.c2,{s:'#6BCBC2',f:'rgba(107,203,194,.13)'},false);
+    blob(agg.c1,{s:'#FF6A42',f:'rgba(255,106,66,.08)'},true);
+    blob(agg.c0,{s:'#081D4D',f:'rgba(8,29,77,.1)'},false);
+  },100);
+}
+
+// Load from Supabase — render only after data is ready
+(async()=>{
+  // Show loading state
+  document.getElementById('page').innerHTML='<div style="text-align:center;padding:4rem;color:#8892A4;font-size:14px;">Loading data...</div>';
+  const rows=await fetchFromSupabase(PROJEKT);
+  if(rows&&rows.length>0){
+    // SUPABASE HAS DATA: use only Supabase, ignore localStorage
+    Object.keys(agg).forEach(k=>delete agg[k]);
+    counts.c0=0;counts.c1=0;counts.c2=0;
+    Object.keys(bereiche).forEach(k=>delete bereiche[k]);
+    // Process Supabase rows into same format as localStorage
+    const sbAgg={};const sbCounts={c0:0,c1:0,c2:0};const sbBereiche={};
+    rows.forEach(row=>{
+      const ebene=row.ebene;const bereich=row.bereich||'gesamt';const bname=row.bereichname||'Gesamtes Unternehmen';
+      sbCounts[ebene]=(sbCounts[ebene]||0)+1;
+      if(!sbAgg[ebene])sbAgg[ebene]={};
+      Object.keys(row.scores||{}).forEach(dim=>{
+        if(!sbAgg[ebene][dim])sbAgg[ebene][dim]={sum:0,n:0};
+        if(row.scores[dim]!==null){sbAgg[ebene][dim].sum+=row.scores[dim];sbAgg[ebene][dim].n++;}
+      });
+      if(bereich!=='gesamt'){
+        if(!sbBereiche[bereich])sbBereiche[bereich]={name:bname,sums:{},counts:{c0:0,c1:0,c2:0}};
+        if(!sbBereiche[bereich].sums[ebene])sbBereiche[bereich].sums[ebene]={};
+        sbBereiche[bereich].counts[ebene]=(sbBereiche[bereich].counts[ebene]||0)+1;
+        Object.keys(row.scores||{}).forEach(dim=>{
+          if(!sbBereiche[bereich].sums[ebene][dim])sbBereiche[bereich].sums[ebene][dim]={sum:0,n:0};
+          if(row.scores[dim]!==null){sbBereiche[bereich].sums[ebene][dim].sum+=row.scores[dim];sbBereiche[bereich].sums[ebene][dim].n++;}
+        });
+      }
+    });
+    // Finalize averages
+    ['c0','c1','c2'].forEach(ebene=>{
+      if(!sbAgg[ebene])return;
+      const final={};
+      DIMS.forEach(dim=>{
+        const d=sbAgg[ebene][dim];
+        final[dim]=d&&d.n?parseFloat((d.sum/d.n).toFixed(2)):null;
+      });
+      sbAgg[ebene]=final;
+    });
+    Object.keys(sbBereiche).forEach(slug=>{
+      const b=sbBereiche[slug];
+      ['c0','c1','c2'].forEach(ebene=>{
+        b[ebene]={};
+        DIMS.forEach(dim=>{
+          const sd=b.sums[ebene]&&b.sums[ebene][dim];
+          b[ebene][dim]=sd&&sd.n?parseFloat((sd.sum/sd.n).toFixed(2)):null;
+        });
+      });
+    });
+    // Update globals and re-render
+    Object.assign(agg,sbAgg);
+    Object.assign(counts,sbCounts);
+    Object.assign(bereiche,sbBereiche);
+    console.log('Counts after Supabase:', JSON.stringify(counts));
+    console.log('Agg keys:', Object.keys(agg));
+    render();
+    renderBereiche();
+  } else {
+    // No Supabase data — use localStorage
+    loadData();
+    // If still no data, show demo
+    if(!agg.c0&&!agg.c1&&!agg.c2){
+      agg.c0={'Coherence':4.2,'Agility':3.6,'Talent Impact':4.0,'Decision Power':4.3,'Accountability Culture':3.9};
+      agg.c1={'Coherence':3.1,'Agility':3.4,'Talent Impact':3.2,'Decision Power':3.1,'Accountability Culture':3.1};
+      agg.c2={'Coherence':2.1,'Agility':3.2,'Talent Impact':2.9,'Decision Power':2.4,'Accountability Culture':2.6};
+      counts.c0=6;counts.c1=12;counts.c2=34;
+    }
+    render();
+    renderBereiche();
+  }
+})();
+
+function renderBereiche(){
+  const bKeys=Object.keys(bereiche);
+  const el=document.getElementById('bereich-section');
+  if(!el)return;
+  if(bKeys.length<1){el.innerHTML='';return;}
+
+  let html='<div style="font-size:10px;font-weight:700;color:#8892A4;letter-spacing:.8px;text-transform:uppercase;margin-bottom:.75rem;margin-top:.5rem;">Bereichsvergleich — Leadership-Wirkungsgrad pro Bereich</div>';
+
+  // Heatmap table
+  html+='<div style="background:white;border-radius:14px;border:1.5px solid #E2E6F0;overflow:hidden;margin-bottom:1rem;">';
+
+  // Header
+  html+='<div style="background:#081D4D;padding:11px 18px;display:grid;grid-template-columns:1.5fr repeat('+DIMS.length+',1fr) 80px;gap:8px;">';
+  html+='<div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.5px;">BEREICH</div>';
+  DIMS.forEach(d=>{
+    const short=d==='Accountability Culture'?'Account.':d==='Decision Power'?'Decision':d==='Talent Impact'?'Talent':d;
+    html+='<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.3px;text-align:center;">'+short.toUpperCase()+'</div>';
+  });
+  html+='<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.5);text-align:center;">Ø Δ</div>';
+  html+='</div>';
+
+  // Rows
+  bKeys.forEach(slug=>{
+    const b=bereiche[slug];
+    const deltas=DIMS.map(dim=>{
+      const v0=b.c0?b.c0[dim]:null;
+      const v2=b.c2?b.c2[dim]:null;
+      return v0&&v2?parseFloat((v0-v2).toFixed(1)):null;
+    });
+    const validDeltas=deltas.filter(d=>d!==null);
+    const avgD=validDeltas.length?parseFloat((validDeltas.reduce((a,b)=>a+b,0)/validDeltas.length).toFixed(1)):null;
+    const rowCol=avgD!==null?(avgD>=1.5?'rgba(254,236,235,.4)':avgD>=0.8?'rgba(254,250,224,.4)':'rgba(234,247,239,.3)'):'white';
+
+    html+='<div style="padding:10px 18px;display:grid;grid-template-columns:1.5fr repeat('+DIMS.length+',1fr) 80px;gap:8px;align-items:center;border-bottom:1px solid #F5F7FB;background:'+rowCol+';">';
+    html+='<div style="font-family:Petrona,Georgia,serif;font-size:13px;font-weight:600;color:#081D4D;">'+b.name+'</div>';
+
+    deltas.forEach(delta=>{
+      if(delta===null){html+='<div style="text-align:center;color:#C0C8D8;font-size:12px;">—</div>';return;}
+      const col=getColor(delta);
+      html+='<div style="text-align:center;"><span style="background:'+col.bg+';color:'+col.c+';font-size:11px;font-weight:700;padding:3px 7px;border-radius:6px;">Δ'+delta+'</span></div>';
+    });
+
+    if(avgD!==null){
+      const ac=getColor(avgD);
+      html+='<div style="text-align:center;"><span style="background:'+ac.bg+';color:'+ac.c+';font-size:12px;font-weight:700;padding:4px 8px;border-radius:7px;">'+avgD+'</span></div>';
+    } else {
+      html+='<div></div>';
+    }
+    html+='</div>';
+  });
+
+  html+='</div>';
+
+  // Legend
+  html+='<div style="font-size:11px;color:#8892A4;display:flex;gap:16px;flex-wrap:wrap;margin-bottom:1rem;">';
+  html+='<span style="display:flex;align-items:center;gap:5px;"><span style="background:#FEECEB;color:#C0392B;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;">Δ≥1.5</span> Kritische Divergenz</span>';
+  html+='<span style="display:flex;align-items:center;gap:5px;"><span style="background:#FEFAE0;color:#D4AC0D;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;">Δ0.8–1.4</span> Handlungsbedarf</span>';
+  html+='<span style="display:flex;align-items:center;gap:5px;"><span style="background:#EAF7EF;color:#1a7a4a;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;">Δ<0.8</span> Solide</span>';
+  html+='</div>';
+
+  // Critical bereich highlight
+  const critBereiche=bKeys.filter(slug=>{
+    const b=bereiche[slug];
+    const avgD=DIMS.reduce((s,dim)=>{
+      const v0=b.c0?b.c0[dim]:null;const v2=b.c2?b.c2[dim]:null;
+      return v0&&v2?s+(v0-v2):s;
+    },0)/DIMS.length;
+    return avgD>=1.5;
+  });
+
+  if(critBereiche.length){
+    html+='<div style="background:#FEECEB;border-radius:10px;padding:12px 16px;margin-bottom:1rem;border-left:4px solid #C0392B;">';
+    html+='<div style="font-size:11px;font-weight:700;color:#C0392B;margin-bottom:4px;">Bereiche mit kritischer Divergenz</div>';
+    html+='<div style="font-size:12px;color:#7B1F1F;line-height:1.55;">'+critBereiche.map(s=>bereiche[s].name).join(', ')+' zeigen fundamentale Wahrnehmungsunterschiede zwischen C-Level und C-2. Empfehlung: Bereichsspezifische Leadership-Analyse und gezielte Intervention.</div>';
+    html+='</div>';
+  }
+
+  el.innerHTML=html;
+}
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body></html>

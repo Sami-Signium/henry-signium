@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LPR Admin — Signium</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Gill Sans','Gill Sans MT',Calibri,sans-serif;background:#EEF1F8;min-height:100vh;}
+.page{max-width:820px;margin:0 auto;padding:2rem 1.5rem;}
+
+.hdr{background:#081D4D;border-radius:16px;padding:1.5rem 2rem;margin-bottom:1.5rem;position:relative;overflow:hidden;}
+.hdr-d1{position:absolute;top:0;right:0;width:45%;height:100%;background:#FF6A42;clip-path:polygon(35% 0,100% 0,100% 100%,5% 100%);opacity:.13;}
+.hdr-d2{position:absolute;top:0;right:0;width:27%;height:100%;background:#6BCBC2;clip-path:polygon(55% 0,100% 0,100% 100%,25% 100%);opacity:.11;}
+.hdr-z{position:relative;z-index:1;display:flex;align-items:center;gap:14px;}
+.hdr-mark{width:36px;height:36px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hdr-mark svg{width:20px;height:20px;}
+.hdr-word{font-size:13px;font-weight:700;color:white;letter-spacing:2px;opacity:.8;}
+.hdr-sep{width:1px;height:28px;background:rgba(255,255,255,.2);}
+.hdr-txt h1{font-family:'Petrona',Georgia,serif;color:white;font-size:18px;font-weight:300;}
+.hdr-txt p{color:rgba(255,255,255,.45);font-size:11px;margin-top:3px;letter-spacing:.3px;}
+
+.card{background:white;border-radius:14px;border:1.5px solid #E2E6F0;padding:1.5rem;margin-bottom:1rem;}
+.card-title{font-family:'Petrona',Georgia,serif;font-size:16px;font-weight:600;color:#081D4D;margin-bottom:1rem;}
+
+.field{margin-bottom:1rem;}
+.field label{display:block;font-size:11px;font-weight:700;color:#6B7A99;letter-spacing:.3px;margin-bottom:6px;text-transform:uppercase;}
+.field input{width:100%;padding:11px 14px;border:1.5px solid #E2E6F0;border-radius:10px;font-size:14px;font-family:'Gill Sans','Gill Sans MT',Calibri,sans-serif;color:#081D4D;background:white;outline:none;}
+.field input:focus{border-color:#081D4D;}
+
+/* BEREICHE — positive selection */
+.bereiche-label{font-size:11px;font-weight:700;color:#6B7A99;letter-spacing:.3px;margin-bottom:8px;text-transform:uppercase;display:block;}
+.bereiche-hint{font-size:12px;color:#8892A4;margin-bottom:12px;line-height:1.5;}
+.bereiche-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.b-chip{padding:8px 16px;border-radius:20px;border:1.5px solid #E2E6F0;background:white;font-size:13px;font-family:'Gill Sans','Gill Sans MT',Calibri,sans-serif;color:#6B7A99;cursor:pointer;transition:all .15s;user-select:none;}
+.b-chip:hover{border-color:#081D4D;color:#081D4D;}
+.b-chip.selected{background:#081D4D;border-color:#081D4D;color:white;}
+.custom-bereich{display:flex;gap:8px;margin-top:6px;}
+.custom-bereich input{flex:1;padding:9px 12px;border:1.5px solid #E2E6F0;border-radius:10px;font-size:13px;font-family:'Gill Sans','Gill Sans MT',Calibri,sans-serif;color:#081D4D;outline:none;}
+.custom-bereich input:focus{border-color:#FF6A42;}
+.btn-add-custom{padding:9px 16px;background:#F5F7FB;border:1.5px solid #E2E6F0;border-radius:10px;font-size:13px;font-weight:700;color:#081D4D;cursor:pointer;}
+.btn-add-custom:hover{background:#081D4D;color:white;border-color:#081D4D;}
+.selected-summary{margin-top:10px;font-size:12px;color:#8892A4;}
+.selected-summary span{color:#081D4D;font-weight:700;}
+
+.btn-primary{width:100%;padding:13px;background:#081D4D;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Gill Sans','Gill Sans MT',Calibri,sans-serif;letter-spacing:.3px;}
+.btn-primary:hover{opacity:.9;}
+
+/* PROJEKT LISTE */
+.project-card{background:white;border-radius:14px;border:1.5px solid #E2E6F0;padding:1.25rem 1.5rem;margin-bottom:10px;transition:border-color .15s;}
+.project-card:hover{border-color:#081D4D;}
+.project-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;cursor:pointer;}
+.project-name{font-family:'Petrona',Georgia,serif;font-size:15px;font-weight:600;color:#081D4D;}
+.project-meta{font-size:11px;color:#8892A4;margin-top:3px;}
+.project-bereiche-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.pb-tag{font-size:11px;padding:2px 10px;border-radius:10px;background:#F0F3FA;color:#6B7A99;}
+.project-actions{display:flex;gap:6px;flex-shrink:0;}
+.btn-small{padding:6px 14px;background:white;border:1.5px solid #E2E6F0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;color:#081D4D;text-decoration:none;display:inline-block;white-space:nowrap;}
+.btn-small:hover{background:#081D4D;color:white;border-color:#081D4D;}
+.btn-small.orange{background:#FF6A42;color:white;border-color:#FF6A42;}
+.btn-small.orange:hover{opacity:.9;}
+
+/* STATUS */
+.status-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.status-pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:8px;border:1.5px solid;}
+
+/* LINKS PANEL */
+.links-panel{display:none;margin-top:1rem;padding-top:1rem;border-top:1.5px solid #E2E6F0;}
+.links-panel.open{display:block;}
+.links-note{font-size:12px;color:#6B7A99;margin-bottom:1rem;padding:10px 14px;background:#F5F7FB;border-radius:8px;line-height:1.55;}
+.bereich-section{margin-bottom:1.25rem;}
+.bereich-title{font-family:'Petrona',Georgia,serif;font-size:14px;font-weight:600;color:#081D4D;margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:2px solid #E2E6F0;}
+.link-card{background:#F5F7FB;border-radius:10px;padding:11px 14px;margin-bottom:8px;border-left:4px solid;}
+.link-level{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px;}
+.link-desc{font-size:11px;color:#8892A4;margin-bottom:8px;}
+.link-url-row{display:flex;align-items:center;gap:8px;}
+.link-url-row input{flex:1;padding:8px 11px;border:1.5px solid #E2E6F0;border-radius:7px;font-size:11px;font-family:'Gill Sans','Gill Sans MT',Calibri,sans-serif;color:#081D4D;background:white;outline:none;}
+.btn-copy{padding:7px 14px;background:white;border:1.5px solid #E2E6F0;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;color:#081D4D;white-space:nowrap;}
+.btn-copy:hover{background:#081D4D;color:white;border-color:#081D4D;}
+.btn-copy.copied{background:#1a7a4a;color:white;border-color:#1a7a4a;}
+
+.dash-links{display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap;}
+
+.alert{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:1rem;display:none;}
+.alert.success{background:#EAF7EF;color:#1a7a4a;border:1.5px solid #1a7a4a;display:block;}
+.alert.error{background:#FEECEB;color:#C0392B;border:1.5px solid #C0392B;display:block;}
+.empty{text-align:center;padding:2rem;color:#8892A4;font-size:13px;}
+
+/* Login screen */
+#login-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:#EEF1F8;z-index:9999;display:flex;align-items:center;justify-content:center;}
+.login-card{background:white;border-radius:16px;padding:2.5rem;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,.12);text-align:center;}
+.login-logo{width:52px;height:52px;background:#081D4D;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem;}
+.login-logo svg{width:28px;height:28px;}
+.login-title{font-size:18px;font-weight:700;color:#081D4D;margin-bottom:.3rem;}
+.login-sub{font-size:12px;color:#8892A4;margin-bottom:1.5rem;}
+.login-input{width:100%;border:1.5px solid #E2E6F0;border-radius:9px;padding:.75rem 1rem;font-size:14px;font-family:inherit;text-align:center;letter-spacing:3px;margin-bottom:.8rem;}
+.login-input:focus{outline:none;border-color:#081D4D;}
+.login-btn{width:100%;padding:.75rem;background:#081D4D;color:white;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+.login-btn:hover{background:#0d2a5e;}
+.login-error{font-size:12px;color:#C0392B;margin-top:.5rem;display:none;}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4C8.5 4 6 6.5 6 9.5C6 11.5 7 13.2 8.5 14.2L10 15C11 15.6 11.5 16.3 11.5 17.2C11.5 18.2 10.8 19 9.5 19C8.3 19 7.5 18.3 7 17.2L5 18.3C5.8 20 7.5 21 9.5 21C12.3 21 14 19.3 14 17.2C14 15.3 13 13.8 11.5 12.8L10 12C9 11.4 8.5 10.6 8.5 9.5C8.5 8 9.5 7 11 7C12.2 7 13.2 7.7 13.8 8.8L15.8 7.7C14.8 5.5 13.5 4 12 4Z" fill="white"></path></svg></div>
+    <div class="login-title">LPR Admin</div>
+    <div class="login-sub">Signium Leadership Performance Radar</div>
+    <input type="password" class="login-input" id="pw-input" placeholder="Password" onkeydown="if(event.key===&#39;Enter&#39;)checkLogin()">
+    <button class="login-btn" onclick="checkLogin()">Sign In</button>
+    <div class="login-error" id="login-error">Incorrect password</div>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="hdr">
+    <div class="hdr-d1"></div><div class="hdr-d2"></div>
+    <div class="hdr-z">
+      <div class="hdr-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4C8.5 4 6 6.5 6 9.5C6 11.5 7 13.2 8.5 14.2L10 15C11 15.6 11.5 16.3 11.5 17.2C11.5 18.2 10.8 19 9.5 19C8.3 19 7.5 18.3 7 17.2L5 18.3C5.8 20 7.5 21 9.5 21C12.3 21 14 19.3 14 17.2C14 15.3 13 13.8 11.5 12.8L10 12C9 11.4 8.5 10.6 8.5 9.5C8.5 8 9.5 7 11 7C12.2 7 13.2 7.7 13.8 8.8L15.8 7.7C14.8 5.5 13.5 4 12 4Z" fill="#081D4D" opacity=".9"></path></svg></div>
+      <span class="hdr-word">SIGNIUM</span>
+      <div class="hdr-sep"></div>
+      <div class="hdr-txt"><h1>Leadership Performance Radar</h1><p>CONSULTANT ADMINISTRATION</p></div>
+    </div>
+  </div>
+
+  <div id="alert" class="alert"></div>
+
+  <!-- NEUES PROJEKT -->
+  <div class="card">
+    <div class="card-title">Create New Project</div>
+    <div class="field">
+      <label>Client Name / Project Title</label>
+      <input type="text" id="proj-name" placeholder="e.g. ACME Industries AG">
+    </div>
+    <div class="field">
+      <label>Responsible Consultant</label>
+      <input type="text" id="proj-berater" placeholder="e.g. Dr. Sami Hamid">
+    </div>
+    <div class="field">
+      <label class="bereiche-label">Select Business Areas</label>
+      <div class="bereiche-hint">Click on the desired areas. For each selected area, three links are generated (C-Level, C-1, C-2).</div>
+      <div class="bereiche-chips" id="bereiche-chips">
+        <div class="b-chip" onclick="toggleChip(this,&#39;Marketing&#39;)">Marketing</div>
+        <div class="b-chip" onclick="toggleChip(this,&#39;Sales&#39;)">Sales</div>
+        <div class="b-chip" onclick="toggleChip(this,&#39;Operations&#39;)">Operations</div>
+        <div class="b-chip" onclick="toggleChip(this,&#39;Finance&#39;)">Finance</div>
+        <div class="b-chip" onclick="toggleChip(this,&#39;HR&#39;)">HR</div>
+        <div class="b-chip" onclick="toggleChip(this,&#39;IT&#39;)">IT</div>
+        <div class="b-chip" onclick="toggleChip(this,&#39;Legal&#39;)">Legal</div>
+        <div class="b-chip" onclick="toggleChip(this,&#39;Strategy&#39;)">Strategy</div>
+        <div class="b-chip" onclick="toggleChip(this,&#39;R&amp;D&#39;)">R&amp;D</div>
+        <div class="b-chip" onclick="toggleChip(this,&#39;Supply Chain&#39;)">Supply Chain</div>
+      </div>
+      <div class="custom-bereich">
+        <input type="text" id="custom-bereich" placeholder="Custom area..." onkeydown="if(event.key===&#39;Enter&#39;)addCustom()">
+        <button class="btn-add-custom" onclick="addCustom()">+ Add</button>
+      </div>
+      <div class="selected-summary" id="selected-summary">No area selected — company-wide analysis</div>
+    </div>
+    <button class="btn-primary" onclick="createProject()">Create Project &amp; Generate Links →</button>
+  </div>
+
+  <!-- BESTEHENDE PROJEKTE -->
+  <div class="card">
+    <div class="card-title">Projects</div>
+    <div id="projects-list">
+    <div class="project-card">
+      <div class="project-header" onclick="toggleLinks(&#39;CONST-D80&#39;)">
+        <div>
+          <div class="project-name">Constantia Flexibles</div>
+          <div class="project-meta">Code: CONST-D80 · 25. März 2026 · Sebastian Stein</div>
+          <div class="project-bereiche-tags">
+            <span class="pb-tag">Marketing</span><span class="pb-tag">Sales</span>
+          </div>
+          <div id="status-CONST-D80"><span style="font-size:11px;color:#C0C8D8;">No responses yet</span></div>
+        </div>
+        <div class="project-actions">
+          <button class="btn-small" onclick="event.stopPropagation();toggleLinks(&#39;CONST-D80&#39;)">Links ▾</button>
+          <a href="https://signium-radar.netlify.app/dashboard.html?projekt=CONST-D80" class="btn-small" onclick="event.stopPropagation()">Dashboard</a>
+          <a href="https://signium-radar.netlify.app/report.html?projekt=CONST-D80" class="btn-small orange" onclick="event.stopPropagation()">Report</a>
+        </div>
+      </div>
+      <div class="links-panel" id="links-CONST-D80">
+        <div class="links-note">Send each link exclusively to the corresponding leadership level. All participants within a group share the same link.</div>
+        <div class="bereich-section"><div class="bereich-title">Marketing</div><div class="link-card" style="border-color:#081D4D;">
+        <div class="link-level" style="color:#081D4D;">C-Level</div>
+        <div class="link-desc">Strategic leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-CONST-D80-marketing-c0" value="https://signium-radar.netlify.app/survey.html?projekt=CONST-D80&amp;ebene=c0&amp;bereich=marketing&amp;bereichname=Marketing" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-CONST-D80-marketing-c0&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#FF6A42;">
+        <div class="link-level" style="color:#FF6A42;">C-1</div>
+        <div class="link-desc">Operational leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-CONST-D80-marketing-c1" value="https://signium-radar.netlify.app/survey.html?projekt=CONST-D80&amp;ebene=c1&amp;bereich=marketing&amp;bereichname=Marketing" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-CONST-D80-marketing-c1&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#6BCBC2;">
+        <div class="link-level" style="color:#6BCBC2;">C-2</div>
+        <div class="link-desc">Leadership Snapshot · 30 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-CONST-D80-marketing-c2" value="https://signium-radar.netlify.app/survey.html?projekt=CONST-D80&amp;ebene=c2&amp;bereich=marketing&amp;bereichname=Marketing" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-CONST-D80-marketing-c2&#39;,this)">Copy</button>
+        </div>
+      </div></div><div class="bereich-section"><div class="bereich-title">Sales</div><div class="link-card" style="border-color:#081D4D;">
+        <div class="link-level" style="color:#081D4D;">C-Level</div>
+        <div class="link-desc">Strategic leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-CONST-D80-sales-c0" value="https://signium-radar.netlify.app/survey.html?projekt=CONST-D80&amp;ebene=c0&amp;bereich=sales&amp;bereichname=Sales" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-CONST-D80-sales-c0&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#FF6A42;">
+        <div class="link-level" style="color:#FF6A42;">C-1</div>
+        <div class="link-desc">Operational leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-CONST-D80-sales-c1" value="https://signium-radar.netlify.app/survey.html?projekt=CONST-D80&amp;ebene=c1&amp;bereich=sales&amp;bereichname=Sales" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-CONST-D80-sales-c1&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#6BCBC2;">
+        <div class="link-level" style="color:#6BCBC2;">C-2</div>
+        <div class="link-desc">Leadership Snapshot · 30 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-CONST-D80-sales-c2" value="https://signium-radar.netlify.app/survey.html?projekt=CONST-D80&amp;ebene=c2&amp;bereich=sales&amp;bereichname=Sales" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-CONST-D80-sales-c2&#39;,this)">Copy</button>
+        </div>
+      </div></div>
+        <div class="dash-links">
+          <a href="https://signium-radar.netlify.app/dashboard.html?projekt=CONST-D80" class="btn-small">Open Dashboard →</a>
+          <a href="https://signium-radar.netlify.app/report.html?projekt=CONST-D80" class="btn-small orange">Generate Report →</a>
+        </div>
+      </div>
+    </div>
+    <div class="project-card">
+      <div class="project-header" onclick="toggleLinks(&#39;TESTC-2TH&#39;)">
+        <div>
+          <div class="project-name">Testco 3</div>
+          <div class="project-meta">Code: TESTC-2TH · 25. März 2026 · SH</div>
+          <div class="project-bereiche-tags">
+            <span class="pb-tag">Marketing</span>
+          </div>
+          <div id="status-TESTC-2TH"><span style="font-size:11px;color:#C0C8D8;">No responses yet</span></div>
+        </div>
+        <div class="project-actions">
+          <button class="btn-small" onclick="event.stopPropagation();toggleLinks(&#39;TESTC-2TH&#39;)">Links ▾</button>
+          <a href="https://signium-radar.netlify.app/dashboard.html?projekt=TESTC-2TH" class="btn-small" onclick="event.stopPropagation()">Dashboard</a>
+          <a href="https://signium-radar.netlify.app/report.html?projekt=TESTC-2TH" class="btn-small orange" onclick="event.stopPropagation()">Report</a>
+        </div>
+      </div>
+      <div class="links-panel" id="links-TESTC-2TH">
+        <div class="links-note">Send each link exclusively to the corresponding leadership level. All participants within a group share the same link.</div>
+        <div class="bereich-section"><div class="bereich-title">Marketing</div><div class="link-card" style="border-color:#081D4D;">
+        <div class="link-level" style="color:#081D4D;">C-Level</div>
+        <div class="link-desc">Strategic leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-TESTC-2TH-marketing-c0" value="https://signium-radar.netlify.app/survey.html?projekt=TESTC-2TH&amp;ebene=c0&amp;bereich=marketing&amp;bereichname=Marketing" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-TESTC-2TH-marketing-c0&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#FF6A42;">
+        <div class="link-level" style="color:#FF6A42;">C-1</div>
+        <div class="link-desc">Operational leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-TESTC-2TH-marketing-c1" value="https://signium-radar.netlify.app/survey.html?projekt=TESTC-2TH&amp;ebene=c1&amp;bereich=marketing&amp;bereichname=Marketing" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-TESTC-2TH-marketing-c1&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#6BCBC2;">
+        <div class="link-level" style="color:#6BCBC2;">C-2</div>
+        <div class="link-desc">Leadership Snapshot · 30 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-TESTC-2TH-marketing-c2" value="https://signium-radar.netlify.app/survey.html?projekt=TESTC-2TH&amp;ebene=c2&amp;bereich=marketing&amp;bereichname=Marketing" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-TESTC-2TH-marketing-c2&#39;,this)">Copy</button>
+        </div>
+      </div></div>
+        <div class="dash-links">
+          <a href="https://signium-radar.netlify.app/dashboard.html?projekt=TESTC-2TH" class="btn-small">Open Dashboard →</a>
+          <a href="https://signium-radar.netlify.app/report.html?projekt=TESTC-2TH" class="btn-small orange">Generate Report →</a>
+        </div>
+      </div>
+    </div>
+    <div class="project-card">
+      <div class="project-header" onclick="toggleLinks(&#39;TESTC-BKX&#39;)">
+        <div>
+          <div class="project-name">Testco2</div>
+          <div class="project-meta">Code: TESTC-BKX · 23. März 2026 · SH</div>
+          <div class="project-bereiche-tags">
+            <span class="pb-tag">Sales</span>
+          </div>
+          <div id="status-TESTC-BKX"><span style="font-size:11px;color:#C0C8D8;">No responses yet</span></div>
+        </div>
+        <div class="project-actions">
+          <button class="btn-small" onclick="event.stopPropagation();toggleLinks(&#39;TESTC-BKX&#39;)">Links ▾</button>
+          <a href="https://signium-radar.netlify.app/dashboard.html?projekt=TESTC-BKX" class="btn-small" onclick="event.stopPropagation()">Dashboard</a>
+          <a href="https://signium-radar.netlify.app/report.html?projekt=TESTC-BKX" class="btn-small orange" onclick="event.stopPropagation()">Report</a>
+        </div>
+      </div>
+      <div class="links-panel" id="links-TESTC-BKX">
+        <div class="links-note">Send each link exclusively to the corresponding leadership level. All participants within a group share the same link.</div>
+        <div class="bereich-section"><div class="bereich-title">Sales</div><div class="link-card" style="border-color:#081D4D;">
+        <div class="link-level" style="color:#081D4D;">C-Level</div>
+        <div class="link-desc">Strategic leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-TESTC-BKX-sales-c0" value="https://signium-radar.netlify.app/survey.html?projekt=TESTC-BKX&amp;ebene=c0&amp;bereich=sales&amp;bereichname=Sales" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-TESTC-BKX-sales-c0&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#FF6A42;">
+        <div class="link-level" style="color:#FF6A42;">C-1</div>
+        <div class="link-desc">Operational leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-TESTC-BKX-sales-c1" value="https://signium-radar.netlify.app/survey.html?projekt=TESTC-BKX&amp;ebene=c1&amp;bereich=sales&amp;bereichname=Sales" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-TESTC-BKX-sales-c1&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#6BCBC2;">
+        <div class="link-level" style="color:#6BCBC2;">C-2</div>
+        <div class="link-desc">Leadership Snapshot · 30 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-TESTC-BKX-sales-c2" value="https://signium-radar.netlify.app/survey.html?projekt=TESTC-BKX&amp;ebene=c2&amp;bereich=sales&amp;bereichname=Sales" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-TESTC-BKX-sales-c2&#39;,this)">Copy</button>
+        </div>
+      </div></div>
+        <div class="dash-links">
+          <a href="https://signium-radar.netlify.app/dashboard.html?projekt=TESTC-BKX" class="btn-small">Open Dashboard →</a>
+          <a href="https://signium-radar.netlify.app/report.html?projekt=TESTC-BKX" class="btn-small orange">Generate Report →</a>
+        </div>
+      </div>
+    </div>
+    <div class="project-card">
+      <div class="project-header" onclick="toggleLinks(&#39;TESTC-R97&#39;)">
+        <div>
+          <div class="project-name">Testco</div>
+          <div class="project-meta">Code: TESTC-R97 · 23. März 2026 · Sami Hamid</div>
+          <div class="project-bereiche-tags">
+            <span class="pb-tag">Sales</span>
+          </div>
+          <div id="status-TESTC-R97"><div class="status-row"><span class="status-pill" style="color:#081D4D;border-color:#081D4D;background:white;">C-Level: 1</span></div><div style="font-size:10px;color:#8892A4;margin-top:4px;">Letzte Antwort: 23.03., 15:25</div></div>
+        </div>
+        <div class="project-actions">
+          <button class="btn-small" onclick="event.stopPropagation();toggleLinks(&#39;TESTC-R97&#39;)">Links ▾</button>
+          <a href="https://signium-radar.netlify.app/dashboard.html?projekt=TESTC-R97" class="btn-small" onclick="event.stopPropagation()">Dashboard</a>
+          <a href="https://signium-radar.netlify.app/report.html?projekt=TESTC-R97" class="btn-small orange" onclick="event.stopPropagation()">Report</a>
+        </div>
+      </div>
+      <div class="links-panel" id="links-TESTC-R97">
+        <div class="links-note">Send each link exclusively to the corresponding leadership level. All participants within a group share the same link.</div>
+        <div class="bereich-section"><div class="bereich-title">Sales</div><div class="link-card" style="border-color:#081D4D;">
+        <div class="link-level" style="color:#081D4D;">C-Level</div>
+        <div class="link-desc">Strategic leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-TESTC-R97-sales-c0" value="https://signium-radar.netlify.app/survey.html?projekt=TESTC-R97&amp;ebene=c0&amp;bereich=sales&amp;bereichname=Sales" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-TESTC-R97-sales-c0&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#FF6A42;">
+        <div class="link-level" style="color:#FF6A42;">C-1</div>
+        <div class="link-desc">Operational leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-TESTC-R97-sales-c1" value="https://signium-radar.netlify.app/survey.html?projekt=TESTC-R97&amp;ebene=c1&amp;bereich=sales&amp;bereichname=Sales" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-TESTC-R97-sales-c1&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#6BCBC2;">
+        <div class="link-level" style="color:#6BCBC2;">C-2</div>
+        <div class="link-desc">Leadership Snapshot · 30 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-TESTC-R97-sales-c2" value="https://signium-radar.netlify.app/survey.html?projekt=TESTC-R97&amp;ebene=c2&amp;bereich=sales&amp;bereichname=Sales" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-TESTC-R97-sales-c2&#39;,this)">Copy</button>
+        </div>
+      </div></div>
+        <div class="dash-links">
+          <a href="https://signium-radar.netlify.app/dashboard.html?projekt=TESTC-R97" class="btn-small">Open Dashboard →</a>
+          <a href="https://signium-radar.netlify.app/report.html?projekt=TESTC-R97" class="btn-small orange">Generate Report →</a>
+        </div>
+      </div>
+    </div>
+    <div class="project-card">
+      <div class="project-header" onclick="toggleLinks(&#39;BRITC-Q4S&#39;)">
+        <div>
+          <div class="project-name">BritCo</div>
+          <div class="project-meta">Code: BRITC-Q4S · 19. März 2026 · SH</div>
+          <div class="project-bereiche-tags">
+            <span class="pb-tag">Marketing</span>
+          </div>
+          <div id="status-BRITC-Q4S"><div class="status-row"><span class="status-pill" style="color:#6BCBC2;border-color:#6BCBC2;background:white;">C-2: 1</span></div><div style="font-size:10px;color:#8892A4;margin-top:4px;">Letzte Antwort: 19.03., 20:47</div></div>
+        </div>
+        <div class="project-actions">
+          <button class="btn-small" onclick="event.stopPropagation();toggleLinks(&#39;BRITC-Q4S&#39;)">Links ▾</button>
+          <a href="https://signium-radar.netlify.app/dashboard.html?projekt=BRITC-Q4S" class="btn-small" onclick="event.stopPropagation()">Dashboard</a>
+          <a href="https://signium-radar.netlify.app/report.html?projekt=BRITC-Q4S" class="btn-small orange" onclick="event.stopPropagation()">Report</a>
+        </div>
+      </div>
+      <div class="links-panel" id="links-BRITC-Q4S">
+        <div class="links-note">Send each link exclusively to the corresponding leadership level. All participants within a group share the same link.</div>
+        <div class="bereich-section"><div class="bereich-title">Marketing</div><div class="link-card" style="border-color:#081D4D;">
+        <div class="link-level" style="color:#081D4D;">C-Level</div>
+        <div class="link-desc">Strategic leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-BRITC-Q4S-marketing-c0" value="https://signium-radar.netlify.app/survey.html?projekt=BRITC-Q4S&amp;ebene=c0&amp;bereich=marketing&amp;bereichname=Marketing" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-BRITC-Q4S-marketing-c0&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#FF6A42;">
+        <div class="link-level" style="color:#FF6A42;">C-1</div>
+        <div class="link-desc">Operational leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-BRITC-Q4S-marketing-c1" value="https://signium-radar.netlify.app/survey.html?projekt=BRITC-Q4S&amp;ebene=c1&amp;bereich=marketing&amp;bereichname=Marketing" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-BRITC-Q4S-marketing-c1&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#6BCBC2;">
+        <div class="link-level" style="color:#6BCBC2;">C-2</div>
+        <div class="link-desc">Leadership Snapshot · 30 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-BRITC-Q4S-marketing-c2" value="https://signium-radar.netlify.app/survey.html?projekt=BRITC-Q4S&amp;ebene=c2&amp;bereich=marketing&amp;bereichname=Marketing" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-BRITC-Q4S-marketing-c2&#39;,this)">Copy</button>
+        </div>
+      </div></div>
+        <div class="dash-links">
+          <a href="https://signium-radar.netlify.app/dashboard.html?projekt=BRITC-Q4S" class="btn-small">Open Dashboard →</a>
+          <a href="https://signium-radar.netlify.app/report.html?projekt=BRITC-Q4S" class="btn-small orange">Generate Report →</a>
+        </div>
+      </div>
+    </div>
+    <div class="project-card">
+      <div class="project-header" onclick="toggleLinks(&#39;NEWCO-HSF&#39;)">
+        <div>
+          <div class="project-name">NewCo19</div>
+          <div class="project-meta">Code: NEWCO-HSF · 19. März 2026 · SH</div>
+          <div class="project-bereiche-tags">
+            <span class="pb-tag">Strategy</span>
+          </div>
+          <div id="status-NEWCO-HSF"><div class="status-row"><span class="status-pill" style="color:#081D4D;border-color:#081D4D;background:white;">C-Level: 4</span><span class="status-pill" style="color:#FF6A42;border-color:#FF6A42;background:white;">C-1: 2</span><span class="status-pill" style="color:#6BCBC2;border-color:#6BCBC2;background:white;">C-2: 1</span></div><div style="font-size:10px;color:#8892A4;margin-top:4px;">Letzte Antwort: 19.03., 18:42</div></div>
+        </div>
+        <div class="project-actions">
+          <button class="btn-small" onclick="event.stopPropagation();toggleLinks(&#39;NEWCO-HSF&#39;)">Links ▾</button>
+          <a href="https://signium-radar.netlify.app/dashboard.html?projekt=NEWCO-HSF" class="btn-small" onclick="event.stopPropagation()">Dashboard</a>
+          <a href="https://signium-radar.netlify.app/report.html?projekt=NEWCO-HSF" class="btn-small orange" onclick="event.stopPropagation()">Report</a>
+        </div>
+      </div>
+      <div class="links-panel" id="links-NEWCO-HSF">
+        <div class="links-note">Send each link exclusively to the corresponding leadership level. All participants within a group share the same link.</div>
+        <div class="bereich-section"><div class="bereich-title">Strategy</div><div class="link-card" style="border-color:#081D4D;">
+        <div class="link-level" style="color:#081D4D;">C-Level</div>
+        <div class="link-desc">Strategic leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-NEWCO-HSF-strategy-c0" value="https://signium-radar.netlify.app/survey.html?projekt=NEWCO-HSF&amp;ebene=c0&amp;bereich=strategy&amp;bereichname=Strategy" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-NEWCO-HSF-strategy-c0&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#FF6A42;">
+        <div class="link-level" style="color:#FF6A42;">C-1</div>
+        <div class="link-desc">Operational leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-NEWCO-HSF-strategy-c1" value="https://signium-radar.netlify.app/survey.html?projekt=NEWCO-HSF&amp;ebene=c1&amp;bereich=strategy&amp;bereichname=Strategy" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-NEWCO-HSF-strategy-c1&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#6BCBC2;">
+        <div class="link-level" style="color:#6BCBC2;">C-2</div>
+        <div class="link-desc">Leadership Snapshot · 30 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-NEWCO-HSF-strategy-c2" value="https://signium-radar.netlify.app/survey.html?projekt=NEWCO-HSF&amp;ebene=c2&amp;bereich=strategy&amp;bereichname=Strategy" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-NEWCO-HSF-strategy-c2&#39;,this)">Copy</button>
+        </div>
+      </div></div>
+        <div class="dash-links">
+          <a href="https://signium-radar.netlify.app/dashboard.html?projekt=NEWCO-HSF" class="btn-small">Open Dashboard →</a>
+          <a href="https://signium-radar.netlify.app/report.html?projekt=NEWCO-HSF" class="btn-small orange">Generate Report →</a>
+        </div>
+      </div>
+    </div>
+    <div class="project-card">
+      <div class="project-header" onclick="toggleLinks(&#39;TEST001&#39;)">
+        <div>
+          <div class="project-name">Testfirma</div>
+          <div class="project-meta">Code: TEST001 · 19. März 2026 · Dr. Hamid</div>
+          <div class="project-bereiche-tags">
+            <span class="pb-tag">Entire Company</span>
+          </div>
+          <div id="status-TEST001"><span style="font-size:11px;color:#C0C8D8;">No responses yet</span></div>
+        </div>
+        <div class="project-actions">
+          <button class="btn-small" onclick="event.stopPropagation();toggleLinks(&#39;TEST001&#39;)">Links ▾</button>
+          <a href="https://signium-radar.netlify.app/dashboard.html?projekt=TEST001" class="btn-small" onclick="event.stopPropagation()">Dashboard</a>
+          <a href="https://signium-radar.netlify.app/report.html?projekt=TEST001" class="btn-small orange" onclick="event.stopPropagation()">Report</a>
+        </div>
+      </div>
+      <div class="links-panel" id="links-TEST001">
+        <div class="links-note">Send each link exclusively to the corresponding leadership level. All participants within a group share the same link.</div>
+        <div class="bereich-section"><div class="bereich-title">Entire Company</div><div class="link-card" style="border-color:#081D4D;">
+        <div class="link-level" style="color:#081D4D;">C-Level</div>
+        <div class="link-desc">Strategic leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-TEST001-gesamt-c0" value="https://signium-radar.netlify.app/survey.html?projekt=TEST001&amp;ebene=c0&amp;bereich=gesamt&amp;bereichname=Gesamtes%20Unternehmen" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-TEST001-gesamt-c0&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#FF6A42;">
+        <div class="link-level" style="color:#FF6A42;">C-1</div>
+        <div class="link-desc">Operational leadership perspective · 16 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-TEST001-gesamt-c1" value="https://signium-radar.netlify.app/survey.html?projekt=TEST001&amp;ebene=c1&amp;bereich=gesamt&amp;bereichname=Gesamtes%20Unternehmen" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-TEST001-gesamt-c1&#39;,this)">Copy</button>
+        </div>
+      </div><div class="link-card" style="border-color:#6BCBC2;">
+        <div class="link-level" style="color:#6BCBC2;">C-2</div>
+        <div class="link-desc">Leadership Snapshot · 30 questions</div>
+        <div class="link-url-row">
+          <input type="text" id="lnk-TEST001-gesamt-c2" value="https://signium-radar.netlify.app/survey.html?projekt=TEST001&amp;ebene=c2&amp;bereich=gesamt&amp;bereichname=Gesamtes%20Unternehmen" readonly="">
+          <button class="btn-copy" onclick="copyLink(&#39;lnk-TEST001-gesamt-c2&#39;,this)">Copy</button>
+        </div>
+      </div></div>
+        <div class="dash-links">
+          <a href="https://signium-radar.netlify.app/dashboard.html?projekt=TEST001" class="btn-small">Open Dashboard →</a>
+          <a href="https://signium-radar.netlify.app/report.html?projekt=TEST001" class="btn-small orange">Generate Report →</a>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+</div>
+
+<script src="./admin_files/supabase-js@2"></script>
+<script>
+// ── PASSWORT ──────────────────────────────────────────────
+const ADMIN_PASSWORD = 'Signium2026';
+
+function checkLogin(){
+  const pw = document.getElementById('pw-input').value;
+  if(pw === ADMIN_PASSWORD){
+    document.getElementById('login-screen').style.display = 'none';
+    sessionStorage.setItem('lpr_auth','1');
+    loadProjectsFromSupabase();
+  } else {
+    const err = document.getElementById('login-error');
+    err.style.display = 'block';
+    setTimeout(()=>err.style.display='none', 3000);
+  }
+}
+
+// Check if already logged in this session
+if(sessionStorage.getItem('lpr_auth')==='1'){
+  document.getElementById('login-screen').style.display='none';
+  loadProjectsFromSupabase();
+}
+
+// ── SUPABASE ──────────────────────────────────────────────
+const SUPABASE_URL='https://yipevhfddofchlupqmzi.supabase.co';
+const SUPABASE_KEY='sb_publishable_33D93AcK5v2rgCKjGGiULw_4ThzR6E7';
+const sb=supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function saveProjectToSupabase(proj){
+  try{
+    const payload={code:proj.code,name:proj.name,bereiche:proj.bereiche||[],berater:proj.berater||'',date:proj.date||''};
+    console.log('Saving project:', payload.code);
+    const {error}=await sb.from('lpr_projects').upsert(payload,{onConflict:'code'});
+    if(error)console.error('Supabase project save error:',error.message);
+    else console.log('Project saved OK');
+  }catch(e){console.error('Supabase project save error:',e);}
+}
+
+async function loadProjectsFromSupabase(){
+  try{
+    const {data,error}=await sb.from('lpr_projects').select('*').order('created_at',{ascending:false});
+    if(error){console.error('Load error:',error.message);return;}
+    console.log('Loaded projects:', data.length);
+    if(data&&data.length){
+      localStorage.setItem('lpr_projects',JSON.stringify(data));
+      renderProjects();
+    }
+  }catch(e){console.error('Supabase project load error:',e);}
+}
+
+// ── BASE URL ──────────────────────────────────────────────
+const BASE_URL=(()=>{
+  // Use current directory - works regardless of filename or subfolder
+  const href=window.location.href;
+  const base=href.substring(0,href.lastIndexOf('/')+1);
+  return base;
+})();
+
+// Bereiche selection
+const selectedBereiche=new Set();
+
+function toggleChip(el, name){
+  if(el.classList.contains('selected')){
+    el.classList.remove('selected');
+    selectedBereiche.delete(name);
+  } else {
+    el.classList.add('selected');
+    selectedBereiche.add(name);
+  }
+  updateSummary();
+}
+
+function addCustom(){
+  const inp=document.getElementById('custom-bereich');
+  const val=inp.value.trim();
+  if(!val)return;
+  // Check if already exists as chip
+  const existing=[...document.querySelectorAll('.b-chip')].find(c=>c.textContent===val);
+  if(existing){existing.classList.add('selected');selectedBereiche.add(val);}
+  else {
+    const chip=document.createElement('div');
+    chip.className='b-chip selected';
+    chip.textContent=val;
+    chip.onclick=function(){toggleChip(this,val);};
+    document.getElementById('bereiche-chips').appendChild(chip);
+    selectedBereiche.add(val);
+  }
+  inp.value='';
+  updateSummary();
+}
+
+function updateSummary(){
+  const el=document.getElementById('selected-summary');
+  if(selectedBereiche.size===0){
+    el.innerHTML='No area selected — <strong>company-wide analysis</strong>';
+  } else {
+    el.innerHTML='<span>'+selectedBereiche.size+' areas selected:</span> '+[...selectedBereiche].join(', ');
+  }
+}
+
+function generateCode(name){
+  const clean=name.toUpperCase().replace(/[^A-Z0-9]/g,'').substring(0,5);
+  const rand=Math.random().toString(36).substring(2,5).toUpperCase();
+  return clean+'-'+rand;
+}
+
+function slugify(name){
+  return name.toLowerCase()
+    .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+    .replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+}
+
+function createProject(){
+  const name=document.getElementById('proj-name').value.trim();
+  const berater=document.getElementById('proj-berater').value.trim();
+  if(!name){showAlert('Please enter a client name.','error');return;}
+
+  const bereiche=selectedBereiche.size>0?[...selectedBereiche]:[];
+  const code=generateCode(name);
+  const date=new Date().toLocaleDateString('en-GB',{year:'numeric',month:'long',day:'numeric'});
+
+  const projects=JSON.parse(localStorage.getItem('lpr_projects')||'[]');
+  projects.unshift({code,name,berater,date,bereiche,created:Date.now()});
+  localStorage.setItem('lpr_projects',JSON.stringify(projects));
+  // Also save to Supabase
+  saveProjectToSupabase({code,name,berater,date,bereiche});
+
+  // Reset form
+  document.getElementById('proj-name').value='';
+  document.getElementById('proj-berater').value='';
+  document.querySelectorAll('.b-chip.selected').forEach(c=>c.classList.remove('selected'));
+  selectedBereiche.clear();
+  updateSummary();
+
+  showAlert('Project "'+name+'" created. Code: '+code,'success');
+  renderProjects();
+
+  // Auto-expand the new project's links
+  setTimeout(()=>{
+    const panel=document.getElementById('links-'+code);
+    if(panel)panel.classList.add('open');
+  },100);
+}
+
+function buildLinks(code, bereiche){
+  const surveyBase=BASE_URL+'survey.html';
+  let html='';
+  const groups=bereiche.length>0?bereiche:['gesamt'];
+  groups.forEach(bereich=>{
+    const slug=bereich==='gesamt'?'gesamt':slugify(bereich);
+    const bname=bereich==='gesamt'?'Entire Company':bereich;
+    html+='<div class="bereich-section"><div class="bereich-title">'+(bereich==='gesamt'?'Entire Company':bereich)+'</div>';
+    [
+      {id:'c0',label:'C-Level',desc:'Strategic leadership perspective · 16 questions',color:'#081D4D'},
+      {id:'c1',label:'C-1',desc:'Operational leadership perspective · 16 questions',color:'#FF6A42'},
+      {id:'c2',label:'C-2',desc:'Leadership Snapshot · 30 questions',color:'#6BCBC2'},
+    ].forEach(lv=>{
+      const url=surveyBase+'?projekt='+code+'&ebene='+lv.id+'&bereich='+slug+'&bereichname='+encodeURIComponent(bname);
+      const iid='lnk-'+code+'-'+slug+'-'+lv.id;
+      html+=`<div class="link-card" style="border-color:${lv.color};">
+        <div class="link-level" style="color:${lv.color};">${lv.label}</div>
+        <div class="link-desc">${lv.desc}</div>
+        <div class="link-url-row">
+          <input type="text" id="${iid}" value="${url}" readonly>
+          <button class="btn-copy" onclick="copyLink('${iid}',this)">Copy</button>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  return html;
+}
+
+function copyLink(id,btn){
+  const val=document.getElementById(id).value;
+  navigator.clipboard.writeText(val).then(()=>{
+    btn.textContent='✓ Copied';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);
+  });
+}
+
+async function loadStatus(code, el){
+  try{
+    const {data:rows,error}=await sb.from('lpr_responses').select('ebene,bereich,created_at').eq('projekt',code);
+    if(error||!rows)return;
+    if(!rows.length){el.innerHTML='<span style="font-size:11px;color:#C0C8D8;">No responses yet</span>';return;}
+    const counts={c0:0,c1:0,c2:0};
+    rows.forEach(r=>{counts[r.ebene]=(counts[r.ebene]||0)+1;});
+    const last=new Date(rows[rows.length-1].created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    let html='<div class="status-row">';
+    [['c0','C-Level','#081D4D'],['c1','C-1','#FF6A42'],['c2','C-2','#6BCBC2']].forEach(([k,l,c])=>{
+      if(counts[k])html+=`<span class="status-pill" style="color:${c};border-color:${c};background:white;">${l}: ${counts[k]}</span>`;
+    });
+    html+='</div><div style="font-size:10px;color:#8892A4;margin-top:4px;">Letzte Antwort: '+last+'</div>';
+    el.innerHTML=html;
+  }catch(e){}
+}
+
+function showAlert(msg,type){
+  const el=document.getElementById('alert');
+  el.textContent=msg;el.className='alert '+type;
+  setTimeout(()=>el.className='alert',5000);
+}
+
+function renderProjects(){
+  const projects=JSON.parse(localStorage.getItem('lpr_projects')||'[]');
+  const container=document.getElementById('projects-list');
+  if(!projects.length){container.innerHTML='<div class="empty">Noch keine Projekte angelegt.</div>';return;}
+
+  container.innerHTML=projects.map(p=>`
+    <div class="project-card">
+      <div class="project-header" onclick="toggleLinks('${p.code}')">
+        <div>
+          <div class="project-name">${p.name}</div>
+          <div class="project-meta">Code: ${p.code} · ${p.date}${p.berater?' · '+p.berater:''}</div>
+          <div class="project-bereiche-tags">
+            ${p.bereiche&&p.bereiche.length?p.bereiche.map(b=>'<span class="pb-tag">'+b+'</span>').join(''):'<span class="pb-tag">Entire Company</span>'}
+          </div>
+          <div id="status-${p.code}"><span style="font-size:11px;color:#C0C8D8;">Loading...</span></div>
+        </div>
+        <div class="project-actions">
+          <button class="btn-small" onclick="event.stopPropagation();toggleLinks('${p.code}')">Links ▾</button>
+          <a href="dashboard.html?projekt=${p.code}" class="btn-small" onclick="event.stopPropagation()">Dashboard</a>
+          <a href="report.html?projekt=${p.code}" class="btn-small orange" onclick="event.stopPropagation()">Report</a>
+        </div>
+      </div>
+      <div class="links-panel" id="links-${p.code}">
+        <div class="links-note">Send each link exclusively to the corresponding leadership level. All participants within a group share the same link.</div>
+        ${buildLinks(p.code, p.bereiche||[])}
+        <div class="dash-links">
+          <a href="dashboard.html?projekt=${p.code}" class="btn-small">Open Dashboard →</a>
+          <a href="report.html?projekt=${p.code}" class="btn-small orange">Generate Report →</a>
+        </div>
+      </div>
+    </div>`).join('');
+
+  projects.forEach(p=>loadStatus(p.code,document.getElementById('status-'+p.code)));
+}
+
+function toggleLinks(code){
+  const panel=document.getElementById('links-'+code);
+  if(panel)panel.classList.toggle('open');
+}
+
+renderProjects();
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body></html>
