@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leadership Performance Radar — Signium</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Gill Sans','Gill Sans MT',Calibri,sans-serif;background:#EEF1F8;min-height:100vh;}
+.page{max-width:640px;margin:0 auto;padding:1.5rem;}
+
+.hdr{background:#081D4D;border-radius:16px;padding:1.25rem 1.75rem;margin-bottom:1.25rem;position:relative;overflow:hidden;}
+.hdr-d1{position:absolute;top:0;right:0;width:45%;height:100%;background:#FF6A42;clip-path:polygon(35% 0,100% 0,100% 100%,5% 100%);opacity:.13;}
+.hdr-d2{position:absolute;top:0;right:0;width:27%;height:100%;background:#6BCBC2;clip-path:polygon(55% 0,100% 0,100% 100%,25% 100%);opacity:.11;}
+.hdr-z{position:relative;z-index:1;display:flex;align-items:center;gap:12px;}
+.hdr-mark{width:30px;height:30px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hdr-mark svg{width:17px;height:17px;}
+.hdr-word{font-size:12px;font-weight:700;color:white;letter-spacing:2px;opacity:.8;}
+.hdr-sep{width:1px;height:24px;background:rgba(255,255,255,.2);}
+.hdr-txt h1{font-family:'Petrona',Georgia,serif;color:white;font-size:16px;font-weight:300;}
+.hdr-txt p{color:rgba(255,255,255,.45);font-size:11px;margin-top:2px;}
+
+/* INTRO SCREEN */
+.intro-card{background:white;border-radius:14px;border:1.5px solid #E2E6F0;padding:1.75rem;margin-bottom:1rem;}
+.intro-headline{font-family:'Petrona',Georgia,serif;font-size:20px;font-weight:300;color:#081D4D;margin-bottom:.75rem;line-height:1.3;}
+.intro-headline em{font-style:italic;color:#FF6A42;}
+.intro-text{font-size:13px;color:#6B7A99;line-height:1.65;margin-bottom:1rem;}
+.intro-level{background:#081D4D;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:1rem;}
+.intro-level-badge{background:rgba(255,255,255,.1);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;color:white;letter-spacing:.5px;}
+.intro-level-text{font-size:12px;color:rgba(255,255,255,.65);}
+.anon{background:#F5F7FB;border-radius:8px;padding:10px 14px;font-size:12px;color:#8892A4;line-height:1.5;margin-bottom:1.25rem;}
+.btn-start{width:100%;padding:13px;background:#081D4D;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.3px;}
+.btn-start:hover{opacity:.9;}
+
+/* SURVEY SCREEN */
+.survey-hdr{background:#081D4D;border-radius:12px;padding:14px 18px;margin-bottom:1.25rem;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.sh-dim{font-family:'Petrona',Georgia,serif;color:white;font-size:14px;font-weight:400;}
+.sh-cat{color:rgba(255,255,255,.45);font-size:11px;margin-top:3px;}
+.sh-prog{height:3px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden;margin-top:10px;}
+.sh-fill{height:100%;background:#FF6A42;border-radius:2px;transition:width .3s;}
+.sh-right{text-align:right;flex-shrink:0;}
+.sh-qn{font-family:'Petrona',Georgia,serif;color:#FF6A42;font-size:26px;font-weight:300;line-height:1;}
+.sh-qt{color:rgba(255,255,255,.35);font-size:11px;margin-top:2px;}
+
+.qcard{background:white;border-radius:14px;border:1.5px solid #E2E6F0;padding:1.5rem;margin-bottom:1rem;}
+.q-text{font-family:'Petrona',Georgia,serif;font-size:17px;line-height:1.65;color:#081D4D;font-weight:400;margin-bottom:1.5rem;}
+.scale-ends{display:flex;justify-content:space-between;font-size:11px;color:#8892A4;margin-bottom:10px;}
+.scale-opts{display:flex;gap:8px;margin-bottom:1.25rem;}
+.sopt{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;border:none;background:transparent;padding:0;}
+.snum{width:100%;height:50px;border-radius:10px;border:1.5px solid #E0E4EE;background:white;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#8892A4;transition:all .12s;}
+.sopt:hover .snum{border-color:#FF6A42;color:#081D4D;}
+.sopt.on .snum{color:white;}
+.sopt[data-v="1"].on .snum{background:#C0392B;border-color:#C0392B;}
+.sopt[data-v="2"].on .snum{background:#C0392B;border-color:#C0392B;opacity:.75;}
+.sopt[data-v="3"].on .snum{background:#D4AC0D;border-color:#D4AC0D;}
+.sopt[data-v="4"].on .snum{background:#1a7a4a;border-color:#1a7a4a;opacity:.8;}
+.sopt[data-v="5"].on .snum{background:#1a7a4a;border-color:#1a7a4a;}
+.slbl{font-size:10px;color:#8892A4;text-align:center;line-height:1.3;}
+
+.cmt-wrap{border-top:1px solid #F0F2F7;padding-top:1rem;}
+.cmt-lbl{font-size:11px;color:#8892A4;margin-bottom:5px;letter-spacing:.3px;text-transform:uppercase;}
+textarea{width:100%;padding:10px 12px;border:1.5px solid #E0E4EE;border-radius:10px;font-size:13px;font-family:'Gill Sans','Gill Sans MT',Calibri,sans-serif;color:#081D4D;background:white;resize:none;height:58px;line-height:1.5;outline:none;}
+textarea:focus{border-color:#FF6A42;}
+
+.nav-row{display:flex;gap:10px;}
+.btn-back{padding:12px 18px;background:transparent;color:#8892A4;border:1.5px solid #E0E4EE;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
+.btn-next{flex:1;padding:12px;background:#C0C8D8;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:default;letter-spacing:.3px;}
+.btn-next.ready{background:#FF6A42;cursor:pointer;}
+.btn-next.ready:hover{opacity:.9;}
+
+/* DONE SCREEN */
+.done-card{background:white;border-radius:14px;border:1.5px solid #E2E6F0;padding:2rem;text-align:center;}
+.done-icon{width:60px;height:60px;background:#EAF7EF;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;}
+.done-title{font-family:'Petrona',Georgia,serif;font-size:22px;font-weight:300;color:#081D4D;margin-bottom:.5rem;}
+.done-text{font-size:13px;color:#6B7A99;line-height:1.65;margin-bottom:1.2rem;}
+.done-back{display:inline-block;margin-top:.2rem;padding:.6rem 1.4rem;background:#081D4D;color:white;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;letter-spacing:.3px;}
+.done-back:hover{background:#0d2a5e;}
+
+.screen{display:none;}
+.screen.active{display:block;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hdr">
+    <div class="hdr-d1"></div><div class="hdr-d2"></div>
+    <div class="hdr-z">
+      <div class="hdr-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4C8.5 4 6 6.5 6 9.5C6 11.5 7 13.2 8.5 14.2L10 15C11 15.6 11.5 16.3 11.5 17.2C11.5 18.2 10.8 19 9.5 19C8.3 19 7.5 18.3 7 17.2L5 18.3C5.8 20 7.5 21 9.5 21C12.3 21 14 19.3 14 17.2C14 15.3 13 13.8 11.5 12.8L10 12C9 11.4 8.5 10.6 8.5 9.5C8.5 8 9.5 7 11 7C12.2 7 13.2 7.7 13.8 8.8L15.8 7.7C14.8 5.5 13.5 4 12 4Z" fill="#081D4D" opacity=".9"></path></svg></div>
+      <span class="hdr-word">SIGNIUM</span>
+      <div class="hdr-sep"></div>
+      <div class="hdr-txt"><h1>Leadership Performance Radar</h1><p id="hdr-sub">QUESTIONNAIRE · C-2 · Entire Company</p></div>
+    </div>
+  </div>
+
+  <!-- INTRO -->
+  <div id="s-intro" class="screen active">
+    <div class="intro-card">
+      <div class="intro-headline">How does leadership see itself —<br>and where does it <em>land</em>?</div>
+      <div class="intro-text">This questionnaire is part of the Signium Strategic Leadership Audit. Your responses help us understand the effectiveness of your organisation's leadership system — not as an assessment of individuals, but as an analysis of the system as a whole.</div>
+      <div class="intro-level" id="intro-level">
+        <div class="intro-level-badge" id="level-badge">C-2</div>
+        <div class="intro-level-text" id="level-desc">Leadership Snapshot · 30 questions · approx. 10 minutes</div>
+      </div>
+      <div class="anon">Your responses are completely anonymised. No personal data is stored or shared.</div>
+      <button class="btn-start" onclick="startSurvey()">Start Questionnaire →</button>
+    </div>
+  </div>
+
+  <!-- SURVEY -->
+  <div id="s-survey" class="screen">
+    <div class="survey-hdr">
+      <div style="flex:1;">
+        <div class="sh-dim" id="sh-dim"></div>
+        <div class="sh-cat" id="sh-cat"></div>
+        <div class="sh-prog"><div class="sh-fill" id="sh-fill" style="width:0%"></div></div>
+      </div>
+      <div class="sh-right">
+        <div class="sh-qn" id="sh-qn">1</div>
+        <div class="sh-qt" id="sh-qt">von 10</div>
+      </div>
+    </div>
+    <div class="qcard">
+      <div class="q-text" id="q-text"></div>
+      <div class="scale-ends" id="scale-ends"></div>
+      <div class="scale-opts" id="scale-opts"></div>
+      <div class="cmt-wrap">
+        <div class="cmt-lbl">Comment — optional</div>
+        <textarea id="q-cmt" placeholder="Your comment..."></textarea>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" id="btn-back" onclick="goBack()">← Back</button>
+      <button class="btn-next" id="btn-next" onclick="goNext()">Weiter →</button>
+    </div>
+  </div>
+
+  <!-- DONE -->
+  <div id="s-done" class="screen">
+    <div class="done-card">
+      <div class="done-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#1a7a4a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </div>
+      <div class="done-title">Thank you.</div>
+      <div class="done-text">Your responses have been saved and will flow anonymously into the evaluation.</div>
+      <a class="done-back" href="https://signium-radar.netlify.app/admin">← Back to Project Admin</a>
+    </div>
+  </div>
+
+</div>
+
+<script src="./survey_files/supabase-js@2"></script>
+<script>
+const SC01=[{v:1,l:'Not at all'},{v:2,l:'Barely'},{v:3,l:'Partially'},{v:4,l:'Largely'},{v:5,l:'Fully'}];
+const SC2=[{v:1,l:'Does not apply'},{v:2,l:'Rather not'},{v:3,l:'Partly'},{v:4,l:'Rather yes'},{v:5,l:'Fully applies'}];
+const DIMS=['Coherence','Agility','Talent Impact','Decision Power','Accountability Culture'];
+
+const QS={
+  c0:[
+    {dim:'Coherence',cat:'Strategic Clarity',t:'To what extent are the strategic objectives of your unit clear, understandable, and embedded across all leadership levels?'},
+    {dim:'Coherence',cat:'Strategic Clarity',t:'How well do your subordinate leadership levels understand the strategic mandate and their role in it?'},
+    {dim:'Decision Power',cat:'Alignment',t:'How consistently are structures, processes, and governance aligned with your strategic objectives?'},
+    {dim:'Decision Power',cat:'Alignment',t:'How effectively do you coordinate decisions within the top team in line with strategic objectives?'},
+    {dim:'Decision Power',cat:'Decision Quality',t:'To what extent are strategic decisions in the leadership team made in a disciplined, fact-based manner?'},
+    {dim:'Decision Power',cat:'Decision Quality',t:'How transparent and effective is the decision-making architecture of your organisation?'},
+    {dim:'Accountability Culture',cat:'Leadership Energy',t:'To what degree is leadership lived in top management as an active source of energy and strategic effectiveness?'},
+    {dim:'Accountability Culture',cat:'Leadership Energy',t:'How deliberately do you cultivate a leadership culture that enables initiative, responsibility, and courage?'},
+    {dim:'Agility',cat:'Implementation Power',t:'How reliably does your organisation succeed in operationalising strategic initiatives top-down?'},
+    {dim:'Agility',cat:'Implementation Power',t:'To what extent do you experience leadership as an effective lever for implementing your transformation agenda?'},
+    {dim:'Talent Impact',cat:'Talent Strategy',t:'We have a systematic approach to identifying and developing key talents.'},
+    {dim:'Talent Impact',cat:'Talent Strategy',t:'Career paths and development prospects are clearly defined and communicated in our organisation.'},
+    {dim:'Talent Impact',cat:'Talent Strategy',t:'High-potential individuals are involved early in strategically relevant tasks.'},
+    {dim:'Talent Impact',cat:'Talent Strategy',t:'I personally invest time and resources in the development of my direct leaders.'},
+    {dim:'Talent Impact',cat:'Talent Strategy',t:'Succession planning for key positions is an active part of our leadership agenda.'},
+    {dim:'Talent Impact',cat:'Talent Strategy',t:'Building sustainable internal relationships is understood by us as a strategic leadership task.'},
+  ],
+  c1:[
+    {dim:'Coherence',cat:'Strategic Clarity',t:'How clear and comprehensible are the strategic objectives you have received from top management?'},
+    {dim:'Coherence',cat:'Strategic Clarity',t:'To what extent do you understand your role in implementing the overarching strategic agenda?'},
+    {dim:'Decision Power',cat:'Alignment',t:'How well are your leadership and control systems aligned with the corporate strategy?'},
+    {dim:'Decision Power',cat:'Alignment',t:'How consistent are the priorities with which you work in your unit?'},
+    {dim:'Decision Power',cat:'Decision Quality',t:'How often do you make decisions in line with the strategic direction of your unit?'},
+    {dim:'Decision Power',cat:'Decision Quality',t:'How reliable and clear is the decision logic between your level and top management?'},
+    {dim:'Accountability Culture',cat:'Leadership Energy',t:'To what extent do you experience yourself as a shaping, inspiring leader in day-to-day work?'},
+    {dim:'Accountability Culture',cat:'Leadership Energy',t:'How well do you succeed in generating motivation and energy in your organisational unit?'},
+    {dim:'Agility',cat:'Implementation Power',t:'How effectively are strategic measures implemented in your area of responsibility?'},
+    {dim:'Agility',cat:'Implementation Power',t:'How strongly do you experience leadership as a supporting factor in implementing strategic objectives?'},
+    {dim:'Talent Impact',cat:'Talent Development',t:'Talents in my area are systematically identified and specifically supported in their development.'},
+    {dim:'Talent Impact',cat:'Talent Development',t:'I clearly communicate career paths and development opportunities to my team.'},
+    {dim:'Talent Impact',cat:'Talent Development',t:'I assign responsibility to high-potential individuals early, even if it goes beyond their current role.'},
+    {dim:'Talent Impact',cat:'Talent Development',t:'I regularly take time for the individual development of my employees.'},
+    {dim:'Talent Impact',cat:'Talent Development',t:'I actively think about succession and talent pipeline in my area.'},
+    {dim:'Talent Impact',cat:'Talent Development',t:'I consciously invest in building and maintaining relationships — within and outside my team.'},
+  ],
+  c2:[
+    {dim:'Coherence',cat:'System',t:'There is a clear, company-wide shared understanding of leadership.'},
+    {dim:'Coherence',cat:'System',t:'Our leadership culture is consistently experienced across all areas.'},
+    {dim:'Coherence',cat:'Behaviour',t:'Leaders orient themselves towards common leadership principles.'},
+    {dim:'Coherence',cat:'Behaviour',t:'Our values are visibly reflected in day-to-day leadership behaviour.'},
+    {dim:'Coherence',cat:'Impact',t:'I experience our leadership as coherent — regardless of location or hierarchy.'},
+    {dim:'Coherence',cat:'Impact',t:'Leaders act in accordance with clear ethical principles.'},
+    {dim:'Agility',cat:'Behaviour',t:'Leaders act autonomously, without constant reassurance from above.'},
+    {dim:'Agility',cat:'System',t:'Structures and processes are flexibly adapted as needed.'},
+    {dim:'Agility',cat:'System',t:'There is a clear framework for decentralised decisions.'},
+    {dim:'Agility',cat:'Behaviour',t:'Leaders actively foster innovation and openness to change.'},
+    {dim:'Agility',cat:'Impact',t:'I feel encouraged to contribute unconventional ideas.'},
+    {dim:'Agility',cat:'Impact',t:'Our organisation responds quickly to external changes.'},
+    {dim:'Talent Impact',cat:'System',t:'Talents are systematically identified and specifically developed.'},
+    {dim:'Talent Impact',cat:'System',t:'Career paths and development opportunities are transparent.'},
+    {dim:'Talent Impact',cat:'Behaviour',t:'High-potential individuals receive responsibility early.'},
+    {dim:'Talent Impact',cat:'Behaviour',t:'Leaders specifically promote the development of their employees.'},
+    {dim:'Talent Impact',cat:'System',t:'There is a structured succession process for key positions.'},
+    {dim:'Talent Impact',cat:'Behaviour',t:'Leaders actively invest in sustainable relationships.'},
+    {dim:'Decision Power',cat:'System',t:'Leaders have clear decision-making authority.'},
+    {dim:'Decision Power',cat:'Behaviour',t:'Strategic decisions are made quickly and effectively.'},
+    {dim:'Decision Power',cat:'System',t:'Responsibilities for decisions are clearly defined.'},
+    {dim:'Decision Power',cat:'Behaviour',t:'Decisions are consistently implemented throughout the organisation.'},
+    {dim:'Decision Power',cat:'Impact',t:'Important decisions are communicated in a transparent manner.'},
+    {dim:'Accountability Culture',cat:'Behaviour',t:'Leaders take responsibility — even beyond their own area.'},
+    {dim:'Accountability Culture',cat:'System',t:'Mistakes are openly addressed and constructively resolved.'},
+    {dim:'Accountability Culture',cat:'Behaviour',t:'Ownership is visible — a cover-your-back culture is avoided.'},
+    {dim:'Accountability Culture',cat:'Behaviour',t:'Missing targets leads to solution-oriented analysis, not blame.'},
+    {dim:'Accountability Culture',cat:'Behaviour',t:'Leaders visibly live the role model of accountability.'},
+    {dim:'Accountability Culture',cat:'Impact',t:'Ethical behaviour is visible in everyday life — even under pressure.'},
+    {dim:'Accountability Culture',cat:'Impact',t:'Relationship-building is visibly practised and encouraged in leadership.'},
+  ]
+};
+
+const LEVEL_INFO={
+  c0:{badge:'C-LEVEL',desc:'Strategic leadership perspective · 16 questions · approx. 8 minutes',scaleEnd0:'Not at all',scaleEnd1:'Fully'},
+  c1:{badge:'C-1',desc:'Operational leadership perspective · 16 questions · approx. 8 minutes',scaleEnd0:'Not at all',scaleEnd1:'Fully'},
+  c2:{badge:'C-2',desc:'Leadership Snapshot · 30 questions · approx. 10 minutes',scaleEnd0:'Does not apply',scaleEnd1:'Fully applies'},
+};
+
+// Parse URL params
+
+const SUPABASE_URL='https://yipevhfddofchlupqmzi.supabase.co';
+const SUPABASE_KEY='sb_publishable_33D93AcK5v2rgCKjGGiULw_4ThzR6E7';
+const sb=supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function saveToSupabase(result){
+  try{
+    const payload={
+      projekt: result.projekt,
+      ebene: result.ebene,
+      bereich: result.bereich||'gesamt',
+      bereichname: result.bereichname||'Gesamtes Unternehmen',
+      scores: result.scores,
+      comments: result.comments||{}
+    };
+    console.log('Saving to Supabase:', payload.projekt, payload.ebene);
+    const {error}=await sb.from('lpr_responses').insert(payload);
+    if(error){console.error('Supabase save error:',error.message);return false;}
+    console.log('Saved to Supabase OK');
+    return true;
+  }catch(e){
+    console.error('Supabase fetch error:', e.message);
+    return false;
+  }
+}
+const params=new URLSearchParams(window.location.search);
+const PROJEKT=params.get('projekt')||'DEMO';
+const EBENE=params.get('ebene')||'c2';
+const BEREICH=params.get('bereich')||'gesamt';
+const BEREICHNAME=params.get('bereichname')||'Entire Company';
+const questions=QS[EBENE]||QS.c2;
+const scale=EBENE==='c2'?SC2:SC01;
+const info=LEVEL_INFO[EBENE]||LEVEL_INFO.c2;
+
+let curQ=0;
+const answers={};
+const comments={};
+
+// Init intro
+document.getElementById('level-badge').textContent=info.badge;
+document.getElementById('level-desc').textContent=info.desc;
+document.getElementById('hdr-sub').textContent=`QUESTIONNAIRE · ${info.badge} · ${BEREICHNAME}`;
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(id);
+  if(el)el.classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function startSurvey(){go('s-survey');renderQ();}
+
+function renderQ(){
+  const q=questions[curQ];
+  const total=questions.length;
+  const pct=Math.round((curQ/total)*100);
+  document.getElementById('sh-fill').style.width=pct+'%';
+  document.getElementById('sh-dim').textContent=q.dim;
+  document.getElementById('sh-cat').textContent='Perspective: '+q.cat+' · '+info.badge+(BEREICH!=='gesamt'?' · '+BEREICHNAME:'');
+  document.getElementById('sh-qn').textContent=curQ+1;
+  document.getElementById('sh-qt').textContent='von '+total;
+  document.getElementById('q-text').textContent=q.t;
+  document.getElementById('scale-ends').innerHTML=`<span>${info.scaleEnd0}</span><span>${info.scaleEnd1}</span>`;
+
+  const cur=answers[curQ];
+  document.getElementById('scale-opts').innerHTML=scale.map(s=>`
+    <button class="sopt${cur===s.v?' on':''}" data-v="${s.v}" onclick="pick(${s.v})">
+      <div class="snum">${s.v}</div>
+      <div class="slbl">${s.l}</div>
+    </button>`).join('');
+
+  document.getElementById('q-cmt').value=comments[curQ]||'';
+  document.getElementById('q-cmt').oninput=()=>{comments[curQ]=document.getElementById('q-cmt').value;};
+  document.getElementById('btn-back').style.visibility=curQ===0?'hidden':'visible';
+  const nb=document.getElementById('btn-next');
+  nb.textContent=curQ===questions.length-1?'Submit →':'Next →';
+  nb.className='btn-next'+(cur!==undefined?' ready':'');
+}
+
+function pick(v){
+  answers[curQ]=v;
+  document.querySelectorAll('.sopt').forEach(el=>el.classList.toggle('on',parseInt(el.dataset.v)===v));
+  document.getElementById('btn-next').className='btn-next ready';
+}
+
+function goNext(){
+  if(answers[curQ]===undefined)return;
+  const cmtEl=document.getElementById('q-cmt');
+  if(cmtEl)comments[curQ]=cmtEl.value;
+  if(curQ<questions.length-1){
+    curQ++;
+    renderQ();
+  }else{
+    submit();
+  }
+}
+
+function goBack(){if(curQ>0){curQ--;renderQ();}}
+
+function submit(){
+  let result=null;
+  try{
+    const dimScores={};
+    const dimComments={};
+    questions.forEach((q,i)=>{
+      if(!dimScores[q.dim]){dimScores[q.dim]=[];dimComments[q.dim]=[];}
+      if(answers[i]!==undefined)dimScores[q.dim].push(answers[i]);
+      if(comments[i]&&comments[i].trim())dimComments[q.dim].push(comments[i].trim());
+    });
+
+    result={
+      projekt:PROJEKT,
+      ebene:EBENE,
+      bereich:BEREICH,
+      bereichname:BEREICHNAME,
+      timestamp:new Date().toISOString(),
+      scores:{},
+      comments:{}
+    };
+
+    Object.keys(dimScores).forEach(dim=>{
+      const vals=dimScores[dim];
+      result.scores[dim]=vals.length?parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2)):null;
+      result.comments[dim]=dimComments[dim];
+    });
+
+    const key='lpr_'+PROJEKT+'_'+EBENE+'_'+BEREICH;
+    const existing=JSON.parse(localStorage.getItem(key)||'[]');
+    existing.push(result);
+    localStorage.setItem(key,JSON.stringify(existing));
+  }catch(e){
+    console.error('Save error:',e);
+  }
+  // Save to Supabase (async - doesn't block done screen)
+  if(result)saveToSupabase(result);
+  // Always show done screen regardless of save success
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-done').classList.add('active');
+  window.scrollTo(0,0);
+}
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body></html>
